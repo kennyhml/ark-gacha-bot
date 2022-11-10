@@ -61,93 +61,99 @@ gacha_crystal = Item(
 )
 
 riot_helmet = Item(
-    name="Helmet",
+    name="Riot Helmet",
     inventory_icon="templates/riot_helmet.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 riot_chest = Item(
     name="Chest",
     inventory_icon="templates/riot_chest.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 riot_leggs = Item(
     name="Leggings",
     inventory_icon="templates/riot_leggs.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 riot_gauntlets = Item(
     name="Gauntlets",
     inventory_icon="templates/riot_gauntlets.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 riot_boots = Item(
     name="Boots",
     inventory_icon="templates/riot_boots.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 crystal = Item(
     name="Crystal",
     inventory_icon="templates/crystal.png",
     added_icon=None,
-    added_text=None
-
+    added_text=None,
 )
 
 assault_rifle = Item(
     name="Assault",
     inventory_icon="templates/assault_rifle.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 pumpgun = Item(
     name="Pump",
     inventory_icon="templates/pumpgun.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 metal_ingot = Item(
     name="Ingot",
     inventory_icon="templates/metal_ingot.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 fabricated_sniper = Item(
     name="Sniper",
     inventory_icon="templates/fabricated_sniper.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 fabricated_pistol = Item(
     name="Pistol",
     inventory_icon="templates/fabricated_pistol.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 auto_turret = Item(
     name="Auto Turret",
     inventory_icon="templates/auto_turret.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
 )
 
 heavy_auto_turret = Item(
     name="Heavy Auto Turret",
     inventory_icon="templates/heavy_auto_turret.png",
     added_icon=None,
-    added_text=None
+    added_text=None,
+)
+
+miner_helmet = Item(
+    name="Miner Helmet",
+    inventory_icon="templates/miner_helmet.png",
+    added_icon=None,
+    added_text=None,
 )
