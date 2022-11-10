@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="elementDustIcon">
+    <file>gachaBotLogo.png</file>
+  </qresource>
+</RCC>
