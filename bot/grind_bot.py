@@ -5,7 +5,7 @@ from ark.inventories import Vault, DedicatedStorage, Grinder, Inventory
 
 from ark.items import *
 from PIL import Image
-
+from math import floor
 from ark.beds import BedMap
 from itertools import cycle
 import pydirectinput as input
@@ -16,7 +16,7 @@ from pytesseract import pytesseract as tes
 
 
 AUTO_TURRET_COST = {"paste": 50, "electronics": 70, "ingots": 140, "poly": 20}
-HEAVY_AUTO_TURRET_COST = {"paste": 150, "electronics": 200, "ingots": 400, "poly": 50}
+TURRET_COST = {"paste": 200, "electronics": 270, "ingots": 540, "poly": 70}
 
 
 class GrindBot(ArkBot):
@@ -169,7 +169,7 @@ class GrindBot(ArkBot):
 
         self.turn_to("Metal")
         self.dedis.attempt_deposit(None, False)
-        
+
     def grind_riot_gear(self) -> None:
         """Grind all the riot gear down, keep first 2 poly and all pearls, crystal
         from helmets into dedis."""
@@ -232,7 +232,7 @@ class GrindBot(ArkBot):
         self.sleep(0.5)
         self.turn_to("Gear Vault")
         self.sleep(0.5)
-        
+
     def craft_turrets(self) -> None:
         self.turn_to("Exo Mek")
         self.exo_mek.open()
@@ -254,7 +254,6 @@ class GrindBot(ArkBot):
             images[dedi] = pil_img.crop(
                 (region[0], region[1], region[0] + region[2], region[1] + region[3])
             )
-        print(images)
         return images
 
     def find_dedi(self, item, img) -> tuple:
@@ -286,7 +285,7 @@ class GrindBot(ArkBot):
         """
 
         for i in range(10):
-            amounts = {}   
+            amounts = {}
 
             # get dedi wall image
             dedis_image = self.get_dedi_screenshot()
@@ -305,66 +304,78 @@ class GrindBot(ArkBot):
             # got all regions, denoise and OCR the amount
             for name in dedis:
                 img = self.denoise_text(dedis[name], (229, 230, 110), 15)
-                cv.imshow("a", img)
-                cv.waitKey(0)
                 raw_result = tes.image_to_string(
                     img,
                     config="-c tessedit_char_whitelist=0123456789 --psm 6 -l eng",
                 ).rstrip()
-                print(raw_result)
 
                 # add material and its amount to our dict
                 amounts[name] = int(raw_result)
 
+            print(amounts)
             return amounts
 
         raise Exception
 
-    def get_amount_turret(self, owned) -> int:
+    def get_crafting_method(self, owned_items):
+        """Receives the list of materials we own and figures out the most 'efficient'
+        way to craft turrets mainly taking in consideration the balance between metal
+        and electronics.
+
+        It first calculates the usage of the crafted mats we have, and then calculates
+        with pearls and ingots instead of electronics.
+        """
+        # print(f"Materials owned at start: {owned_items}")
+
+        # set our costs, no pearls for now
         cost = {"paste": 0, "ingots": 0, "electronics": 0}
-        can_craft = 0
+        # find how many turrets we can craft right away
+        lowest_1 = min(owned_items[material] / TURRET_COST[material] for material in cost)
 
-        # check how many turrets we can craft if we first turn ingots and pearls into elec
-        while True:
-            for material in cost:
-                # add the material from the turrets to our cost
-                cost[material] += (
-                    AUTO_TURRET_COST[material] + HEAVY_AUTO_TURRET_COST[material]
-                )
-                # check that the cost isnt higher than the mats we have
-                if all(cost[material] < owned[material] for material in cost):
-                    continue
-                return can_craft
-            can_craft += 1
-            
-    def get_craftable_turrets(self, dedi_mats) -> int:
-
-        # get amount of electronics we coul craft
-        electronics_to_craft = round(dedi_mats["pearl"] / 3)
-        # check that we have enough ingots to craft all the electronics
-        if electronics_to_craft > dedi_mats["ingots"]:
-            electronics_to_craft = dedi_mats["ingots"]
-
-        # create a seperate imaginary material dict of mats we would have
-        # after crafting electronics
-        if_crafted = {
-            "paste": dedi_mats["paste"],
-            "ingots": dedi_mats["ingots"] - electronics_to_craft,
-            "electronics": dedi_mats["electronics"] + electronics_to_craft,
+        # set the inital cost 
+        phase_1 = {
+            "paste": int(TURRET_COST["paste"] * lowest_1),
+            "ingots": int(TURRET_COST["ingots"] * lowest_1),
+            "electronics": int(TURRET_COST["electronics"] * lowest_1),
         }
-        
-        # get both amounts of craftable turrets
-        can_craft_with_elec = self.get_amount_turret(if_crafted)
-        can_craft_without_elec = self.get_amount_turret(dedi_mats)
 
-        return can_craft_without_elec, can_craft_with_elec
+        # add the initial cost, remove it from the owned mats
+        for material in phase_1:
+            cost[material] += phase_1[material]
+            owned_items[material] -= phase_1[material]
+
+        # print(f"Cost for phase 1: {cost}, materials owned after {owned_items}")
+
+        # set new turret cost using pearls and more ingots instead, set pearl value
+        raw_turret_cost = {
+            "paste": 200,
+            "pearl": 270 * 3,
+            "ingots": 540 + 270
+        }
+        cost["pearl"] = 0
+
+        # once again get the amount of craftable turrets, create phase 2 cost
+        lowest_2 = min(owned_items[material] / raw_turret_cost[material] for material in raw_turret_cost)
+        phase_2 = {
+            "paste": int(raw_turret_cost["paste"] * lowest_2),
+            "ingots": int(raw_turret_cost["ingots"] * lowest_2),
+            "pearl": int(raw_turret_cost["pearl"] * lowest_2)
+        }
+
+        # add each material to the total cost, electronics to craft is now pearls / 3
+        for material in phase_2:
+            cost[material] += phase_2[material]
+
+        # print(f"Cost for phase 2: {phase_2}, total cost: {cost}\n\n")
+        print(f"Need to craft {round(cost['pearl'] / 3)} electronics for {floor(lowest_1 + lowest_2)} Turrets")
+
+        return cost
+
 
     def start(self):
         """Starts the crafting station"""
-        # self.grind_riot_gear()
+        self.grind_riot_gear()
 
-        # self.grind_down_for_metal()
+        self.grind_down_for_metal()
         
-        print(self.get_craftable_turrets(self.get_dedi_materials()))
-
         # self.craft_turrets()
