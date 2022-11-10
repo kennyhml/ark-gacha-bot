@@ -127,13 +127,12 @@ class BedMap(ArkBot):
         input.moveTo(1266, 541, duration=0.1)
         player.sleep(0.1)
         input.moveTo(1266, 540, duration=0.1)
-        player.sleep(0.5)
+        player.sleep(0.3)
         player.click("left")
 
         # 'use' only needs to be held if we hold for too long after clicking
-        player.sleep(0.2)
-        input.keyDown(player.keybinds.use)
-        player.sleep(1)
+        input.keyUp(player.keybinds.use)
+        player.sleep(15)
 
 
 class TekPod(Bed):

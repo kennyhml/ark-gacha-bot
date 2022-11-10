@@ -82,7 +82,7 @@ class Inventory(ArkBot):
         """
         return (
             self.locate_template(
-                item.inventory_icon,
+                item.inventory_icon if isinstance(item, Item) else item,
                 region=self.ITEM_REGION,
                 confidence=0.8,
                 grayscale=True,
@@ -216,6 +216,8 @@ class Inventory(ArkBot):
     def search_for(self, term: str) -> None:
         """Searches for a term in the target inventory using pyautogui typewrite"""
         self.check_status()
+        if isinstance(term, Item):
+            term = term.name
 
         # write the name into the search bar
         self.click_search()
@@ -390,6 +392,8 @@ class PlayerInventory(Inventory):
         item: :class:`str`:
             The item to search for
         """
+        print(f"Transferring {item.name} into {inventory._name}!")
+
         if not inventory.is_open():
             print(
                 f"{inventory._name} could not be found!\n"
@@ -454,6 +458,11 @@ class PlayerInventory(Inventory):
         print(
             f"Transferred approximately {rows} rows of pellets into {inventory._name}!"
         )
+
+    def open_inv_drop_all(self) -> None:
+        self.open()
+        self.drop_all()
+        self.close()
 
     def drop_all(self) -> None:
         self.click_at(self.DROP_ALL)

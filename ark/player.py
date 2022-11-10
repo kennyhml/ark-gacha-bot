@@ -18,6 +18,16 @@ class Player(ArkBot):
         super().__init__()
         self.inventory = PlayerInventory()
 
+    def drop_all(self) -> None:
+        self.inventory.open()
+        self.inventory.drop_all()
+        self.inventory.close()
+
+    def drop_all_items(self, item) -> None:
+        self.inventory.open()
+        self.inventory.drop_all_items(item)
+        self.inventory.close()
+
     def is_spawned(self) -> bool:
         """Checks if the player is spawned"""
         return (
@@ -221,36 +231,8 @@ class Player(ArkBot):
 
     def disable_hud(self) -> None:
         self.press("backspace")
- 
-    def do_drop_script(self, item, inventory: Inventory):
-        self.inventory.take_one_item(item, slot=2, inventory=inventory)
-        self.inventory.await_items_added()
-        self.sleep(0.5)
-        self.inventory.drop_all_items(item.name)
 
-        self.inventory.search_for(item.name)
-
-        while True:
-            inventory.search_for(item.name)
-            self.sleep(0.5)
-            if not inventory.has_item(item):
-                break
-
-            inventory.take_all()
-            self.sleep(0.3)
-            for _ in range(3):
-                for slot in [
-                    (168, 280),
-                    (258, 280),
-                    (348, 277),
-                    (447, 282),
-                    (531, 281),
-                    (624, 284),
-                ]:
-                    pg.moveTo(slot)
-                    pg.press(self.keybinds.drop)
-
-        self.inventory.close()
+    def pick_up_bag(self):
         self.look_down_hard()
         self.press(self.keybinds.target_inventory)
         bag = Inventory("Bag", "bag")
@@ -258,5 +240,34 @@ class Player(ArkBot):
         self.move_to(1287, 289)
         self.press("o")
         self.sleep(1)
+
+    def do_drop_script(self, item, target_inventory: Inventory):
+
+        self.crouch()
+        self.sleep(0.5)
+        target_inventory.open()
+
+        self.inventory.take_one_item(item, slot=2, inventory=target_inventory)
+        self.inventory.await_items_added()
+        self.sleep(0.3)
+        self.inventory.drop_all_items(item.name)
+
+        self.inventory.search_for(item.name)
+
+        while True:
+            target_inventory.search_for(item.name)
+            self.sleep(0.5)
+            if not target_inventory.has_item(item):
+                break
+
+            target_inventory.take_all()
+            self.sleep(0.3)
+            for _ in range(3):
+                for slot in [(168, 280), (258, 280), (348, 277)]:
+                    pg.moveTo(slot)
+                    pg.press(self.keybinds.drop)
+
+        self.inventory.close()
+        self.pick_up_bag()
         self.crouch()
         self.sleep(0.5)

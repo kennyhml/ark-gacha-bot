@@ -1,19 +1,17 @@
-from bot.ark_bot import ArkBot
-from ark.player import Player
-
-from ark.inventories import Vault, DedicatedStorage, Grinder, Inventory
-
-from ark.items import *
-from PIL import Image
-from math import floor
-from ark.beds import BedMap
 from itertools import cycle
-import pydirectinput as input
+from math import floor
 
-import numpy as np
 import cv2 as cv
+import numpy as np
+import pydirectinput as input
+from PIL import Image
 from pytesseract import pytesseract as tes
 
+from ark.beds import BedMap
+from ark.inventories import DedicatedStorage, Grinder, Inventory, Vault
+from ark.items import *
+from ark.player import Player
+from bot.ark_bot import ArkBot
 
 AUTO_TURRET_COST = {"paste": 50, "electronics": 70, "ingots": 140, "poly": 20}
 TURRET_COST = {"paste": 200, "electronics": 270, "ingots": 540, "poly": 70}
@@ -123,124 +121,126 @@ class GrindBot(ArkBot):
             method(args)
             self.sleep(0.2)
 
-    def grind_down_for_metal(self) -> None:
-        gear = [fabricated_pistol, fabricated_sniper, assault_rifle, pumpgun]
-
-        for item in gear:
-            self.vault.open()
-            self.player.inventory.drop_all_items("poly")
-
-            self.vault.search_for(item.name)
-            self.sleep(0.5)
-            if not self.vault.has_item(item):
-                continue
-
-            self.vault.take_all()
-            self.vault.close()
-
-            self.turn_to("Grinder")
-            self.grinder.open()
-            self.grinder.turn_on()
-
-            self.player.inventory.transfer_all(self.grinder, item.name)
-            self.sleep(1)
-            self.grinder.grind_all()
-
-            self.grinder.take_all_items("poly")
-            self.grinder.take_all_items("paste")
-            self.grinder.close()
-
-            self.turn_to("Paste")
-            self.sleep(0.5)
-            self.dedis.attempt_deposit(None, False)
-            self.turn_to("Gear Vault")
-
-        self.player.inventory.open()
-        self.player.inventory.drop_all()
-        self.player.inventory.close()
+    def grind(self, grind: str | Item, take: list[Item | str]) -> None:
 
         self.turn_to("Grinder")
-        self.player.crouch()
         self.grinder.open()
-        self.sleep(0.5)
+        self.player.inventory.transfer_all(self.grinder, grind)
+        self.grinder.turn_on()
+        self.sleep(1)
+        self.grinder.grind_all()
 
+        for item in take:
+            self.grinder.take_all_items(item)
+
+        self.grinder.close()
+
+    def deposit(self, items: list[Item | str] | Item | str) -> None:
+        # turn it into a list if only 1 item was passed
+        if not isinstance(items, list):
+            items = [items]
+
+        # deposit
+        for item in items:
+            if isinstance(item, Item):
+                item = item.name
+
+            self.turn_to(item.capitalize())
+            self.dedis.attempt_deposit(item, False)
+            self.sleep(0.3)
+
+    def take_item(self, item: Item | str) -> bool:
+        self.turn_to("Gear Vault")
+        self.vault.open()
+        self.player.inventory.drop_all_items("poly")
+
+        self.vault.search_for(item)
+        self.sleep(0.5)
+        if not self.vault.has_item(item):
+            return False
+
+        self.vault.take_all()
+        self.vault.close()
+        return True
+
+    def grind_weapons(self) -> None:
+        weapons = [fabricated_pistol, fabricated_sniper, assault_rifle, pumpgun]
+
+        for weapon in weapons:
+            # continue with next item if no item was found
+            if not self.take_item(weapon):
+                continue
+
+            self.grind(grind=weapon, take=["poly", "paste"])
+            self.deposit("paste")
+            self.turn_to("Gear Vault")
+
+        self.player.drop_all_items("poly")
+
+        self.turn_to("Grinder")
         self.player.do_drop_script(metal_ingot, self.grinder)
         self.resync_to_vault()
 
-        self.turn_to("Metal")
-        self.dedis.attempt_deposit(None, False)
+        self.deposit(metal_ingot)
 
-    def grind_riot_gear(self) -> None:
+    def put_into_exo_mek(self, items: list[Item | str] | Item | str) -> None:
+        """Puts all given items into exo mek"""
+        print(f"Depositing {items} into exo mek")
+        # turn it into a list if only 1 item was passed
+        if not isinstance(items, list):
+            items = [items]
+
+        self.turn_to("Exo Mek")
+        self.exo_mek.open()
+
+        # deposit
+        for item in items:
+            self.player.inventory.transfer_all(self.exo_mek, item)
+            self.sleep(0.5)
+        self.exo_mek.close()
+
+    def grind_armor(self) -> None:
         """Grind all the riot gear down, keep first 2 poly and all pearls, crystal
         from helmets into dedis."""
         # all pieces to grind
-        gear = [riot_leggs, riot_chest, riot_gauntlets, riot_boots, riot_helmet]
+        armor = [riot_leggs, riot_chest, riot_gauntlets, riot_boots, riot_helmet]
         any_found = False
 
-        for i, item in enumerate(gear):
-            self.vault.open()
-            self.vault.search_for(item.name)
-            self.sleep(0.5)
-            if not self.vault.has_item(item):
+        for i, piece in enumerate(armor):
+            if not self.take_item(piece):
                 continue
+
             any_found = True
-
-            self.vault.take_all()
-            self.vault.close()
-
-            self.turn_to("Grinder")
-            self.grinder.open()
-            self.sleep(0.4)
-            self.grinder.turn_on()
-
-            self.player.inventory.transfer_all(self.grinder, item.name)
-            self.sleep(1)
-            self.grinder.grind_all()
-
-            self.grinder.take_all_items("poly")
-            self.grinder.take_all_items("pearl")
-            self.grinder.close()
+            self.grind(
+                grind=piece,
+                take=["poly", "pearl", "electronics"]
+                if piece is riot_helmet
+                else ["poly", "pearl"],
+            )
 
             if (i + 1) <= 2:
-                self.turn_to("Exo Mek")
-                self.exo_mek.open()
-                self.player.inventory.transfer_all(self.exo_mek, "poly")
-                self.exo_mek.close()
+                self.put_into_exo_mek("poly")
             else:
-                self.player.inventory.open()
-                self.player.inventory.drop_all_items("poly")
-                self.player.inventory.close()
+                self.player.drop_all_items("poly")
 
-            self.turn_to("Pearls")
-            self.sleep(1)
-            self.dedis.attempt_deposit(None, False)
-            self.sleep(1)
+            self.deposit(
+                ["pearls", "electronics"] if piece is riot_helmet else "pearls"
+            )
+
             self.turn_to("Gear Vault")
 
         if not any_found:
             return
 
+        # get all the crystal out of the grinder
         self.vault.close()
         self.turn_to("Grinder")
-        self.player.crouch()
-        self.grinder.open()
         self.player.do_drop_script(crystal, self.grinder)
         self.resync_to_vault()
-
-        self.turn_to("Crystal")
-        self.dedis.attempt_deposit(crystal, check_amount=False)
-        self.sleep(0.5)
+        self.deposit("crystal")
         self.turn_to("Gear Vault")
-        self.sleep(0.5)
-
-    def craft_turrets(self) -> None:
-        self.turn_to("Exo Mek")
-        self.exo_mek.open()
-        self.exo_mek.open_craft()
-        return
 
     def find_all_dedi_positions(self, image) -> list[tuple]:
-
         images = {}
 
         for dedi in ("pearl", "paste", "ingots", "electronics", "crystal", "hide"):
@@ -330,9 +330,11 @@ class GrindBot(ArkBot):
         # set our costs, no pearls for now
         cost = {"paste": 0, "ingots": 0, "electronics": 0}
         # find how many turrets we can craft right away
-        lowest_1 = min(owned_items[material] / TURRET_COST[material] for material in cost)
+        lowest_1 = min(
+            owned_items[material] / TURRET_COST[material] for material in cost
+        )
 
-        # set the inital cost 
+        # set the inital cost
         phase_1 = {
             "paste": int(TURRET_COST["paste"] * lowest_1),
             "ingots": int(TURRET_COST["ingots"] * lowest_1),
@@ -347,19 +349,18 @@ class GrindBot(ArkBot):
         # print(f"Cost for phase 1: {cost}, materials owned after {owned_items}")
 
         # set new turret cost using pearls and more ingots instead, set pearl value
-        raw_turret_cost = {
-            "paste": 200,
-            "pearl": 270 * 3,
-            "ingots": 540 + 270
-        }
+        raw_turret_cost = {"paste": 200, "pearl": 270 * 3, "ingots": 540 + 270}
         cost["pearl"] = 0
 
         # once again get the amount of craftable turrets, create phase 2 cost
-        lowest_2 = min(owned_items[material] / raw_turret_cost[material] for material in raw_turret_cost)
+        lowest_2 = min(
+            owned_items[material] / raw_turret_cost[material]
+            for material in raw_turret_cost
+        )
         phase_2 = {
             "paste": int(raw_turret_cost["paste"] * lowest_2),
             "ingots": int(raw_turret_cost["ingots"] * lowest_2),
-            "pearl": int(raw_turret_cost["pearl"] * lowest_2)
+            "pearl": int(raw_turret_cost["pearl"] * lowest_2),
         }
 
         # add each material to the total cost, electronics to craft is now pearls / 3
@@ -367,15 +368,31 @@ class GrindBot(ArkBot):
             cost[material] += phase_2[material]
 
         # print(f"Cost for phase 2: {phase_2}, total cost: {cost}\n\n")
-        print(f"Need to craft {round(cost['pearl'] / 3)} electronics for {floor(lowest_1 + lowest_2)} Turrets")
+        print(
+            f"Need to craft {round(cost['pearl'] / 3)} electronics for {floor(lowest_1 + lowest_2)} Turrets"
+        )
 
         return cost
 
+    def empty_grinder(self) -> None:
+        self.turn_to("Grinder")
+        self.grinder.open()
+        self.grinder.take_all_items("hide")
+        self.grinder.close()
+
+        self.deposit("Hide")
+
+        self.turn_to("Grinder")
+        self.grinder.open()
+        for _ in range(3):
+            self.grinder.take_all()
+            self.player.inventory.drop_all()
 
     def start(self):
         """Starts the crafting station"""
-        self.grind_riot_gear()
+        # self.grind_armor()
+        # self.grind_weapons()
+        self.empty_grinder()
 
-        self.grind_down_for_metal()
-        
+        print(self.get_crafting_method(self.get_dedi_materials()))
         # self.craft_turrets()
