@@ -64,6 +64,7 @@ class ArkBot(ArkWindow):
                 raise TerminatedException
 
     def sleep(self, duration):
+        # print("Sleeping", duration)
         self.check_status()
         time.sleep(duration)
 

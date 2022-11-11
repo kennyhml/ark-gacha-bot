@@ -12,7 +12,7 @@ from ark.exceptions import (
     InventoryNotAccessibleError,
     TekPodNotAccessibleError,
 )
-from ark.inventories import Gacha
+from ark.inventories import Gacha, Inventory
 from ark.items import pellet, crystal
 from ark.player import Player
 from bot.ark_bot import ArkBot, TerminatedException
@@ -25,6 +25,7 @@ class GachaBot(ArkBot):
     discord_avatar = "https://i.kym-cdn.com/entries/icons/facebook/000/022/293/Bloodyshadow_rolled_user_shutupandsleepwith_i_m_bisexual_let_s_work_from__a48265eae6a474904cdc2cae9f184aad.jpg"
     y_trap_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/cb/Plant_Species_Y_Trap_%28Scorched_Earth%29.png/revision/latest?cb=20160901233007"
     crystal_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/c3/Gacha_Crystal_%28Extinction%29.png/revision/latest?cb=20181108100408"
+    dust_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b1/Element_Dust.png/revision/latest/scale-to-width-down/228?cb=20181107161643"
 
     def __init__(self, selected_tower) -> None:
         super().__init__()
@@ -35,13 +36,18 @@ class GachaBot(ArkBot):
         self.create_webhooks()
 
         self._ytraps_deposited = 0
+        self._total_dust_made = 0
+        self._total_bps_made = 0
+        self._total_pickups = 0
         self._laps_completed = 0
-        self._first_pickup = True
-        self._at_pod = False
-        self._last_heal = time.time()
-
         self._current_bed = 0
         self._current_lap = 0
+        self._station_times = []
+        self._session_start = time.time()
+
+        self._first_pickup = True
+        self._at_pod = False
+        self._least_healed = time.time()
         self.last_emptied = time.time()
         self.lap_started = time.time()
 
@@ -173,29 +179,39 @@ class GachaBot(ArkBot):
         bed :class:`Bed`:
             The crystal bed to spawn at
         """
+        try:
+            # spawn at crystal bed and pick up the crystals
+            crystals = CrystalCollection(self.player)
+            self.beds.travel_to(bed, self._at_pod)
+            crystals.pick_crystals()
 
-        # spawn at crystal bed and pick up the crystals
-        crystals = CrystalCollection(self.player)
-        self.beds.travel_to(bed, self._at_pod)
-        crystals.pick_crystals()
+            # open the crystals and deposit the items into dedis
+            crystals_opened = crystals.open_crystals(self._first_pickup)
+            resources_deposited, time_taken = crystals.deposit_dedis(
+                self.tower_settings.dedis_amount
+            )
+            self._first_pickup = False
 
-        # open the crystals and deposit the items into dedis
-        crystals_opened = crystals.open_crystals(self._first_pickup)
-        resources_deposited, time_taken = crystals.deposit_dedis(
-            self.tower_settings.dedis_amount
-        )
-        self._first_pickup = False
+            # put items into vault
+            crystals.deposit_items(
+                self.tower_settings.poly_vaults,
+                self.tower_settings.drop_items,
+                self.tower_settings.keep_items,
+            )
 
-        # put items into vault
-        crystals.deposit_items(
-            self.tower_settings.poly_vaults,
-            self.tower_settings.drop_items,
-            self.tower_settings.keep_items,
-        )
+            self.inform_resources_deposited(
+                time_taken, crystals_opened, resources_deposited, bed
+            )
+            self._total_pickups += 1
 
-        self.inform_resources_deposited(
-            time_taken, crystals_opened, resources_deposited, bed
-        )
+        except TerminatedException:
+            pass
+
+        except InventoryNotAccessibleError as err:
+            self.inform_inventory_not_accessible(bed, err.args[0])
+
+        except Exception as e:
+            self.inform_unknown_exception(bed, e)
 
     def do_gacha_station(self, bed: Bed) -> None:
         """Completes the gacha station of the given bed.
@@ -232,17 +248,34 @@ class GachaBot(ArkBot):
             self.sleep(0.5)
             self.player.do_crop_plots()
             added_traps = self.player.load_gacha(gacha)
-            self._ytraps_deposited += (added_traps * 10)
+            self._ytraps_deposited += added_traps * 10
             self.inform_station_finished(bed, round(time.time() - start), added_traps)
+            self._station_times.append(round(time.time() - start))
 
         except TerminatedException:
             pass
 
         except InventoryNotAccessibleError:
-            self.inform_gacha_not_accessible(bed)
+            self.inform_inventory_not_accessible(bed, gacha._name)
 
         except Exception as e:
             self.inform_unknown_exception(bed, e)
+
+    def format_time_taken(self, time: time.time) -> str:
+        """Returns the given time.time object in a formatted string"""
+        # get time diff
+        time_diff = time - self.lap_started
+        # get hours and minutes, round for clean number
+        h = round(time_diff // 3600)
+        m, s = divmod(time_diff % 3600, 60)
+        m, s = round(m), round(s)
+
+        # format
+        return f"{h} hour{'s' if h > 1 or not h else ''} {m} minutes"
+
+    def get_dust_per_hour(self) -> int:
+        total_minutes = round(time.time() - self._session_start) / 60
+        return f"{(self._total_dust_made / total_minutes) * 60:_}".replace("_", " ")
 
     def inform_unknown_exception(self, bed: Bed, exception: Exception) -> None:
         """Posts an image of the current screenshot alongside current
@@ -257,8 +290,7 @@ class GachaBot(ArkBot):
             The description of the occured exception
         """
         formatted_text = (
-            f"Ran into an unhandled exception at gacha station `{bed.name}`!\n"
-            f"{exception}"
+            f"Ran into an unhandled exception at task `{bed.name}`!\n" f"{exception}"
         )
         Thread(
             target=self.send_to_discord,
@@ -309,14 +341,22 @@ class GachaBot(ArkBot):
             username="Ling Ling",
         )
 
-    def inform_gacha_not_accessible(self, bed: Bed) -> None:
+    def inform_inventory_not_accessible(self, bed: Bed, inventory: Inventory) -> None:
         """Inform the user that the gacha cannot be accessed"""
-        formatted_text = (
-            f"Gacha at gacha station `{bed.name}` cannot be accessed.\n"
-            f"Please move the gacha closer, or improve the bed placement.\n"
-            f"Server: {self.tower_settings.server_name}, Account: {self.tower_settings.account_name}"
-        )
 
+        if inventory == "Gacha":
+            formatted_text = (
+                f"Gacha at `{bed.name}` could not be accessed.\n"
+                f"Please move the gacha closer, or improve the bed placement.\n"
+                f"Server: {self.tower_settings.server_name}, Account: {self.tower_settings.account_name}"
+            )
+        else:
+            formatted_text = (
+                f"{inventory} at `{bed.name}` could not be accessed.\n"
+                f"This may have been caused by lag, otherwise please improve your placement.\n"
+                f"Server: {self.tower_settings.server_name}, Account: {self.tower_settings.account_name}"
+            )
+            
         Thread(
             target=self.send_to_discord,
             name="Posting to discord",
@@ -360,22 +400,60 @@ class GachaBot(ArkBot):
 
     def inform_healed_up(self, time_spent, last_healed) -> None:
         """Sends a msg to discord that we healed"""
-        h = round(last_healed // 3600)
-        m, s = divmod(last_healed % 3600, 60)
-        m = round(m)
-        s = round(s)
-
         embed = discord.Embed(
             type="rich",
             title=f"Recovered player at '{self.tek_pod.name}'!",
             color=0x4F4F4F,
         )
         embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{time_spent} seconds")
-        embed.add_field(
-            name="Last healed:", value=f"{h} hours {m} minutes {s} seconds ago"
+        embed.add_field(name="Last healed:", value=self.format_time_taken(last_healed))
+        embed.set_thumbnail(url=self.tek_pod.discord_image)
+        embed.set_footer(text="Ling Ling on top!")
+
+        self.info_webhook.send(
+            avatar_url=self.discord_avatar,
+            embed=embed,
+            username="Ling Ling",
         )
 
-        embed.set_thumbnail(url=self.tek_pod.discord_image)
+    def inform_lap_finished(self) -> None:
+
+        station_avg = round(sum(self._station_times) / len(self._station_times))
+
+        dust = f"{self._total_dust_made:_}".replace("_", " ")
+        pearls = f"{self._total_bps_made:_}".replace("_", " ")
+
+        embed = discord.Embed(
+            type="rich",
+            title=f"Finished Lap {self._current_lap}!",
+            color=0x4285D7,
+        )
+        embed.add_field(
+            name="Time taken:ㅤㅤㅤ", value=self.format_time_taken(self.lap_started)
+        )
+
+        embed.add_field(
+            name="Total runtime:ㅤㅤㅤ",
+            value=self.format_time_taken(self._session_start),
+        )
+        embed.add_field(name="\u200b", value="\u200b")
+
+        embed.add_field(
+            name="Average station time:ㅤㅤㅤ",
+            value=f"{station_avg} seconds",
+        )
+
+        embed.add_field(
+            name="Dust per hour:ㅤㅤㅤ",
+            value=f"{self.get_dust_per_hour()}",
+        )
+        embed.add_field(name="\u200b", value="\u200b")
+
+        embed.add_field(name="Total Element Dust:", value=f"{dust}")
+        embed.add_field(name="Total Black Pearls:", value=f"{pearls}")
+        embed.add_field(name="\u200b", value="\u200b")
+
+        embed.set_thumbnail(url=self.dust_avatar)
         embed.set_footer(text="Ling Ling on top!")
 
         self.info_webhook.send(
@@ -462,9 +540,9 @@ class GachaBot(ArkBot):
             self.tek_pod.heal(60)
             self.tek_pod.leave()
             self.inform_healed_up(
-                round(time.time() - start), time.time() - self._last_heal
+                round(time.time() - start), time.time() - self._least_healed
             )
-            self._last_heal = time.time()
+            self._least_healed = time.time()
             return
 
         # we cant heal, raise an error so we can try to unstuck

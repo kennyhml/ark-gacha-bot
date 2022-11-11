@@ -173,13 +173,11 @@ class Inventory(ArkBot):
             # 2 seconds passed, check if we can access it at all
             if c == 2:
                 if not self.in_access_range():
-                    raise InventoryNotAccessibleError
+                    raise InventoryNotAccessibleError(self._name)
                 print("Timer appears to be popping, or the server is lagging!")
 
             if c > 60:
-                raise InventoryNotAccessibleError(
-                    f"Failed to access {self._name} inventory!"
-                )
+                raise InventoryNotAccessibleError(self._name)
 
         self.await_receiving_remove_inventory()
         print(f"Opened {self._name}!")
@@ -201,7 +199,7 @@ class Inventory(ArkBot):
                 break
 
             if c > 30:
-                raise InventoryNotClosableError
+                raise InventoryNotClosableError(self._name)
         self.sleep(0.2)
 
     def click_search(self) -> None:
@@ -221,7 +219,6 @@ class Inventory(ArkBot):
 
         # write the name into the search bar
         self.click_search()
-        self.sleep(0.2)
         pg.typewrite(term.lower(), interval=0.01)
 
     def take_all(self) -> None:
@@ -242,7 +239,7 @@ class Inventory(ArkBot):
 
         # search for the item and hit take all
         self.search_for(item)
-        self.sleep(0.2)
+        self.sleep(0.1)
         self.take_all()
 
     def take_one_item(self, item: Item | str, slot: int, inventory) -> None:
@@ -342,7 +339,7 @@ class PlayerInventory(Inventory):
             self.sleep(1.5)
 
             if c > 20:
-                raise InventoryNotAccessibleError
+                raise InventoryNotAccessibleError(self._name)
 
     def has_item(self, item: Item) -> bool:
         return (
@@ -392,8 +389,6 @@ class PlayerInventory(Inventory):
         item: :class:`str`:
             The item to search for
         """
-        print(f"Transferring {item.name} into {inventory._name}!")
-
         if not inventory.is_open():
             print(
                 f"{inventory._name} could not be found!\n"
@@ -402,7 +397,7 @@ class PlayerInventory(Inventory):
             return
         if item:
             self.search_for(item)
-        self.click_at(self.TRANSFER_ALL, delay=0.2)
+        self.click_at(self.TRANSFER_ALL)
 
     def pellets_left_to_tranfer(self) -> bool:
         """Checks if there are any pellets left to even transfer,
@@ -757,7 +752,10 @@ class Grinder(Inventory):
     def can_turn_on(self) -> bool:
         return (
             self.locate_template(
-                "templates/turn_on.png", region=(740, 570, 444, 140), confidence=0.85, grayscale=True
+                "templates/turn_on.png",
+                region=(740, 570, 444, 140),
+                confidence=0.85,
+                grayscale=True,
             )
             is not None
         )
@@ -765,7 +763,10 @@ class Grinder(Inventory):
     def is_turned_on(self) -> bool:
         return (
             self.locate_template(
-                "templates/turn_off.png", region=(740, 570, 444, 140), confidence=0.85, grayscale=True
+                "templates/turn_off.png",
+                region=(740, 570, 444, 140),
+                confidence=0.85,
+                grayscale=True,
             )
             is not None
         )
