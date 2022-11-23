@@ -3,20 +3,16 @@ import time
 from threading import Thread
 
 import discord
-import pydirectinput as input
 from dacite import from_dict
 
 from ark.beds import Bed, BedMap, TekPod
-from ark.exceptions import (
-    BotTerminatedError,
-    InventoryNotAccessibleError,
-    TekPodNotAccessibleError,
-)
+from ark.exceptions import InventoryNotAccessibleError, TekPodNotAccessibleError
 from ark.inventories import Gacha, Inventory
-from ark.items import pellet, crystal
+from ark.items import pellet
 from ark.player import Player
 from bot.ark_bot import ArkBot, TerminatedException
 from bot.crystal_collection import CrystalCollection
+from ark.console import Console
 from bot.settings import DiscordSettings, TowerSettings
 
 
@@ -27,9 +23,9 @@ class GachaBot(ArkBot):
     crystal_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/c3/Gacha_Crystal_%28Extinction%29.png/revision/latest?cb=20181108100408"
     dust_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b1/Element_Dust.png/revision/latest/scale-to-width-down/228?cb=20181107161643"
 
-    def __init__(self, selected_tower) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.load_settings(selected_tower)
+        self.load_settings()
         self.seed_beds = self.create_seed_beds()
         self.crystal_beds = self.create_crystal_beds()
         self.tek_pod = self.create_tek_pod()
@@ -132,11 +128,11 @@ class GachaBot(ArkBot):
         Returns a `TekPod` object
         """
         return TekPod(
-            self.tower_settings.suicide_bed,
+            self.tower_settings.pod_name,
             (self.tower_settings.bed_x, self.tower_settings.bed_y),
         )
 
-    def load_settings(self, selected_tower) -> None:
+    def load_settings(self) -> None:
         """Loads the configuration for the selected tower.
         Uses dactite.from_dict to load the dictionary into corresponding dataclasses.
 
@@ -152,19 +148,14 @@ class GachaBot(ArkBot):
         """
         try:
             with open("settings/settings.json", "r") as f:
-                self.tower_settings = from_dict(
-                    TowerSettings, json.load(f)["towers"][selected_tower]
-                )
+                self.tower_settings = from_dict(TowerSettings, json.load(f))
 
             with open("settings/settings.json", "r") as f:
-                self.discord_settings = from_dict(
-                    DiscordSettings, json.load(f)["towers"][selected_tower]
-                )
+                self.discord_settings = from_dict(DiscordSettings, json.load(f))
 
         except Exception as e:
             print(f"CRITICAL! Error loading settings!\n{e}")
-            self.running = False
-            raise TerminatedException
+            self._running = False
 
     def do_crystal_station(self, bed: Bed) -> None:
         """Completes the crystal collection station of the given bed.
@@ -187,14 +178,11 @@ class GachaBot(ArkBot):
 
             # open the crystals and deposit the items into dedis
             crystals_opened = crystals.open_crystals(self._first_pickup)
-            resources_deposited, time_taken = crystals.deposit_dedis(
-                self.tower_settings.dedis_amount
-            )
+            resources_deposited, time_taken = crystals.deposit_dedis()
             self._first_pickup = False
 
             # put items into vault
             crystals.deposit_items(
-                self.tower_settings.poly_vaults,
                 self.tower_settings.drop_items,
                 self.tower_settings.keep_items,
             )
@@ -203,6 +191,8 @@ class GachaBot(ArkBot):
                 time_taken, crystals_opened, resources_deposited, bed
             )
             self._total_pickups += 1
+            self._total_dust_made += resources_deposited["Element Dust"]
+            self._total_bps_made += resources_deposited["Black Pearl"]
 
         except TerminatedException:
             pass
@@ -236,6 +226,9 @@ class GachaBot(ArkBot):
         try:
             # check if we need to take pellets first
             if not self._laps_completed:
+                if self.current_bed == 0:
+                    Console().set_gamma()
+
                 gacha.open()
                 if gacha.has_item(pellet):
                     gacha.take_all_items("ll")
@@ -261,10 +254,11 @@ class GachaBot(ArkBot):
         except Exception as e:
             self.inform_unknown_exception(bed, e)
 
-    def format_time_taken(self, time: time.time) -> str:
+    def format_time_taken(self, time_taken: time.time) -> str:
         """Returns the given time.time object in a formatted string"""
         # get time diff
-        time_diff = time - self.lap_started
+        time_diff = time.time() - time_taken
+
         # get hours and minutes, round for clean number
         h = round(time_diff // 3600)
         m, s = divmod(time_diff % 3600, 60)
@@ -356,7 +350,7 @@ class GachaBot(ArkBot):
                 f"This may have been caused by lag, otherwise please improve your placement.\n"
                 f"Server: {self.tower_settings.server_name}, Account: {self.tower_settings.account_name}"
             )
-            
+
         Thread(
             target=self.send_to_discord,
             name="Posting to discord",
@@ -520,6 +514,8 @@ class GachaBot(ArkBot):
         self.current_bed = 0
         self._laps_completed += 1
         self._current_lap += 1
+
+        self.inform_lap_finished()
 
     def go_heal(self) -> None:
         """Goes to heal by travelling to the tek pod, trying to enter it up to

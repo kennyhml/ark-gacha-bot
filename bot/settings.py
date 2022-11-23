@@ -41,18 +41,11 @@ class TowerSettings:
     drop_items: list
     keep_items: list
     game_launcher: str
-    dedis_amount: int
-    open_logs: bool
     log_interval: int
-    pickup_method: str
-    poly_vaults: str
     save_time: int
     server_name: str
     server_search: str
-    suicide_bed: str
-    suicide_interval: int
-    suicide_method: str
-    turn_direction: str
+    pod_name: str
     single_player: bool = False
 
 @dataclass

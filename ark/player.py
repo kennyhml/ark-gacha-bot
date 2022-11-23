@@ -54,6 +54,7 @@ class Player(ArkBot):
     def await_spawned(self) -> None:
         while not self.is_spawned():
             self.sleep(0.5)
+        print("Now spawned!")
 
     def turn_90_degrees(self, direction: str = "right") -> None:
         """Turns by 90 degrees in given direction"""
@@ -201,9 +202,7 @@ class Player(ArkBot):
         -----------
         `InventoryNotAccessible` if the gacha cant be accessed
         """
-        if not self.look_for_gacha(gacha):
-            raise InventoryNotAccessibleError
-
+        
         # open the gacha and take all pellets
         gacha.open()
         amount_of_traps = self.inventory.count_item(y_trap)

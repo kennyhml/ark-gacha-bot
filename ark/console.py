@@ -33,7 +33,7 @@ class Console(ArkBot):
         """Sets gamma to the given value"""
         self.open()
 
-        pg.typewrite(f"t.maxfps {gamma}", interval=0.001)
+        pg.typewrite(f"gamma {gamma}", interval=0.001)
         self.sleep(0.5)
         self.press("enter")
 

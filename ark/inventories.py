@@ -191,10 +191,9 @@ class Inventory(ArkBot):
         within 30 seconds, indicating a server / game crash.
         """
         c = 0
-        self.click_at(960, 249)
         while self.is_open():
             c += 1
-            self.press(self.keybinds.target_inventory)
+            self.press("esc")
             if self.await_closed():
                 break
 
@@ -202,9 +201,11 @@ class Inventory(ArkBot):
                 raise InventoryNotClosableError(self._name)
         self.sleep(0.2)
 
-    def click_search(self) -> None:
+    def click_search(self, delete_prior: bool = True) -> None:
         """Clicks into the searchbar"""
         self.click_at(self.SEARCHBAR)
+        if not delete_prior:
+            return
 
         input.keyDown("ctrl")
         self.sleep(0.1)
@@ -218,8 +219,8 @@ class Inventory(ArkBot):
             term = term.name
 
         # write the name into the search bar
-        self.click_search()
-        pg.typewrite(term.lower(), interval=0.01)
+        self.click_search(delete_prior=False if term == "trap" else False)
+        pg.typewrite(term.lower(), interval=0.001)
 
     def take_all(self) -> None:
         """Clicks the take all button"""
@@ -239,7 +240,6 @@ class Inventory(ArkBot):
 
         # search for the item and hit take all
         self.search_for(item)
-        self.sleep(0.1)
         self.take_all()
 
     def take_one_item(self, item: Item | str, slot: int, inventory) -> None:
@@ -349,11 +349,23 @@ class PlayerInventory(Inventory):
             is not None
         )
 
-    def count_item(self, item: Item) -> int:
+    def find_item(self, item: Item | str) -> tuple | None:
+        if isinstance(item, Item):
+            item = item.inventory_icon
+        return self.locate_template(item, region=self.ITEM_REGION, confidence=0.8)
+
+    def find_items(self, item: Item | str) -> tuple | None:
+        if isinstance(item, Item):
+            item = item.inventory_icon
+
+        return self.locate_all_template(item, region=self.ITEM_REGION, confidence=0.8)
+
+    def count_item(self, item: Item | str) -> int:
+        if isinstance(item, Item):
+            item = item.inventory_icon
+
         return len(
-            self.locate_all_template(
-                item.inventory_icon, region=self.ITEM_REGION, confidence=0.8
-            )
+            self.locate_all_template(item, region=self.ITEM_REGION, confidence=0.8)
         )
 
     def has_pellets(self) -> bool:
@@ -398,6 +410,7 @@ class PlayerInventory(Inventory):
         if item:
             self.search_for(item)
         self.click_at(self.TRANSFER_ALL)
+        self.sleep(0.1)
 
     def pellets_left_to_tranfer(self) -> bool:
         """Checks if there are any pellets left to even transfer,

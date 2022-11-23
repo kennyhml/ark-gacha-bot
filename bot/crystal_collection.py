@@ -138,14 +138,9 @@ class CrystalCollection(ArkBot):
         self.sleep(3)
         return r * 7
 
-    def deposit_dedis(self, dedi_numbers: int) -> tuple[dict, int]:
+    def deposit_dedis(self) -> tuple[dict, int]:
         """Deposits all the dust / black pearls into the dedis.\n
         Uses `DedicatedStorage.attempt_deposit` method to deposit into each of the dedis.
-
-        Parameters:
-        -----------
-        dedi_numbers :class:`int`:
-            The amount of dedis placed
 
         Returns:
         -----------
@@ -155,35 +150,32 @@ class CrystalCollection(ArkBot):
         gains = {"Element Dust": 0, "Black Pearl": 0}
         dedi = DedicatedStorage()
         
-        # match the amount of dedis 
-        if dedi_numbers == 4:
+        # prepare turns
+        turns = {
+            40: self.player.turn_x_by,
+            -50: self.player.turn_y_by,
+            -80: self.player.turn_x_by,
+            50: self.player.turn_y_by,
+        }
 
-            # prepare turns for this amount of dedis
-            turns = {
-                40: self.player.turn_x_by,
-                -50: self.player.turn_y_by,
-                -80: self.player.turn_x_by,
-                50: self.player.turn_y_by,
-            }
+        # go through each turn depositing into dedi
+        for amount in turns:
+            turns[amount](amount)
 
-            # go through each turn depositing into dedi
-            for amount in turns:
-                turns[amount](amount)
+            item, amount = dedi.attempt_deposit([dust, black_pearl])
+            if amount:
+                print(f'Deposited {amount} "{item}"!')
+                gains[item] += amount
+            else:
+                print(
+                    "Nothing was deposited, dedi is either full or we have already deposited all items!"
+                )
 
-                item, amount = dedi.attempt_deposit([dust, black_pearl])
-                if amount:
-                    print(f'Deposited {amount} "{item}"!')
-                    gains[item] += amount
-                else:
-                    print(
-                        "Nothing was deposited, dedi is either full or we have already deposited all items!"
-                    )
+        # return to original position
+        self.player.turn_x_by(40)
+        return gains, round(time.time() - self.started)
 
-            # return to original position
-            self.player.turn_x_by(40)
-            return gains, round(time.time() - self.started)
-
-    def deposit_items(self, vault_position, drop_items: list, keep_items: list) -> None:
+    def deposit_items(self, drop_items: list, keep_items: list) -> None:
         vault = Vault()
 
         self.player.inventory.open()
@@ -192,18 +184,17 @@ class CrystalCollection(ArkBot):
             self.sleep(0.3)
         self.player.inventory.close()
 
-        if vault_position == "Above":
-            self.player.look_up_hard()
-            vault.open()
-            if vault.is_full():
-                print("Vault is full! Pls empty!!")
-                self.player.inventory.drop_all()
-                vault.close()
-                return
-
-            print("Vault has slots left.")
-            for item in keep_items:
-                self.player.inventory.transfer_all(vault, item)
-                self.sleep(0.3)
+        self.player.look_up_hard()
+        vault.open()
+        if vault.is_full():
+            print("Vault is full! Pls empty!!")
             self.player.inventory.drop_all()
             vault.close()
+            return
+
+        print("Vault has slots left.")
+        for item in keep_items:
+            self.player.inventory.transfer_all(vault, item)
+            self.sleep(0.3)
+        self.player.inventory.drop_all()
+        vault.close()
