@@ -269,7 +269,7 @@ class GachaBot(ArkBot):
 
     def get_dust_per_hour(self) -> int:
         total_minutes = round(time.time() - self._session_start) / 60
-        return f"{(self._total_dust_made / total_minutes) * 60:_}".replace("_", " ")
+        return f"{round((self._total_dust_made / total_minutes) * 60):_}".replace("_", " ")
 
     def inform_unknown_exception(self, bed: Bed, exception: Exception) -> None:
         """Posts an image of the current screenshot alongside current
@@ -514,8 +514,9 @@ class GachaBot(ArkBot):
         self.current_bed = 0
         self._laps_completed += 1
         self._current_lap += 1
-
+        
         self.inform_lap_finished()
+        self.lap_started = time.time()
 
     def go_heal(self) -> None:
         """Goes to heal by travelling to the tek pod, trying to enter it up to
