@@ -19,7 +19,7 @@ from ark.exceptions import (
     ReceivingRemoveInventoryTimeout,
     NoGasolineError,
 )
-from ark.items import Item
+from ark.items import Item, pellet
 from bot.ark_bot import ArkBot
 
 
@@ -518,7 +518,8 @@ class CropPlot(Inventory):
                 self.take_all_items("trap")
 
             # put pellets in and close
-            player_inv.transfer_all(self)
+            if player_inv.has_item(pellet):
+                player_inv.transfer_all(self)
             self.close()
 
         except InventoryNotAccessibleError:

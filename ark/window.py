@@ -253,7 +253,9 @@ class ArkWindow:
         new_width = self.convert_point(raw_image.width, raw_image.height)
         return ImageOps.contain(raw_image, new_width, PIL.Image.Resampling.LANCZOS)
 
-    def locate_in_image(self, template: str, image, confidence: float, grayscale: bool = False):
+    def locate_in_image(
+        self, template: str, image, confidence: float, grayscale: bool = False
+    ):
         return pg.locate(template, image, confidence=confidence, grayscale=grayscale)
 
     def locate_template(
@@ -309,6 +311,7 @@ class ArkWindow:
         variance: int,
         dilate: bool = True,
         upscale: bool = False,
+        upscale_by: int = 8,
     ) -> Image.Image:
         """Denoises / Masks the passed image by the given RGB and variance.
         Useful to pre-process images for a tesseract character scan.
@@ -357,7 +360,9 @@ class ArkWindow:
 
         if upscale:
             image = Image.fromarray(image)
-            image = image.resize((image.size[0] * 8, image.size[1] * 8), 1)
+            image = image.resize(
+                (image.size[0] * upscale_by, image.size[1] * upscale_by), 1
+            )
 
         matrix_size = 2 if not upscale else 3
 

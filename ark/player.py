@@ -95,6 +95,7 @@ class Player(ArkBot):
             self.turn_90_degrees()
             self.do_crop_plot_stack()
         self.turn_90_degrees()
+        self.sleep(0.2)
 
     def do_crop_plot_stack(self) -> None:
         """Empties the current stack of crop plots.
