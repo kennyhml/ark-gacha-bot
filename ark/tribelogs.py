@@ -24,9 +24,11 @@ CONTENTS_MAPPING = {
     "destroyedl": "destroyed!",
     "destroyedl!": "destroyed!",
     "destrayed!": "destroyed!",
+    "destraved": "destroyed",
     "Giaanotosaurus": "Giganotosaurus",
     "Large Gear Trap": "Large Bear Trap",
     "C4 Charae": "C4 Charge",
+    "C4 Charce": "C4 Charge",
     "(Pin Coded!": "(Pin Coded)",
     "”": "''",
     "“": "'",
@@ -37,11 +39,15 @@ CONTENTS_MAPPING = {
     "Dcorframe": "Doorframe",
     "Ccorframe": "Doorframe",
     "Doaorframe": "Doorframe",
+    "Ceilina": "Ceiling",
     "iTek Turret!": "(Tek Turret)",
     "iTek Turret": "(Tek Turret",
     " Tek Turreti": " (Tek Turret)",
     "(Tek Turret!": "(Tek Turret)",
-    " Tek Turret)": " (Tek Turret)"
+    " Tek Turret)": " (Tek Turret)",
+    "fCarbonemvsl": "(Carbonemys)",
+    "Carbonemvs": "Carbonemys",
+    "iCarbonemysl": "(Carbonemys)",
 }
 
 # RGB to denoise with if the templates are located in the tribelog message
@@ -132,6 +138,11 @@ class TribeLog(ArkBot):
         # litle buffer in case timer pops or server lags
         self.sleep(2)
 
+    def close(self) -> None:
+        while self.is_open():
+            self.press("esc")
+            self.sleep(1)
+
     def update_tribelogs(self) -> None:
         """Returns a list of tuples containing the daytime as string and the
         corresponding log message image
@@ -139,6 +150,7 @@ class TribeLog(ArkBot):
         self.open()
         self.grab_screen(self.LOG_REGION, "temp/tribelog.png")
         log_img = Image.open("temp/tribelog.png")
+        self.close()
 
         # sort days from top to bottom by y coordinate so we can get the message frame
         day_points = self.get_day_occurrences()
@@ -177,7 +189,7 @@ class TribeLog(ArkBot):
                 if self._tribe_log:
                     self.send_alert(message)
 
-        self._tribe_log += messages
+        self._tribe_log += reversed(messages)
 
     def send_alert(self, message: TribeLogMessage) -> None:
         """Sends an alert to discord with the given message."""
@@ -205,7 +217,7 @@ class TribeLog(ArkBot):
         self.alert_webhook.send(
             avatar_url="https://i.kym-cdn.com/entries/icons/original/000/017/373/kimjongz.PNG",
             embed=embed,
-            username="Ling Ling",
+            username="Ling Ling Look Logs",
         )
 
     def get_day_occurrences(self) -> list[tuple]:
@@ -276,7 +288,6 @@ class TribeLog(ArkBot):
         # grab the rgb we need to use to denoise the image properly
         # if None there is no meaningful contents in the image
         denoise_rgb = self.get_denoise_rgb(image)
-        print(denoise_rgb)
         if not denoise_rgb:
             return None
 
@@ -371,8 +382,8 @@ class TribeLog(ArkBot):
 
         # typecast both days to integer to use integer operations
         day_int = int(day.split(" ")[1].replace(",", ""))
-        most_recent_day = int(self._tribe_log[0].day.split(" ")[1].replace(",", ""))
-
+        most_recent_day = int(self._tribe_log[-1].day.split(" ")[1].replace(",", ""))
+        print(most_recent_day)
         # check if the day to check is smaller or too high compared to our most recent day
         if day_int < most_recent_day or day_int > most_recent_day + 20:
             return True
