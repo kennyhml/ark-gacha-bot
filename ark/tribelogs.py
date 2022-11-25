@@ -16,6 +16,9 @@ CONTENTS_MAPPING = {
     "}": ")",
     "[": "(",
     "]": ")",
+    "((": "(",
+    "))": ")",
+    "Owll": "Owl)",
     "\n": " ",
     "!!": "!",
     "Lvi": "Lvl",
@@ -29,6 +32,7 @@ CONTENTS_MAPPING = {
     "Large Gear Trap": "Large Bear Trap",
     "C4 Charae": "C4 Charge",
     "C4 Charce": "C4 Charge",
+    "C4& Charae": "C4 Charge",
     "(Pin Coded!": "(Pin Coded)",
     "”": "''",
     "“": "'",
@@ -39,6 +43,7 @@ CONTENTS_MAPPING = {
     "Dcorframe": "Doorframe",
     "Ccorframe": "Doorframe",
     "Doaorframe": "Doorframe",
+    "Doarframe": "Doorframe",
     "Ceilina": "Ceiling",
     "iTek Turret!": "(Tek Turret)",
     "iTek Turret": "(Tek Turret",
@@ -47,7 +52,10 @@ CONTENTS_MAPPING = {
     " Tek Turret)": " (Tek Turret)",
     "fCarbonemvsl": "(Carbonemys)",
     "Carbonemvs": "Carbonemys",
+    "(Carbonemysl!": "(Carbonemys)!",
     "iCarbonemysl": "(Carbonemys)",
+    "iCarbonemysi": "(Carbonemys)",
+    "(Shadowmane!": "(Shadowmane)!",
 }
 
 # RGB to denoise with if the templates are located in the tribelog message
@@ -79,6 +87,7 @@ DAYTIME_MAPPING = {
     "S": "5",
     "B": "8",
     "Dayy": "Day",
+    ";": "",
 }
 
 
@@ -130,7 +139,8 @@ class TribeLog(ArkBot):
         c = 0
         while not self.is_open():
             self.press(self.keybinds.logs)
-            self.sleep(1)
+            if self.await_open():
+                break
             c += 1
             if c > 20:
                 raise LogsNotOpenedError
@@ -139,14 +149,39 @@ class TribeLog(ArkBot):
         self.sleep(2)
 
     def close(self) -> None:
+        """Closes the tribelogs."""
         while self.is_open():
             self.press("esc")
-            self.sleep(1)
+            self.await_closed()
+
+    def await_open(self) -> bool:
+        """Awaits for the logs to be open to be time efficient.
+
+        to do: write a parent `await` function that does this stuff
+        """
+        c = 0
+        while not self.is_open():
+            self.sleep(0.1)
+            c += 1
+            if c > 10:
+                return False
+        return True
+
+    def await_closed(self) -> bool:
+        """Awaits for the logs to be open to be time efficient."""
+        c = 0
+        while self.is_open():
+            self.sleep(0.1)
+            c += 1
+            if c > 10:
+                return False
+        return True
 
     def update_tribelogs(self) -> None:
         """Returns a list of tuples containing the daytime as string and the
         corresponding log message image
         """
+        print("Updating tribelogs...")
         self.open()
         self.grab_screen(self.LOG_REGION, "temp/tribelog.png")
         log_img = Image.open("temp/tribelog.png")
@@ -155,6 +190,7 @@ class TribeLog(ArkBot):
         # sort days from top to bottom by y coordinate so we can get the message frame
         day_points = self.get_day_occurrences()
         days_in_order = sorted([day for day in day_points], key=lambda t: t[1])
+        print(f"{len(day_points)} days found to check...")
 
         messages = []
         for i, box in enumerate(days_in_order):
@@ -186,7 +222,7 @@ class TribeLog(ArkBot):
                 message = TribeLogMessage(day, *content)
                 messages.append(message)
 
-                if self._tribe_log:
+                if self._tribe_log or 1:
                     self.send_alert(message)
 
         self._tribe_log += reversed(messages)
@@ -214,7 +250,14 @@ class TribeLog(ArkBot):
         embed.set_thumbnail(url=thumbnail_url)
         embed.set_footer(text="Ling Ling on top!")
 
+        # mention if a relevant event happened
+        mention = any(
+            msg in message.content for msg in ("enemy survivor", "(Pin Coded)")
+        )
+
+        # send the message
         self.alert_webhook.send(
+            content="@ everyone" if mention else "",
             avatar_url="https://i.kym-cdn.com/entries/icons/original/000/017/373/kimjongz.PNG",
             embed=embed,
             username="Ling Ling Look Logs",
@@ -308,8 +351,12 @@ class TribeLog(ArkBot):
         for c in CONTENTS_MAPPING:
             raw_res = raw_res.replace(c, CONTENTS_MAPPING[c])
         filtered_res = raw_res
+        event = EVENT_MAPPING[denoise_rgb]
 
-        return EVENT_MAPPING[denoise_rgb], filtered_res
+        if event == "Tek Sensor triggered!":
+            sensor_event = self.get_sensor_event(image)
+            filtered_res = f"'{filtered_res.rstrip()}' triggered by {sensor_event}!"
+        return event, filtered_res
 
     def get_denoise_rgb(self, image: str | Image.Image | ScreenShot) -> tuple:
         """Gets the RGB to denoise for in the given image.
@@ -364,6 +411,23 @@ class TribeLog(ArkBot):
             ):
                 return rgb
 
+    def get_sensor_event(self, image) -> str:
+        if (
+            self.locate_in_image(
+                "templates/tribelog_enemy_survivor.png", image, confidence=0.8
+            )
+            is not None
+        ):
+            return "an enemy survivor"
+        if (
+            self.locate_in_image(
+                "templates/tribelog_enemy_dino.png", image, confidence=0.8
+            )
+            is not None
+        ):
+            return "an enemy dinosaur"
+        return "something (friendly or undetermined)"
+
     def day_is_known(self, day) -> bool:
         """Checks if the given day has already been recognized.
 
@@ -383,7 +447,7 @@ class TribeLog(ArkBot):
         # typecast both days to integer to use integer operations
         day_int = int(day.split(" ")[1].replace(",", ""))
         most_recent_day = int(self._tribe_log[-1].day.split(" ")[1].replace(",", ""))
-        print(most_recent_day)
+
         # check if the day to check is smaller or too high compared to our most recent day
         if day_int < most_recent_day or day_int > most_recent_day + 20:
             return True
