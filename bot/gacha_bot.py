@@ -14,7 +14,7 @@ from bot.ark_bot import ArkBot, TerminatedException
 from bot.crystal_collection import CrystalCollection
 from ark.console import Console
 from bot.settings import DiscordSettings, TowerSettings
-
+from ark.tribelogs import TribeLog
 
 class GachaBot(ArkBot):
 
@@ -26,10 +26,11 @@ class GachaBot(ArkBot):
     def __init__(self) -> None:
         super().__init__()
         self.load_settings()
+        self.create_webhooks()
+        self.tribelogs = TribeLog(self.alert_webhook, self.logs_webhook)
         self.seed_beds = self.create_seed_beds()
         self.crystal_beds = self.create_crystal_beds()
         self.tek_pod = self.create_tek_pod()
-        self.create_webhooks()
 
         self._ytraps_deposited = 0
         self._total_dust_made = 0
@@ -269,7 +270,9 @@ class GachaBot(ArkBot):
 
     def get_dust_per_hour(self) -> int:
         total_minutes = round(time.time() - self._session_start) / 60
-        return f"{round((self._total_dust_made / total_minutes) * 60):_}".replace("_", " ")
+        return f"{round((self._total_dust_made / total_minutes) * 60):_}".replace(
+            "_", " "
+        )
 
     def inform_unknown_exception(self, bed: Bed, exception: Exception) -> None:
         """Posts an image of the current screenshot alongside current
@@ -514,7 +517,7 @@ class GachaBot(ArkBot):
         self.current_bed = 0
         self._laps_completed += 1
         self._current_lap += 1
-        
+
         self.inform_lap_finished()
         self.lap_started = time.time()
 
@@ -536,9 +539,7 @@ class GachaBot(ArkBot):
 
             self.tek_pod.heal(60)
             self.tek_pod.leave()
-            self.inform_healed_up(
-                round(time.time() - start), time.time() - self._least_healed
-            )
+            self.inform_healed_up(round(time.time() - start), self._least_healed)
             self._least_healed = time.time()
             return
 

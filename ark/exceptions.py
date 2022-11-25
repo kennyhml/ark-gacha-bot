@@ -35,3 +35,6 @@ class BedNotAccessibleError(Exception):
 
 class PlayerDidntTravelError(Exception):
     """Raised when the travel screen could not be detected."""
+
+class LogsNotOpenedError(Exception):
+    """Raised when the logs could not be opened"""

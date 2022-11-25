@@ -258,6 +258,18 @@ class ArkWindow:
     ):
         return pg.locate(template, image, confidence=confidence, grayscale=grayscale)
 
+    def locate_all_in_image(
+        self, template: str, image, confidence: float, grayscale: bool = False
+    ):
+        return self.filter_points(
+            set(
+                pg.locateAll(
+                    template, image, confidence=confidence, grayscale=grayscale
+                )
+            ),
+            min_dist=15,
+        )
+
     def locate_template(
         self,
         template: str,
@@ -339,7 +351,8 @@ class ArkWindow:
             image = np.asarray(image)
 
         image = cv.cvtColor(image, cv.COLOR_RGB2BGR)
-
+        image = cv.cvtColor(image, cv.COLOR_RGB2BGR)
+        
         # set color range (filering the color of the chars here)
         lower_bound = (
             max(0, denoise_rgb[0] - variance),
