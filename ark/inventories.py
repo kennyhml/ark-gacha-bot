@@ -193,7 +193,7 @@ class Inventory(ArkBot):
         c = 0
         while self.is_open():
             c += 1
-            self.press("esc")
+            self.press(self.keybinds.target_inventory)
             if self.await_closed():
                 break
 
@@ -221,7 +221,8 @@ class Inventory(ArkBot):
         # write the name into the search bar
         self.click_search(delete_prior=False if term == "trap" else False)
         pg.typewrite(term.lower(), interval=0.001)
-
+        self.press("esc")
+        
     def take_all(self) -> None:
         """Clicks the take all button"""
         self.click_at(self.TRANSFER_ALL)

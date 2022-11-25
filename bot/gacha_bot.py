@@ -60,6 +60,7 @@ class GachaBot(ArkBot):
     def current_bed(self, value: int) -> None:
         self._current_bed = value
 
+
     def inform_started(self) -> None:
         """Sends a message to discord that the bot has been started"""
         self.send_to_discord(
@@ -175,6 +176,8 @@ class GachaBot(ArkBot):
             # spawn at crystal bed and pick up the crystals
             crystals = CrystalCollection(self.player)
             self.beds.travel_to(bed, self._at_pod)
+            self.tribelogs.check_tribelogs()
+            self.player.await_spawned()
             crystals.pick_crystals()
 
             # open the crystals and deposit the items into dedis
@@ -222,6 +225,8 @@ class GachaBot(ArkBot):
         """
         gacha = Gacha()
         self.beds.travel_to(bed, self._at_pod)
+        self.tribelogs.check_tribelogs()
+        self.player.await_spawned()
         start = time.time()
 
         try:
@@ -231,8 +236,9 @@ class GachaBot(ArkBot):
                     Console().set_gamma()
 
                 gacha.open()
+                gacha.search_for("ll")
                 if gacha.has_item(pellet):
-                    gacha.take_all_items("ll")
+                    gacha.take_all()
                     self.player.inventory.await_items_added()
                     self.sleep(0.5)
                     self.player.inventory.transfer_some_pellets(self.player.inventory)
@@ -530,6 +536,8 @@ class GachaBot(ArkBot):
 
         # travel to the pod
         self.beds.travel_to(self.tek_pod)
+        self.tribelogs.check_tribelogs()
+        self.player.await_spawned()
 
         # try to enter the pod 3 times
         for _ in range(3):

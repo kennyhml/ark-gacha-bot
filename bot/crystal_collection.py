@@ -33,12 +33,20 @@ class CrystalCollection(ArkBot):
             self.keybinds.hotbar_0,
         ]
 
+    def typewrite(self, message) -> None:
+        return super().typewrite(message)
+
     def walk_into_back(self) -> None:
         """Walks into the back of the pit, essentially does it twice
         to avoid not picking crystals due to lag.
         """
         self.player.walk("s", duration=3)
-        self.sleep(6)
+
+        self.press(self.keybinds.use)
+        if self.player.await_item_added():
+            return
+
+        self.sleep(3)
         self.player.walk("s", duration=3)
 
     def walk_forward_spam_f(self) -> None:
@@ -61,7 +69,7 @@ class CrystalCollection(ArkBot):
         """
         # look up further (so the deposit text 100% appears)
         dedi = DedicatedStorage()
-        self.player.turn_y_by(-60)
+        self.player.turn_y_by(-70)
 
         # try to access the dedi, if its not possible rewalk
         while not dedi.can_be_opened():
@@ -178,23 +186,34 @@ class CrystalCollection(ArkBot):
     def deposit_items(self, drop_items: list, keep_items: list) -> None:
         vault = Vault()
 
-        self.player.inventory.open()
-        for item in drop_items:
-            self.player.inventory.drop_all_items(item)
-            self.sleep(0.3)
-        self.player.inventory.close()
+        # put the grinding items in the left vault
+        self.player.turn_90_degrees("left")
+        vault.open()
+        if not vault.is_full():
+            # drop the shitty quality ones
+            for item in drop_items:
+                self.player.inventory.drop_all_items(item)
+                self.sleep(0.3)
 
+            # transfer all the grinding items
+            for item in ["riot", "ass", "fab", "miner", "pump"]:
+                self.player.inventory.transfer_all(vault, item)
+                self.sleep(0.2)
+
+        # turn to the upper vault
+        vault.close()
+        self.player.turn_90_degrees("right")
         self.player.look_up_hard()
         vault.open()
+
         if vault.is_full():
-            print("Vault is full! Pls empty!!")
             self.player.inventory.drop_all()
             vault.close()
             return
 
-        print("Vault has slots left.")
-        for item in keep_items:
+        # put structure stuff in it
+        for item in ["gate", "platform"]:
             self.player.inventory.transfer_all(vault, item)
-            self.sleep(0.3)
+            self.sleep(0.2)
         self.player.inventory.drop_all()
         vault.close()

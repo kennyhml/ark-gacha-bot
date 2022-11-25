@@ -100,10 +100,7 @@ class BedMap(ArkBot):
                 self.click_spawn_button()
 
                 # wait for flash screen, then the HP bar
-
                 self.await_travelling()
-                self.sleep(2)
-                player.await_spawned()
                 return
 
             except PlayerDidntTravelError:

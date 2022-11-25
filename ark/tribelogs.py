@@ -6,7 +6,7 @@ import numpy as np
 from mss.screenshot import ScreenShot
 from PIL import Image
 from pytesseract import pytesseract as tes
-
+from threading import Thread
 from ark.exceptions import LogsNotOpenedError
 from bot.ark_bot import ArkBot
 
@@ -34,6 +34,7 @@ CONTENTS_MAPPING = {
     "C4 Charce": "C4 Charge",
     "C4& Charae": "C4 Charge",
     "(Pin Coded!": "(Pin Coded)",
+    "(Pin Codedl": "(Pin Coded)",
     "”": "''",
     "“": "'",
     '"': "'",
@@ -45,6 +46,7 @@ CONTENTS_MAPPING = {
     "Doaorframe": "Doorframe",
     "Doarframe": "Doorframe",
     "Ceilina": "Ceiling",
+    "Tek Ficor": "Tek Floor",
     "iTek Turret!": "(Tek Turret)",
     "iTek Turret": "(Tek Turret",
     " Tek Turreti": " (Tek Turret)",
@@ -177,16 +179,19 @@ class TribeLog(ArkBot):
                 return False
         return True
 
+    def check_tribelogs(self) -> None:
+        print("Updating tribelogs...")
+        self.open()
+        self.grab_screen(self.LOG_REGION, "temp/tribelog.png")
+        self.close()
+        Thread(target=self.update_tribelogs, name="Updating tribelogs...").start()
+
     def update_tribelogs(self) -> None:
         """Returns a list of tuples containing the daytime as string and the
         corresponding log message image
         """
-        print("Updating tribelogs...")
-        self.open()
-        self.grab_screen(self.LOG_REGION, "temp/tribelog.png")
-        log_img = Image.open("temp/tribelog.png")
-        self.close()
 
+        log_img = Image.open("temp/tribelog.png")
         # sort days from top to bottom by y coordinate so we can get the message frame
         day_points = self.get_day_occurrences()
         days_in_order = sorted([day for day in day_points], key=lambda t: t[1])
@@ -222,10 +227,18 @@ class TribeLog(ArkBot):
                 message = TribeLogMessage(day, *content)
                 messages.append(message)
 
-                if self._tribe_log or 1:
+                if self._tribe_log:
                     self.send_alert(message)
 
         self._tribe_log += reversed(messages)
+        self.delete_old_logs()
+        self.send_to_discord(
+            self.log_webhook,
+            "Current tribelogs:",
+            file="temp/tribelog.png",
+            name="Ling Ling Logs",
+            avatar="https://i.kym-cdn.com/entries/icons/original/000/017/373/kimjongz.PNG",
+        )
 
     def send_alert(self, message: TribeLogMessage) -> None:
         """Sends an alert to discord with the given message."""
@@ -251,13 +264,11 @@ class TribeLog(ArkBot):
         embed.set_footer(text="Ling Ling on top!")
 
         # mention if a relevant event happened
-        mention = any(
-            msg in message.content for msg in ("enemy survivor", "(Pin Coded)")
-        )
+        mention = any(msg in message.content for msg in ("enemy survivor", "Pin Coded"))
 
         # send the message
         self.alert_webhook.send(
-            content="@ everyone" if mention else "",
+            content="@everyone" if mention else "",
             avatar_url="https://i.kym-cdn.com/entries/icons/original/000/017/373/kimjongz.PNG",
             embed=embed,
             username="Ling Ling Look Logs",
@@ -454,5 +465,12 @@ class TribeLog(ArkBot):
 
         # check if any of the saved messages already contain the day
         for message in self._tribe_log:
-            if day == message.day:
+            if day.strip() == message.day.strip():
                 return True
+
+    def delete_old_logs(self) -> None:
+        if len(self._tribe_log) < 30:
+            return
+        old_length = len(self._tribe_log)
+        self._tribe_log = self._tribe_log[-30:]
+        print(f"Deleted {old_length - len(self._tribe_log)} old tribelog messages.")

@@ -271,3 +271,15 @@ class Player(ArkBot):
         self.pick_up_bag()
         self.crouch()
         self.sleep(0.5)
+        
+    def item_added(self) -> bool:
+        return self.locate_template("templates/added.png", region=(0, 450, 314, 240), confidence=0.75) is not None
+
+    def await_item_added(self) -> None:
+        c = 0
+        while not self.item_added():
+            self.sleep(0.1)
+            c += 1
+            if c > 10:
+                return False
+        return True
