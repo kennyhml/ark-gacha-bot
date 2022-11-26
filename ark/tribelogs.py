@@ -1,4 +1,7 @@
+import logging
 from dataclasses import dataclass
+from datetime import datetime
+from threading import Thread
 
 import cv2 as cv
 import discord
@@ -6,9 +9,19 @@ import numpy as np
 from mss.screenshot import ScreenShot
 from PIL import Image
 from pytesseract import pytesseract as tes
-from threading import Thread
+
 from ark.exceptions import LogsNotOpenedError
 from bot.ark_bot import ArkBot
+
+now = datetime.now()
+now = now.strftime("%d-%m-%H-%M")
+logging.basicConfig(
+    level=logging.INFO,
+    filename=f"log/tribelogs {now}.log",
+    filemode="w",
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
 
 # common tesseract mistakes to account for in any tribelog messages
 CONTENTS_MAPPING = {
@@ -180,7 +193,7 @@ class TribeLog(ArkBot):
         return True
 
     def check_tribelogs(self) -> None:
-        print("Updating tribelogs...")
+        logging.log("Updating tribelogs...")
         self.open()
         self.grab_screen(self.LOG_REGION, "temp/tribelog.png")
         self.close()
@@ -195,7 +208,7 @@ class TribeLog(ArkBot):
         # sort days from top to bottom by y coordinate so we can get the message frame
         day_points = self.get_day_occurrences()
         days_in_order = sorted([day for day in day_points], key=lambda t: t[1])
-        print(f"{len(day_points)} days found to check...")
+        logging.log(f"{len(day_points)} days found to check...")
 
         messages = []
         for i, box in enumerate(days_in_order):
@@ -222,14 +235,17 @@ class TribeLog(ArkBot):
             # OCR the contents, None if its irrelevant
             if not (content := self.get_message_contents(log_img.crop(message_region))):
                 continue
+            logging.log(f"Found {day} with contents {content}")
 
             if not self.day_is_known(day):
                 message = TribeLogMessage(day, *content)
                 messages.append(message)
 
                 if self._tribe_log:
+                    logging.log(f"Sending an alert for {message}!")
                     self.send_alert(message)
 
+        logging.log(f"New messages added: {messages}!")
         self._tribe_log += reversed(messages)
         self.delete_old_logs()
         self.send_to_discord(
@@ -239,6 +255,7 @@ class TribeLog(ArkBot):
             name="Ling Ling Logs",
             avatar="https://i.kym-cdn.com/entries/icons/original/000/017/373/kimjongz.PNG",
         )
+        logging.log(f"Updated tribelog: {self._tribe_log}")
 
     def send_alert(self, message: TribeLogMessage) -> None:
         """Sends an alert to discord with the given message."""
@@ -318,7 +335,7 @@ class TribeLog(ArkBot):
                 return None
 
         except Exception as e:
-            print(f"Day {day_string} invalid!\n{e}")
+            logging.log(logging.WARNING, f"Day {day_string} invalid!\n{e}")
             return None
 
         return day_string
@@ -451,6 +468,7 @@ class TribeLog(ArkBot):
         ------------
         `True` if the day is already in the database else `False`
         """
+        logging.log(f"Checking if {day} is already in database.")
         # initial log save, no days known yet
         if not self._tribe_log:
             return False
@@ -470,7 +488,9 @@ class TribeLog(ArkBot):
 
     def delete_old_logs(self) -> None:
         if len(self._tribe_log) < 30:
+            logging.log("Not enough tribelog events to delete.")
             return
+
         old_length = len(self._tribe_log)
         self._tribe_log = self._tribe_log[-30:]
-        print(f"Deleted {old_length - len(self._tribe_log)} old tribelog messages.")
+        logging.log(f"Deleted {old_length - len(self._tribe_log)} old tribelog messages.")

@@ -237,6 +237,7 @@ class GachaBot(ArkBot):
 
                 gacha.open()
                 gacha.search_for("ll")
+                self.sleep(0.3)
                 if gacha.has_item(pellet):
                     gacha.take_all()
                     self.player.inventory.await_items_added()
