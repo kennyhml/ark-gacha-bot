@@ -14,7 +14,7 @@ from bot.ark_bot import ArkBot, TerminatedException
 from bot.crystal_collection import CrystalCollection
 from ark.console import Console
 from bot.settings import DiscordSettings, TowerSettings
-from ark.tribelogs import TribeLog
+from ark.tribelog import TribeLog
 
 class GachaBot(ArkBot):
 

@@ -108,26 +108,26 @@ class Inventory(ArkBot):
     def await_open(self) -> bool:
         """Waits for the inventory to be open, for time efficiency.
 
-        Returns `True` if the inventory opened within 1 second else `False`
+        Returns `True` if the inventory opened within 5 second else `False`
         """
         c = 0
         while not self.is_open():
             self.sleep(0.1)
             c += 1
-            if c > 10:
+            if c > 40:
                 return False
         return True
 
     def await_closed(self) -> bool:
         """Waits for the inventory to be closed, for time efficiency.
 
-        Returns `True` if the inventory closed within 1 second else `False`
+        Returns `True` if the inventory closed within 5 second else `False`
         """
         c = 0
         while self.is_open():
             c += 1
             self.sleep(0.1)
-            if c > 10:
+            if c > 40:
                 return False
         return True
 
@@ -152,14 +152,14 @@ class Inventory(ArkBot):
     def open(self) -> None:
         """Opens the inventory using the 'target inventory' keybind.
 
-        If the inventory did not opened within 2 seconds, it will use the
+        If the inventory did not opened within 5 seconds, it will use the
         action wheel to determine if we are able to open it.
 
         Raises:
         ----------
         `InventoryNotAccessibleError` if the structure / dino name does not
         appear in the action wheel upon checking or if the inventory just cannot
-        be opened after 60 seconds, indicating a server or game crash.
+        be opened after 30 seconds, indicating a server or game crash.
 
         """
         c = 0
@@ -170,13 +170,13 @@ class Inventory(ArkBot):
             if self.await_open():
                 break
 
-            # 2 seconds passed, check if we can access it at all
+            # 10 seconds passed, check if we can access it at all
             if c == 2:
                 if not self.in_access_range():
                     raise InventoryNotAccessibleError(self._name)
                 print("Timer appears to be popping, or the server is lagging!")
 
-            if c > 60:
+            if c >= 6:
                 raise InventoryNotAccessibleError(self._name)
 
         self.await_receiving_remove_inventory()
@@ -197,7 +197,7 @@ class Inventory(ArkBot):
             if self.await_closed():
                 break
 
-            if c > 30:
+            if c >= 6:
                 raise InventoryNotClosableError(self._name)
         self.sleep(0.2)
 
@@ -215,12 +215,19 @@ class Inventory(ArkBot):
     def search_for(self, term: str) -> None:
         """Searches for a term in the target inventory using pyautogui typewrite"""
         self.check_status()
+
+        # double check to ensure the inventory is really open
+        # if not self.is_open():
+        #    self.open()
+
         if isinstance(term, Item):
             term = term.name
 
         # write the name into the search bar
-        self.click_search(delete_prior=False if term == "trap" else False)
+        self.click_search(delete_prior=term != "trap")
         pg.typewrite(term.lower(), interval=0.001)
+
+        # escape out of the searchbar so presing f closes the inventory
         self.press("esc")
         
     def take_all(self) -> None:

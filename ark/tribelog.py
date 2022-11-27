@@ -13,11 +13,12 @@ from pytesseract import pytesseract as tes
 from ark.exceptions import LogsNotOpenedError
 from bot.ark_bot import ArkBot
 
+# configure logging file, helps debugging why certain stuff didnt get posted
 now = datetime.now()
 now = now.strftime("%d-%m-%H-%M")
 logging.basicConfig(
     level=logging.INFO,
-    filename=f"log/tribelogs {now}.log",
+    filename=f"logs/tribelogs {now}.log",
     filemode="w",
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
@@ -46,6 +47,7 @@ CONTENTS_MAPPING = {
     "C4 Charae": "C4 Charge",
     "C4 Charce": "C4 Charge",
     "C4& Charae": "C4 Charge",
+    "C4 Charace": "C4 Charge",
     "(Pin Coded!": "(Pin Coded)",
     "(Pin Codedl": "(Pin Coded)",
     "”": "''",
@@ -71,6 +73,8 @@ CONTENTS_MAPPING = {
     "iCarbonemysl": "(Carbonemys)",
     "iCarbonemysi": "(Carbonemys)",
     "(Shadowmane!": "(Shadowmane)!",
+    "Desmadus": "Desmodus",
+    "Desmoadus": "Desmodus"
 }
 
 # RGB to denoise with if the templates are located in the tribelog message
@@ -487,6 +491,7 @@ class TribeLog(ArkBot):
                 return True
 
     def delete_old_logs(self) -> None:
+        """Deletes all but the past 30 messages in the tribelogs."""
         if len(self._tribe_log) < 30:
             logging.log("Not enough tribelog events to delete.")
             return
