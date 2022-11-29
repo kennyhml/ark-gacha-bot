@@ -21,6 +21,7 @@ from ark.exceptions import (
 )
 from ark.items import Item, pellet
 from bot.ark_bot import ArkBot
+import math
 
 
 class Inventory(ArkBot):
@@ -66,6 +67,31 @@ class Inventory(ArkBot):
             )
             is not None
         )
+
+    def get_amount_transferred(self) -> int:
+        img = self.grab_screen((168, 1036, 217, 33), convert=False)
+        img = self.denoise_text(img, denoise_rgb=(255, 255, 255), variance=5)
+
+        raw_result = tes.image_to_string(
+            img,
+            config="-c tessedit_char_whitelist='0123456789liIxObL ' --psm 7 -l eng",
+        )
+        try:
+            # replace all the mistaken "1"s
+            for char in ["I", "l", "i", "b", "L"]:
+                raw_result = raw_result.replace(char, "1")
+
+            # replace mistaken "0"s, strip off newlines
+            filtered = raw_result.replace("O", "0").replace("~", "x").rstrip()
+
+            # find the x to slice out the actual number
+            x = filtered.find("x")
+            if x == -1 or not filtered or filtered == "x":
+                return None
+
+            return int(filtered[:x])
+        except:
+            return None
 
     def has_item(self, item: Item) -> bool:
         """Checks if the player inventory has the passed item.
@@ -229,7 +255,7 @@ class Inventory(ArkBot):
 
         # escape out of the searchbar so presing f closes the inventory
         self.press("esc")
-        
+
     def take_all(self) -> None:
         """Clicks the take all button"""
         self.click_at(self.TRANSFER_ALL)
@@ -304,7 +330,7 @@ class Inventory(ArkBot):
 
     def craft(self, item, amount: int, spam: bool = False) -> None:
         self.search_for(item)
-        self.click_at(1294, 290, delay=0.3)
+        self.click_at(1294, 290, delay=1)
 
         for _ in range(amount):
             self.press("e")
@@ -349,7 +375,48 @@ class PlayerInventory(Inventory):
             if c > 20:
                 raise InventoryNotAccessibleError(self._name)
 
+    def transfer_amount(self, item: str, amount: int, stacksize: int) -> None:
+        """Transfers the amount of the given item into the target inventory.
+        After each transfer, a check on the amount is made that may cancel the transfers if 
+        the OCR'd amount is in a valid range.
+
+        Parameters:
+        -----------
+        item :class:`str`:
+            The item to search for before transferring
+
+        amount :class:`int`:
+            The quantity of items to be transferred
+        
+        stacksize :class:`int`
+            The amount the item stacks to to calculate transfers
+        """
+        # make sure we dont transfer any other items
+        self.search_for(item)
+
+        # get total row transfers, add a little buffer for lag (1.5 by default)
+        total_transfers = round((int(math.ceil(amount / 100.0)) * 100 / stacksize) / 6 * 2)
+
+        # transfer the items
+        for _ in range(total_transfers):
+            for pos in [(167 + (i * 95), 282) for i in range(6)]:
+                pg.moveTo(pos)
+                pg.press("t")
+
+                # OCR the total amount transferred, None if undetermined
+                transferred = self.get_amount_transferred()
+                if not transferred:
+                    continue
+                
+                print(f"Transferred {transferred}...")
+
+                # if the amount of items we transferred makes sense we can cancel
+                if amount < transferred < amount + 3000:
+                    print("Enough items transferred!")
+                    return
+
     def has_item(self, item: Item) -> bool:
+        """Checks if the inventory contains the given item."""
         return (
             self.locate_template(
                 item.inventory_icon, region=self.ITEM_REGION, confidence=0.8
@@ -358,17 +425,20 @@ class PlayerInventory(Inventory):
         )
 
     def find_item(self, item: Item | str) -> tuple | None:
+        """Returns the position of the given item within the inventory."""
         if isinstance(item, Item):
             item = item.inventory_icon
         return self.locate_template(item, region=self.ITEM_REGION, confidence=0.8)
 
     def find_items(self, item: Item | str) -> tuple | None:
+        """Returns all positions of the given item within the inventory."""
         if isinstance(item, Item):
             item = item.inventory_icon
 
         return self.locate_all_template(item, region=self.ITEM_REGION, confidence=0.8)
 
     def count_item(self, item: Item | str) -> int:
+        """Returns the amount of stacks of the given item located within the inventory."""
         if isinstance(item, Item):
             item = item.inventory_icon
 
@@ -377,6 +447,7 @@ class PlayerInventory(Inventory):
         )
 
     def has_pellets(self) -> bool:
+        """Checks whether the player has pellets."""
         return (
             self.locate_template(
                 "templates/pellet.png", region=self.ITEM_REGION, confidence=0.75
@@ -391,6 +462,7 @@ class PlayerInventory(Inventory):
         )
 
     def await_items_added(self) -> None:
+        """Waits for items to be added to the inventory"""
         c = 0
         while not self.item_added():
             c += 1

@@ -352,7 +352,7 @@ class ArkWindow:
 
         image = cv.cvtColor(image, cv.COLOR_RGB2BGR)
         image = cv.cvtColor(image, cv.COLOR_RGB2BGR)
-        
+
         # set color range (filering the color of the chars here)
         lower_bound = (
             max(0, denoise_rgb[0] - variance),

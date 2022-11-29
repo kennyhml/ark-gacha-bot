@@ -185,6 +185,7 @@ class CrystalCollection(ArkBot):
 
     def deposit_items(self, drop_items: list, keep_items: list) -> None:
         vault = Vault()
+        vault_full = False
 
         # put the grinding items in the left vault
         self.player.turn_90_degrees("left")
@@ -199,6 +200,8 @@ class CrystalCollection(ArkBot):
             for item in ["riot", "ass", "fab", "miner", "pump"]:
                 self.player.inventory.transfer_all(vault, item)
                 self.sleep(0.2)
+        else:
+            vault_full = True
 
         # turn to the upper vault
         vault.close()
@@ -209,7 +212,7 @@ class CrystalCollection(ArkBot):
         if vault.is_full():
             self.player.inventory.drop_all()
             vault.close()
-            return
+            return vault_full
 
         # put structure stuff in it
         for item in ["gate", "platform"]:
@@ -217,3 +220,5 @@ class CrystalCollection(ArkBot):
             self.sleep(0.2)
         self.player.inventory.drop_all()
         vault.close()
+
+        return vault_full

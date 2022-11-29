@@ -15,6 +15,8 @@ from bot.crystal_collection import CrystalCollection
 from ark.console import Console
 from bot.settings import DiscordSettings, TowerSettings
 from ark.tribelog import TribeLog
+from bot.grind_bot import GrindBot
+
 
 class GachaBot(ArkBot):
 
@@ -28,6 +30,7 @@ class GachaBot(ArkBot):
         self.load_settings()
         self.create_webhooks()
         self.tribelogs = TribeLog(self.alert_webhook, self.logs_webhook)
+        self.grind_station = GrindBot(self.create_grinder_bed())
         self.seed_beds = self.create_seed_beds()
         self.crystal_beds = self.create_crystal_beds()
         self.tek_pod = self.create_tek_pod()
@@ -59,7 +62,6 @@ class GachaBot(ArkBot):
     @current_bed.setter
     def current_bed(self, value: int) -> None:
         self._current_bed = value
-
 
     def inform_started(self) -> None:
         """Sends a message to discord that the bot has been started"""
@@ -134,6 +136,9 @@ class GachaBot(ArkBot):
             (self.tower_settings.bed_x, self.tower_settings.bed_y),
         )
 
+    def create_grinder_bed(self) -> Bed:
+        return Bed("grinding", (self.tower_settings.bed_x, self.tower_settings.bed_y))
+
     def load_settings(self) -> None:
         """Loads the configuration for the selected tower.
         Uses dactite.from_dict to load the dictionary into corresponding dataclasses.
@@ -159,7 +164,7 @@ class GachaBot(ArkBot):
             print(f"CRITICAL! Error loading settings!\n{e}")
             self._running = False
 
-    def do_crystal_station(self, bed: Bed) -> None:
+    def do_crystal_station(self, bed: Bed) -> bool:
         """Completes the crystal collection station of the given bed.
 
         Travels to the crystal station, picks, opens and deposits crystals and
@@ -186,7 +191,7 @@ class GachaBot(ArkBot):
             self._first_pickup = False
 
             # put items into vault
-            crystals.deposit_items(
+            vault_full = crystals.deposit_items(
                 self.tower_settings.drop_items,
                 self.tower_settings.keep_items,
             )
@@ -197,6 +202,8 @@ class GachaBot(ArkBot):
             self._total_pickups += 1
             self._total_dust_made += resources_deposited["Element Dust"]
             self._total_bps_made += resources_deposited["Black Pearl"]
+
+            return vault_full
 
         except TerminatedException:
             pass
@@ -493,6 +500,12 @@ class GachaBot(ArkBot):
         """Checks if more time than set passed since we last emptied the crystal collection"""
         return (time.time() - self.last_emptied) > self.tower_settings.crystal_interval
 
+    def electronics_need_requeue(self) -> bool:
+        return (
+            self.grind_station.session_cost is not None
+            and (time.time() - self.grind_station.last_crafted) > 240
+        )
+
     def do_next_task(self) -> None:
         """Gacha bot main call method, runs the next task in line. First checks
         if the player needs to go into the tek pod, but it is not actually considered
@@ -501,14 +514,25 @@ class GachaBot(ArkBot):
         # check if we need to go heal
         if healed := self.player.needs_recovery():
             self.go_heal()
-
         self._at_pod = healed
+
+        # check if any electronics are crafting and if they need to be requeued
+        if self.electronics_need_requeue():
+            # false if all needed electronics are crafted, start crafting
+            if not self.grind_station.craft_needed_electronics():
+                self.grind_station.craft_turrets()
+                # reset the grind bot
+                self.grind_station = GrindBot(self.create_grinder_bed())
 
         # check if its time to pick crystals
         if self.crystals_need_pickup() and self._ytraps_deposited > 2000:
             for bed in self.crystal_beds:
-                self.do_crystal_station(bed)
-            self.last_emptied = time.time()
+                # returns true if the vault is filled and we need to start grinding
+                if self.do_crystal_station(bed):
+                    self.last_emptied = time.time()
+                    self.grind_station.grind_all_gear()
+                    return
+                self.last_emptied = time.time()
             return
 
         # do regular gacha seeding task

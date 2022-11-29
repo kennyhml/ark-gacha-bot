@@ -1,13 +1,12 @@
+import time
 from itertools import cycle
 from math import floor
 
-import cv2 as cv
-import numpy as np
 import pydirectinput as input
 from PIL import Image
 from pytesseract import pytesseract as tes
 
-from ark.beds import BedMap
+from ark.beds import Bed, BedMap
 from ark.inventories import DedicatedStorage, Grinder, Inventory, Vault
 from ark.items import *
 from ark.player import Player
@@ -23,7 +22,7 @@ class GrindBot(ArkBot):
     Allows ling ling to spawn at a grind bed and turn grinded resources into structures.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, bed: Bed) -> None:
         super().__init__()
         self.player = Player()
         self.beds = BedMap()
@@ -31,6 +30,12 @@ class GrindBot(ArkBot):
         self.vault = Vault()
         self.dedis = DedicatedStorage()
         self.exo_mek = Inventory("Exo Mek", "exo_mek")
+        self.bed = bed
+        self.electronics_to_craft = 0
+        self.electronics_crafted = 0
+        self.session_cost = None
+        self.session_turrets = 0
+        self.last_crafted = None
 
         self.current_station = "Gear Vault"
 
@@ -40,7 +45,7 @@ class GrindBot(ArkBot):
             "Vault": (self.player.turn_x_by, -95),
             "Crystal": (self.player.turn_x_by, -70),
             "Hide": (self.player.turn_y_by, 40),
-            "Metal": (self.player.turn_x_by, -60),
+            "Ingot": (self.player.turn_x_by, -60),
             "Electronics": (self.player.turn_y_by, -40),
             "Pearls": (self.player.turn_x_by, -60),
             "Paste": (self.player.turn_y_by, 40),
@@ -158,6 +163,7 @@ class GrindBot(ArkBot):
         self.sleep(0.5)
         if not self.vault.has_item(item):
             return False
+        print(f"Vault has {item.name}!")
 
         self.vault.take_all()
         self.vault.close()
@@ -179,7 +185,7 @@ class GrindBot(ArkBot):
 
         self.turn_to("Grinder")
         self.player.do_drop_script(metal_ingot, self.grinder)
-        self.resync_to_vault()
+        self.player.turn_y_by(-163)
 
         self.deposit(metal_ingot)
 
@@ -203,10 +209,21 @@ class GrindBot(ArkBot):
         """Grind all the riot gear down, keep first 2 poly and all pearls, crystal
         from helmets into dedis."""
         # all pieces to grind
-        armor = [riot_leggs, riot_chest, riot_gauntlets, riot_boots, riot_helmet]
+        armor = [
+            riot_leggs,
+            riot_chest,
+            riot_gauntlets,
+            riot_boots,
+            miner_helmet,
+            riot_helmet,
+        ]
         any_found = False
 
         for i, piece in enumerate(armor):
+            if piece is miner_helmet:
+                self.vault.close()
+                self.empty_grinder()
+
             if not self.take_item(piece):
                 continue
 
@@ -214,17 +231,17 @@ class GrindBot(ArkBot):
             self.grind(
                 grind=piece,
                 take=["poly", "pearl", "electronics"]
-                if piece is riot_helmet
+                if piece is miner_helmet
                 else ["poly", "pearl"],
             )
 
-            if (i + 1) <= 2:
+            if not i:
                 self.put_into_exo_mek("poly")
             else:
                 self.player.drop_all_items("poly")
 
             self.deposit(
-                ["pearls", "electronics"] if piece is riot_helmet else "pearls"
+                ["pearls", "electronics"] if piece is miner_helmet else "pearls"
             )
 
             self.turn_to("Gear Vault")
@@ -236,7 +253,7 @@ class GrindBot(ArkBot):
         self.vault.close()
         self.turn_to("Grinder")
         self.player.do_drop_script(crystal, self.grinder)
-        self.resync_to_vault()
+        self.player.turn_y_by(-163)
         self.deposit("crystal")
         self.turn_to("Gear Vault")
 
@@ -246,6 +263,7 @@ class GrindBot(ArkBot):
         for dedi in ("pearl", "paste", "ingots", "electronics", "crystal", "hide"):
             region = self.find_dedi(dedi, image)
             if not region:
+                print(f"Failed to find {dedi}")
                 return
             # convert bc grab screen is retarded + extend boundaries
             region = int(region[0] - 80), int(region[1] + region[3] + 5), 350, 130
@@ -258,11 +276,15 @@ class GrindBot(ArkBot):
 
     def find_dedi(self, item, img) -> tuple:
         return self.locate_in_image(
-            f"templates/{item}_dedi.png", img, confidence=0.8, grayscale=True
+            f"templates/{item}_dedi.png", img, confidence=0.75, grayscale=True
         )
 
     def get_dedi_screenshot(self) -> None:
-        self.resync_to_vault(False)
+        self.beds.travel_to(Bed("grinding", (785, 181)))
+        self.player.await_spawned()
+        self.sleep(1)
+
+        self.player.turn_x_by(128)
 
         self.player.look_up_hard()
         self.sleep(0.2)
@@ -284,7 +306,7 @@ class GrindBot(ArkBot):
         Raises `DediNotFoundError` after 10 unsuccessful attempts.
         """
 
-        for i in range(10):
+        for _ in range(10):
             amounts = {}
 
             # get dedi wall image
@@ -295,19 +317,26 @@ class GrindBot(ArkBot):
             # one dedi could not be determined, trying to move around
             if not dedis:
                 print("Missing a dedi!")
-                if i % 3 == 0 or not i:
-                    self.press("w")
-                else:
-                    self.press("s")
+                self.player.crouch()
+                self.sleep(0.1)
+                input.press("s")
+                self.player.crouch()
                 continue
 
             # got all regions, denoise and OCR the amount
             for name in dedis:
-                img = self.denoise_text(dedis[name], (229, 230, 110), 15)
-                raw_result = tes.image_to_string(
-                    img,
-                    config="-c tessedit_char_whitelist=0123456789 --psm 6 -l eng",
-                ).rstrip()
+                img = self.denoise_text(dedis[name], (55, 228, 227), 15)
+                raw_result = (
+                    tes.image_to_string(
+                        img,
+                        config="-c tessedit_char_whitelist=0123456789liI| --psm 6 -l eng",
+                    )
+                    .rstrip()
+                    .replace("l", "1")
+                    .replace("i", "1")
+                    .replace("I", "1")
+                    .replace("|", "1")
+                )
 
                 # add material and its amount to our dict
                 amounts[name] = int(raw_result)
@@ -368,18 +397,18 @@ class GrindBot(ArkBot):
             cost[material] += phase_2[material]
 
         # print(f"Cost for phase 2: {phase_2}, total cost: {cost}\n\n")
+        self.electronics_to_craft = round(cost["pearl"] / 3)
+        self.session_turrets = floor(lowest_1 + lowest_2)
+        self.session_cost = cost
         print(
-            f"Need to craft {round(cost['pearl'] / 3)} electronics for {floor(lowest_1 + lowest_2)} Turrets"
+            f"Need to craft {self.electronics_to_craft} electronics for {self.session_turrets} Turrets"
         )
-
-        return cost
 
     def empty_grinder(self) -> None:
         self.turn_to("Grinder")
         self.grinder.open()
         self.grinder.take_all_items("hide")
         self.grinder.close()
-
         self.deposit("Hide")
 
         self.turn_to("Grinder")
@@ -387,12 +416,97 @@ class GrindBot(ArkBot):
         for _ in range(3):
             self.grinder.take_all()
             self.player.inventory.drop_all()
+        self.grinder.close()
 
-    def start(self):
+    def craft_needed_electronics(self) -> None:
+        print("Checking on electronics craft...")
+
+        if self.electronics_crafted >= self.electronics_to_craft:
+            print("Crafted enough electronics! Now crafting turrets...")
+            return False
+
+        print(
+            f"Not enough electronics yet! Crafted {self.electronics_crafted}/{self.electronics_to_craft}!"
+        )
+
+        self.beds.travel_to(self.bed)
+        self.player.await_spawned()
+        self.sleep(1)
+        for resource in ("Ingot", "Pearls"):
+            self.turn_to(resource)
+            self.dedis.open()
+            self.dedis.take_all()
+            self.dedis.close()
+            self.turn_to("Exo Mek")
+            self.exo_mek.open()
+
+            if resource == "Ingot":
+                self.player.inventory.transfer_amount(resource, 1000, 300)
+            else:
+                self.player.inventory.transfer_amount(resource, 3000, 100)
+
+            self.exo_mek.close()
+            self.turn_to(resource)
+            self.dedis.attempt_deposit(resource, False)
+
+        self.turn_to("Exo Mek")
+        self.exo_mek.open()
+        self.exo_mek.open_craft()
+        self.exo_mek.craft("Electronics", 0, True)
+        self.exo_mek.close()
+
+        self.electronics_crafted += 1000
+        self.last_crafted = time.time()
+        return True
+
+    def craft_turrets(self):
+
+        self.beds.travel_to(self.bed)
+        self.player.await_spawned()
+        self.sleep(1)
+
+        for resource in ["Ingot", "Paste", "Electronics"]:
+            self.turn_to(resource)
+            self.dedis.open()
+            self.dedis.take_all()
+            self.dedis.close()
+            self.turn_to("Exo Mek")
+            self.exo_mek.open()
+
+            if resource == "Ingot":
+                self.player.inventory.transfer_amount(
+                    "Ingot", self.session_cost["Ingot"], 300
+                )
+            else:
+                self.player.inventory.transfer_amount(
+                    resource, self.session_cost[resource], 100
+                )
+
+            self.exo_mek.close()
+            self.turn_to(resource)
+            self.dedis.attempt_deposit(resource, False)
+
+        self.turn_to("Exo Mek")
+        self.exo_mek.open()
+        self.exo_mek.open_craft()
+        self.exo_mek.craft("Auto Turret", self.session_turrets)
+        self.exo_mek.craft("Heavy Auto Turret", self.session_turrets + 5)
+        self.exo_mek.take_all_items("Heavy Auto Turret")
+        self.exo_mek.close()
+
+    def grind_all_gear(self) -> tuple[int, dict]:
         """Starts the crafting station"""
-        # self.grind_armor()
-        # self.grind_weapons()
+        print("A grinding session has been created!")
+
+        self.beds.travel_to(self.bed)
+        self.player.await_spawned()
+        self.sleep(1)
+
+        self.grind_armor()
+        self.grind_weapons()
         self.empty_grinder()
 
-        print(self.get_crafting_method(self.get_dedi_materials()))
-        # self.craft_turrets()
+        self.get_crafting_method(self.get_dedi_materials())
+        print(
+            f"Grinding gear successful. Crafting cost: {self.session_cost}, electronics to be crafted: {self.electronics_to_craft}!"
+        )

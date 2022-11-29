@@ -61,7 +61,7 @@ gacha_crystal = Item(
 )
 
 riot_helmet = Item(
-    name="Riot Helmet",
+    name="Helmet",
     inventory_icon="templates/riot_helmet.png",
     added_icon=None,
     added_text=None,
