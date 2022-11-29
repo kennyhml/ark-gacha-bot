@@ -519,7 +519,7 @@ class GachaBot(ArkBot):
         # check if any electronics are crafting and if they need to be requeued
         if self.electronics_need_requeue():
             # false if all needed electronics are crafted, start crafting
-            if not self.grind_station.craft_needed_electronics():
+            if not self.grind_station.need_to_craft_electronics():
                 self.grind_station.craft_turrets()
                 # reset the grind bot
                 self.grind_station = GrindBot(self.create_grinder_bed())
@@ -530,7 +530,8 @@ class GachaBot(ArkBot):
                 # returns true if the vault is filled and we need to start grinding
                 if self.do_crystal_station(bed):
                     self.last_emptied = time.time()
-                    self.grind_station.grind_all_gear()
+                    if self.grind_station.grind_all_gear():
+                        self.grind_station = GrindBot(self.create_grinder_bed())
                     return
                 self.last_emptied = time.time()
             return

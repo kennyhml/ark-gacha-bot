@@ -3,7 +3,7 @@ import pyautogui as pg
 
 from ark.inventories import CropPlot, Gacha, PlayerInventory, Inventory
 from ark.buffs import Buff, thirsty, hungry, pod_xp, broken_bones
-from ark.items import y_trap
+from ark.items import y_trap, Item
 from bot.ark_bot import ArkBot
 
 from ark.exceptions import InventoryNotAccessibleError
@@ -203,7 +203,7 @@ class Player(ArkBot):
         -----------
         `InventoryNotAccessible` if the gacha cant be accessed
         """
-        
+
         # open the gacha and take all pellets
         gacha.open()
         amount_of_traps = self.inventory.count_item(y_trap)
@@ -235,13 +235,14 @@ class Player(ArkBot):
     def pick_up_bag(self):
         self.look_down_hard()
         self.press(self.keybinds.target_inventory)
+        self.sleep(0.5)
         bag = Inventory("Bag", "bag")
         bag.open()
         self.move_to(1287, 289)
         self.press("o")
         self.sleep(1)
 
-    def do_drop_script(self, item, target_inventory: Inventory):
+    def do_drop_script(self, item: Item, target_inventory: Inventory):
 
         self.crouch()
         self.sleep(0.5)
@@ -271,9 +272,14 @@ class Player(ArkBot):
         self.pick_up_bag()
         self.crouch()
         self.sleep(0.5)
-        
+
     def item_added(self) -> bool:
-        return self.locate_template("templates/added.png", region=(0, 450, 314, 240), confidence=0.75) is not None
+        return (
+            self.locate_template(
+                "templates/added.png", region=(0, 450, 314, 240), confidence=0.75
+            )
+            is not None
+        )
 
     def await_item_added(self) -> None:
         c = 0

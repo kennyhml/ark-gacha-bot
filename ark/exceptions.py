@@ -38,3 +38,9 @@ class PlayerDidntTravelError(Exception):
 
 class LogsNotOpenedError(Exception):
     """Raised when the logs could not be opened"""
+
+class InvalidStationError(Exception):
+    """Raised when the given station to turn to doesnt exist"""
+
+class DedisNotDetermined(Exception):
+    """Raised when one or more dedis could not be determined whatsoever."""

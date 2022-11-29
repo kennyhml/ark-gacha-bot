@@ -42,6 +42,7 @@ class Inventory(ArkBot):
     TRANSFER_ALL = (1425, 190)
     ADDED_REGION = (40, 1020, 360, 60)
     ITEM_REGION = (1230, 220, 580, 720)
+    DROP_ALL = (1477, 187)
 
     def __init__(self, entity, action_wheel_img):
         super().__init__()
@@ -57,6 +58,9 @@ class Inventory(ArkBot):
             is not None
         )
 
+    def drop_all(self) -> None:
+        self.click_at(self.DROP_ALL)
+        
     def receiving_remote_inventory(self) -> bool:
         """Checks if the 'Receiving Remote Inventory' text is visible."""
         return (
@@ -320,6 +324,9 @@ class Inventory(ArkBot):
     def open_craft(self) -> None:
         self.click_at(1716, 118, delay=0.3)
 
+    def close_craft(self) -> None:
+        self.click_at(1322, 118, delay=0.3)
+
     def can_craft(self, item: Item) -> bool:
         self.search_for(item.name)
         self.sleep(0.5)
@@ -328,18 +335,20 @@ class Inventory(ArkBot):
             is not None
         )
 
-    def craft(self, item, amount: int, spam: bool = False) -> None:
+    def craft(self, item, amount: int) -> None:
+        print(f"Crafting {amount} {item}!")
         self.search_for(item)
         self.click_at(1294, 290, delay=1)
 
-        for _ in range(amount):
-            self.press("e")
-            self.sleep(0.3)
+        if amount < 30:
+            for _ in range(amount):
+                self.press("e")
+                self.sleep(0.3)
+            return
 
-        if spam:
-            for _ in range(10):
-                self.press("a")
-                self.sleep(0.5)
+        for _ in range(10):
+            self.press("a")
+            self.sleep(0.5)
 
 
 class PlayerInventory(Inventory):
@@ -411,7 +420,7 @@ class PlayerInventory(Inventory):
                 print(f"Transferred {transferred}...")
 
                 # if the amount of items we transferred makes sense we can cancel
-                if amount < transferred < amount + 3000:
+                if amount <= transferred <= amount + 3000:
                     print("Enough items transferred!")
                     return
 
@@ -551,9 +560,6 @@ class PlayerInventory(Inventory):
         self.open()
         self.drop_all()
         self.close()
-
-    def drop_all(self) -> None:
-        self.click_at(self.DROP_ALL)
 
     def drop_all_items(self, item) -> None:
         self.search_for(item)
