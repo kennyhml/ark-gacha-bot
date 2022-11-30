@@ -260,8 +260,9 @@ class GrindBot(ArkBot):
         for item in items:
             if isinstance(item, Item):
                 item = item.name
-
+            self.sleep(0.3)
             self.turn_to(item)
+            self.sleep(0.3)
             self.dedis.attempt_deposit(item, False)
             self.sleep(0.3)
 
@@ -452,16 +453,17 @@ class GrindBot(ArkBot):
             f"templates/{item}_dedi.png", img, confidence=0.75, grayscale=True
         )
 
-    def get_dedi_screenshot(self) -> Image.Image:
+    def get_dedi_screenshot(self, spawn: bool = True) -> Image.Image:
         """Grabs a screenshot of the dedi wall to later determine the
         amount of resources available. Syncs by spawning at the bed first.
         Returns the PIL Image object of the dedi wall."""
 
         # sync to bed, look at dedi wall
-        self.beds.travel_to(self.bed)
-        self.player.await_spawned()
-        self.sleep(1)
-        self.player.turn_x_by(130)
+        if spawn:
+            self.beds.travel_to(self.bed)
+            self.player.await_spawned()
+            self.sleep(1)
+            self.player.turn_x_by(130)
 
         # looking up hard then down to make our hands move out of the
         # screen temporarily for better clarity
@@ -479,48 +481,62 @@ class GrindBot(ArkBot):
         self.player.disable_hud()
         return img
 
+    def walk_back_little(self) -> None:
+        self.player.crouch()
+        self.sleep(0.1)
+        input.press("s")
+        self.player.crouch()
+        self.sleep(0.5)
+
     def get_dedi_materials(self):
-        """Tries to get the dedi materials up to 6 times. Will return a dict
+        """Tries to get the dedi materials up to 10 times. Will return a dict
         of the material and its amount on the first successful attempt.
 
-        Raises `DediNotFoundError` after 6 unsuccessful attempts.
+        Raises `DediNotFoundError` after 10 unsuccessful attempts.
         """
-        for _ in range(6):
+        for i in range(10):
             amounts = {}
             # get all dedis regions
-            dedis = self.find_all_dedi_positions(self.get_dedi_screenshot())
-            if dedis:
-                break
-
+            dedis = self.find_all_dedi_positions(self.get_dedi_screenshot(spawn=i < 1))
             # a dedi could not be determined, try to move further back.
-            self.player.crouch()
-            self.sleep(0.1)
-            input.press("s")
-            self.player.crouch()
-            self.sleep(0.5)
-            continue
-        else:
-            raise DedisNotDetermined
+            if not dedis:
+                self.walk_back_little()
+                continue
+            try:
+                # got all regions, denoise and OCR the amount, using psm 6 for the moment
+                for name in dedis:
+                    img = self.denoise_text(dedis[name], (55, 228, 227), 22)
+                    tes_config = (
+                        "-c tessedit_char_whitelist=0123456789liI|O --psm 6 -l eng"
+                    )
+                    raw_result = tes.image_to_string(img, config=tes_config).strip()
+                    # replace common tesseract fuckups
+                    for c in DEDI_NUMBER_MAPPING:
+                        raw_result = raw_result.replace(c, DEDI_NUMBER_MAPPING[c])
 
-        # got all regions, denoise and OCR the amount, using psm 6 for the moment
-        for name in dedis:
-            img = self.denoise_text(dedis[name], (55, 228, 227), 15)
+                    final_result = int(raw_result)
+                    if not self.amount_valid(name, final_result):
+                        print(f"Invalid amount determined {final_result}!")
+                        raise ValueError
+                    print(f"Amount for {name} is valid!")
+                    amounts[name] = int(final_result)
 
-            tes_config = "-c tessedit_char_whitelist=0123456789liI|O --psm 6 -l eng"
-            raw_result = tes.image_to_string(img, config=tes_config).strip()
-
-            # replace common tesseract fuckups
-            for c in DEDI_NUMBER_MAPPING:
-                raw_result = raw_result.replace(c, DEDI_NUMBER_MAPPING[c])
-
-            final_result = raw_result
-            if int(final_result) < 10:
-                final_result = 0
+            except (TypeError, ValueError) as e:
+                print(f"Failed to get amount of {name}!\n{e}")
+                continue
 
             # add material and its amount to our dict
-            amounts[name] = int(final_result)
-        self.post_available_materials(amounts)
-        return amounts
+            self.post_available_materials(amounts)
+            return amounts
+        raise DedisNotDetermined
+
+    def amount_valid(self, material, amount) -> bool:
+        expected = {"Pearls": 7000, "Paste": 7000, "Electronics": 800, "Ingot": 9000}
+        if material not in expected:
+            return True
+
+        expected_amount = expected[material]
+        return expected_amount * 5 >= amount >= expected_amount - 300
 
     def post_available_materials(self, owned_mats: dict[str:int]) -> None:
         formatted = {}
@@ -837,6 +853,7 @@ class GrindBot(ArkBot):
 
         self.beds.travel_to(self.bed)
         self.player.await_spawned()
+        self.current_station = Stations.GEAR_VAULT
         self.sleep(1)
 
         self.grind_armor()

@@ -40,7 +40,7 @@ class GachaBot(ArkBot):
         self._total_bps_made = 0
         self._total_pickups = 0
         self._laps_completed = 0
-        self._current_bed = 16
+        self._current_bed = 0
         self._current_lap = 0
         self._station_times = []
         self._session_start = time.time()
@@ -516,8 +516,8 @@ class GachaBot(ArkBot):
         )
 
     def do_next_task(self) -> None:
-        """Gacha bot main call method, runs the next task in line. 
-        
+        """Gacha bot main call method, runs the next task in line.
+
         Current tasks are: Healing, crafting electronics, picking crystals,
         gacha feeding and grinding gear where healing wont block the next task.
         """
@@ -555,8 +555,7 @@ class GachaBot(ArkBot):
             pass
 
         except Exception as e:
-            self.inform_unknown_exception("unknown", e)
-
+            self.inform_unknown_exception(self.seed_beds[self.current_bed], e)
 
     def lap_finished(self) -> None:
         self.current_bed = 0
