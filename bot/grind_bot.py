@@ -858,7 +858,7 @@ class GrindBot(ArkBot):
 
         self.grind_armor()
         self.grind_weapons()
-        self.empty_grinder()
+        self.empty_grinder(turn_off=True)
 
         self.get_crafting_method(self.get_dedi_materials())
         print(
