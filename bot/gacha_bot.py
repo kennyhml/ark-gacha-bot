@@ -6,16 +6,16 @@ import discord
 from dacite import from_dict
 
 from ark.beds import Bed, BedMap, TekPod
+from ark.console import Console
 from ark.exceptions import InventoryNotAccessibleError, TekPodNotAccessibleError
 from ark.inventories import Gacha, Inventory
 from ark.items import pellet
 from ark.player import Player
+from ark.tribelog import TribeLog
 from bot.ark_bot import ArkBot, TerminatedException
 from bot.crystal_collection import CrystalCollection
-from ark.console import Console
-from bot.settings import DiscordSettings, TowerSettings
-from ark.tribelog import TribeLog
 from bot.grind_bot import GrindBot
+from bot.settings import DiscordSettings, TowerSettings
 
 
 class GachaBot(ArkBot):
@@ -30,9 +30,9 @@ class GachaBot(ArkBot):
         self.load_settings()
         self.create_webhooks()
         self.tribelogs = TribeLog(self.alert_webhook, self.logs_webhook)
-        self.grind_station = GrindBot(self.create_grinder_bed())
+        self.grind_station = GrindBot(self.create_grinder_bed(), self.info_webhook)
         self.seed_beds = self.create_seed_beds()
-        self.crystal_beds = self.create_crystal_beds()
+        self.crystal_bed = self.create_crystal_bed()
         self.tek_pod = self.create_tek_pod()
 
         self._ytraps_deposited = 0
@@ -112,19 +112,16 @@ class GachaBot(ArkBot):
             for i in range(self.tower_settings.seed_beds)
         ]
 
-    def create_crystal_beds(self) -> list[Bed]:
+    def create_crystal_bed(self) -> Bed:
         """Creates the crystal bed names using the given prefix and the defined
         amount of beds, using leading nulls.
 
         Returns a list of `Bed` objects.
         """
-        return [
-            Bed(
-                name=f"{self.tower_settings.crystal_prefix}{i:02d}",
-                coords=(self.tower_settings.bed_x, self.tower_settings.bed_y),
-            )
-            for i in range(self.tower_settings.crystal_beds)
-        ]
+        return Bed(
+            name=f"{self.tower_settings.crystal_prefix}00",
+            coords=(self.tower_settings.bed_x, self.tower_settings.bed_y),
+        )
 
     def create_tek_pod(self) -> TekPod:
         """Creates a tek pod using the given prefix in the settings
@@ -213,6 +210,9 @@ class GachaBot(ArkBot):
 
         except Exception as e:
             self.inform_unknown_exception(bed, e)
+
+        finally:
+            self.last_emptied = time.time()
 
     def do_gacha_station(self, bed: Bed) -> None:
         """Completes the gacha station of the given bed.
@@ -497,61 +497,71 @@ class GachaBot(ArkBot):
         return result if result else "Station works as expected."
 
     def crystals_need_pickup(self) -> bool:
-        """Checks if more time than set passed since we last emptied the crystal collection"""
-        return (time.time() - self.last_emptied) > self.tower_settings.crystal_interval
+        """True if more than the set interval passed since last picking the
+        crystals and either more than 2000 ytraps have been collected or
+        we are already on our second lap.
+        """
+        time_diff = time.time() - self.last_emptied
 
-    def electronics_need_requeue(self) -> bool:
+        return time_diff > self.tower_settings.crystal_interval and (
+            self._ytraps_deposited > 2000 or self._laps_completed
+        )
+
+    def electronics_finished(self) -> bool:
+        """Returns true if there is an ongoing grinding session and more than
+        3 minutes have passed since the last electronics craft."""
         return (
             self.grind_station.session_cost
             and (time.time() - self.grind_station.last_crafted) > 180
         )
 
     def do_next_task(self) -> None:
-        """Gacha bot main call method, runs the next task in line. First checks
-        if the player needs to go into the tek pod, but it is not actually considered
-        a task. A task will either be gacha seeding or crystal collection.
+        """Gacha bot main call method, runs the next task in line. 
+        
+        Current tasks are: Healing, crafting electronics, picking crystals,
+        gacha feeding and grinding gear where healing wont block the next task.
         """
-        # check if we need to go heal
-        if healed := self.player.needs_recovery():
-            self.go_heal()
-        self._at_pod = healed
+        try:
+            # check if we need to go heal
+            if healed := self.player.needs_recovery():
+                self.go_heal()
+            self._at_pod = healed
 
-        # check if any electronics are crafting and if they need to be requeued
-        if self.electronics_need_requeue():
-            # false if all needed electronics are crafted, start crafting
-            if not self.grind_station.need_to_craft_electronics():
-                self.grind_station.craft_turrets()
-                # reset the grind bot
-                self.grind_station = GrindBot(self.create_grinder_bed())
+            # check if any electronics are crafting and if they need to be requeued
+            if self.electronics_finished():
+                if not self.grind_station.need_to_craft_electronics():
+                    self.grind_station.craft_turrets()
+                return
 
-        # check if its time to pick crystals
-        if self.crystals_need_pickup() and (
-            self._ytraps_deposited > 2000 or self._laps_completed
-        ):
-            for bed in self.crystal_beds:
+            # check if its time to pick crystals
+            if self.crystals_need_pickup():
                 # returns true if the vault is filled and we need to start grinding
-                if self.do_crystal_station(bed):
-                    self.last_emptied = time.time()
-                    if self.grind_station.grind_all_gear():
-                        self.grind_station = GrindBot(self.create_grinder_bed())
-                    return
-                self.last_emptied = time.time()
-            return
+                if self.do_crystal_station(self.crystal_bed):
+                    self.grind_station.grind_all_gear()
+                return
 
-        # do regular gacha seeding task
-        self.do_gacha_station(self.seed_beds[self.current_bed])
+            # do regular gacha seeding task
+            self.do_gacha_station(self.seed_beds[self.current_bed])
 
-        # increment bed counter, make sure its not out of range!
-        if self.current_bed < self.tower_settings.seed_beds - 1:
-            self.current_bed += 1
-            return
+            # increment bed counter, make sure its not out of range!
+            if self.current_bed < self.tower_settings.seed_beds - 1:
+                self.current_bed += 1
+                return
 
-        # reset bed counter, increment laps
-        print("Completed a lap!")
+            # reset bed counter, increment laps
+            self.lap_finished()
+
+        except TerminatedException:
+            pass
+
+        except Exception as e:
+            self.inform_unknown_exception("unknown", e)
+
+
+    def lap_finished(self) -> None:
         self.current_bed = 0
         self._laps_completed += 1
         self._current_lap += 1
-
         self.inform_lap_finished()
         self.lap_started = time.time()
 

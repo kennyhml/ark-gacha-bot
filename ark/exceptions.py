@@ -17,6 +17,9 @@ class ReceivingRemoveInventoryTimeout(Exception):
     """Raised when the 'Receiving Remote Inventory' text does not disappear."""
 
 
+class NoItemsAddedError(Exception):
+    """Raised when items were not added to the inventory if expected."""
+
 class NoItemsDepositedError(Exception):
     """Raised when the 'X items deposited.' message does not appear."""
 

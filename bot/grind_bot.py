@@ -2,13 +2,14 @@ import time
 from itertools import cycle
 from math import floor
 
+import discord
 import pydirectinput as input
 from PIL import Image
 from pytesseract import pytesseract as tes
 from strenum import StrEnum
 
 from ark.beds import Bed, BedMap
-from ark.exceptions import DedisNotDetermined, InvalidStationError
+from ark.exceptions import DedisNotDetermined, InvalidStationError, NoItemsAddedError
 from ark.inventories import DedicatedStorage, Grinder, Inventory, Vault
 from ark.items import *
 from ark.player import Player
@@ -73,7 +74,10 @@ class GrindBot(ArkBot):
         A map containing the turns for each station, to get around the station
     """
 
-    def __init__(self, bed: Bed) -> None:
+    grinder_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/f/fe/Industrial_Grinder.png/revision/latest/scale-to-width-down/228?cb=20160728174054"
+    exomek_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/6/6d/Unassembled_Exo-Mek_%28Genesis_Part_2%29.png/revision/latest/scale-to-width-down/228?cb=20210603184626"
+
+    def __init__(self, bed: Bed, info_webhook: discord.Webhook) -> None:
         super().__init__()
         self.player = Player()
         self.beds = BedMap()
@@ -82,6 +86,7 @@ class GrindBot(ArkBot):
         self.dedis = DedicatedStorage()
         self.exo_mek = Inventory("Exo Mek", "exo_mek")
         self.bed = bed
+        self.info_webhook = info_webhook
         self.current_station = "Gear Vault"
         self.electronics_to_craft = 0
         self.electronics_crafted = 0
@@ -101,6 +106,13 @@ class GrindBot(ArkBot):
             "Paste": (self.player.turn_y_by, 40),
             "Gear Vault": [(self.player.turn_y_by, -40), (self.player.turn_x_by, -70)],
         }
+
+    def session_reset(self) -> None:
+        self.electronics_to_craft = 0
+        self.electronics_crafted = 0
+        self.session_turrets = 0
+        self.session_cost = {}
+        self.last_crafted = None
 
     def find_quickest_way_to(self, target_station: Stations) -> list[str]:
         """Finds the quickest way to the passed target station, forwards
@@ -389,8 +401,9 @@ class GrindBot(ArkBot):
         taken and deposited.
         """
         weapons = [fabricated_pistol, fabricated_sniper, assault_rifle, pumpgun]
-
         for weapon in weapons:
+            print(f"Grinding {weapon.name}...")
+
             # continue with next item if no item was found
             if not self.take_item(weapon):
                 continue
@@ -472,7 +485,6 @@ class GrindBot(ArkBot):
 
         Raises `DediNotFoundError` after 6 unsuccessful attempts.
         """
-
         for _ in range(6):
             amounts = {}
             # get all dedis regions
@@ -493,19 +505,48 @@ class GrindBot(ArkBot):
         # got all regions, denoise and OCR the amount, using psm 6 for the moment
         for name in dedis:
             img = self.denoise_text(dedis[name], (55, 228, 227), 15)
-            tes_config = "-c tessedit_char_whitelist=0123456789liI|O --psm 13 -l eng"
-            raw_result = tes.image_to_string(img, config=tes_config)
+
+            tes_config = "-c tessedit_char_whitelist=0123456789liI|O --psm 6 -l eng"
+            raw_result = tes.image_to_string(img, config=tes_config).strip()
+
             # replace common tesseract fuckups
             for c in DEDI_NUMBER_MAPPING:
                 raw_result = raw_result.replace(c, DEDI_NUMBER_MAPPING[c])
+
             final_result = raw_result
-            print(final_result)
             if int(final_result) < 10:
                 final_result = 0
 
             # add material and its amount to our dict
             amounts[name] = int(final_result)
+        self.post_available_materials(amounts)
         return amounts
+
+    def post_available_materials(self, owned_mats: dict[str:int]) -> None:
+        formatted = {}
+        desired_order = ["Ingot", "Paste", "Electronics", "Pearls", "Hide", "Crystal"]
+
+        for resource in owned_mats:
+            formatted[resource] = f"{owned_mats[resource]:_}x".replace("_", " ")
+        formatted = {k: formatted[k] for k in desired_order}
+
+        embed = discord.Embed(
+            type="rich",
+            title="Finished grinding!",
+            description="Available materials:",
+            color=0x03DD74,
+        )
+
+        for resource in formatted:
+            embed.add_field(name=f"{resource}:ㅤ", value=formatted[resource])
+
+        embed.set_thumbnail(url=self.grinder_avatar)
+        embed.set_footer(text="Ling Ling on top!")
+
+        self.info_webhook.send(
+            embed=embed,
+            username="Ling Ling",
+        )
 
     def get_crafting_method(self, owned_items: dict[str:int]):
         """Receives the list of materials we own and figures out the most
@@ -542,7 +583,8 @@ class GrindBot(ArkBot):
             cost[material] += phase_1[material]
             owned_items[material] -= phase_1[material]
 
-        # set new turret cost using pearls and more ingots instead, set pearl value
+        # set new turret cost using pearls and more ingots instead, set
+        # pearl value
         raw_turret_cost = {"Paste": 200, "Pearls": 270 * 3, "Ingot": 540 + 270}
         cost["Pearls"] = 0
 
@@ -557,15 +599,92 @@ class GrindBot(ArkBot):
             "Pearls": int(raw_turret_cost["Pearls"] * lowest_2),
         }
 
-        # add each material to the total cost, electronics to craft is now pearls / 3
+        # add each material to the total cost, electronics to craft is now
+        # pearls / 3
         for material in phase_2:
             cost[material] += phase_2[material]
 
+        # flatten some of the needed amounts to get the exact amounts required
+        cost["Paste"] -= cost["Paste"] % 200
+        cost["Pearls"] -= cost["Pearls"] % 3
+
+        # calculate the total electronics we will end up with to discard
+        # surplus
+        total_elec = cost["Pearls"] / 3 + cost["Electronics"]
+        crafting_too_much = total_elec % 270
+        cost["Pearls"] -= round(crafting_too_much * 3)
+        cost["Ingot"] -= round(crafting_too_much)
+
+        # dicard surplus metal, EXCLUDING the cost for electronics
+        cost["Ingot"] -= round(cost["Ingot"] - (cost["Pearls"] / 3)) % 540
+
+        # set session costs
         self.electronics_to_craft = round(cost["Pearls"] / 3)
         self.session_turrets = floor(lowest_1 + lowest_2)
         self.session_cost = cost
+
+        print(cost)
+        self.post_crafting_plan()
         print(
             f"Need to craft {self.electronics_to_craft} electronics for {self.session_turrets} Turrets"
+        )
+
+    def post_crafting_plan(self) -> None:
+
+        formatted = {}
+        desired_order = ["Ingot", "Paste", "Electronics", "Pearls"]
+
+        for resource in self.session_cost:
+            formatted[resource] = f"{self.session_cost[resource]:_}x".replace("_", " ")
+        formatted = {k: formatted[k] for k in desired_order}
+
+        embed = discord.Embed(
+            type="rich",
+            title="Calculated crafting!",
+            description="Required materials:",
+            color=0x000000,
+        )
+
+        for resource in formatted:
+            embed.add_field(name=f"{resource}:ㅤ", value=formatted[resource])
+            if resource == "Paste":
+                embed.add_field(
+                    name="Expected Result:",
+                    value=f"{self.session_turrets} Heavy Turrets",
+                )
+        embed.add_field(
+            name="Electronics to craft:", value=f"{self.electronics_to_craft}x"
+        )
+
+        embed.set_thumbnail(url=self.exomek_avatar)
+        embed.set_footer(text="Ling Ling on top!")
+
+        self.info_webhook.send(
+            embed=embed,
+            username="Ling Ling",
+        )
+
+    def post_electronics_crafting(self, time_taken) -> None:
+        embed = discord.Embed(
+            type="rich",
+            title="Queued electronics!",
+            color=0xFCFC2C,
+        )
+        embed.add_field(
+            name=f"Time taken:",
+            value=f"{round(time.time() - time_taken)} seconds",
+        )
+        embed.add_field(
+            name="Crafted:",
+            value=f"{self.electronics_crafted}/{self.electronics_to_craft}",
+        )
+
+        embed.set_thumbnail(url=self.exomek_avatar)
+        embed.set_footer(text="Ling Ling on top!")
+
+        self.info_webhook.send(
+            embed=embed,
+            username="Ling Ling",
         )
 
     def empty_grinder(self, turn_off: bool = False) -> None:
@@ -633,24 +752,29 @@ class GrindBot(ArkBot):
             print("Crafted enough electronics! Now crafting turrets...")
             return False
 
-        print(
-            f"Crafted {self.electronics_crafted}/{self.electronics_to_craft} electronics!"
-        )
         # spawn at station
+        start = time.time()
         self.beds.travel_to(self.bed)
         self.player.await_spawned()
         self.current_station = "Gear Vault"
         self.sleep(1)
 
+        if self.electronics_crafted + 1000 <= self.electronics_to_craft:
+            to_craft = 1000
+        else:
+            to_craft = self.electronics_to_craft - self.electronics_crafted
+        print(f"Need to craft {to_craft} more electronics...")
+
         # get resources, craft 1000 electronics
-        self.put_resource_into_exo_mek("Ingot", 1000, 300)
-        self.put_resource_into_exo_mek("Pearls", 3000, 100)
-        self.craft("Electronics", 1000)
+        self.put_resource_into_exo_mek("Ingot", to_craft, 300)
+        self.put_resource_into_exo_mek("Pearls", to_craft * 3, 100)
+        self.craft("Electronics", to_craft)
 
         # add the newly crafted electronics to the total, set new
         # last crafted timestamp
-        self.electronics_crafted += 1000
+        self.electronics_crafted += to_craft
         self.last_crafted = time.time()
+        self.post_electronics_crafting(start)
         return True
 
     def craft_turrets(self):
@@ -661,6 +785,7 @@ class GrindBot(ArkBot):
         self.sleep(1)
 
         for resource in ["Paste", "Electronics", "Ingot"]:
+            print(f"Transferring {resource} into exo mek...")
             if resource == "Ingot":
                 self.put_resource_into_exo_mek(
                     resource, self.session_cost[resource], 300
@@ -675,6 +800,7 @@ class GrindBot(ArkBot):
         self.exo_mek.take_all_items("Heavy Auto Turret")
         self.exo_mek.close()
         self.clear_up_exo_mek()
+        self.session_reset()
 
     def clear_up_exo_mek(self) -> None:
         """Clears the exo mek after a crafting session."""
@@ -682,12 +808,16 @@ class GrindBot(ArkBot):
         self.vault.open()
         self.player.inventory.transfer_all(self.vault, "Turret")
         self.vault.close()
+        try:
+            # clean up the remaining mats from exo mek
+            self.turn_to(Stations.EXO_MEK)
+            self.player.do_drop_script(metal_ingot, self.exo_mek)
+            self.player.turn_y_by(-163)
+            self.deposit(metal_ingot)
 
-        # clean up the remaining mats from exo mek
-        self.turn_to(Stations.EXO_MEK)
-        self.player.do_drop_script(metal_ingot, self.exo_mek)
-        self.player.turn_y_by(-163)
-        self.deposit(metal_ingot)
+        except NoItemsAddedError:
+            print("Failed to take metal from the exo mek!")
+            self.player.crouch()
 
         # get the non heavy mats, drop all on the rest (poly)
         self.turn_to(Stations.EXO_MEK)

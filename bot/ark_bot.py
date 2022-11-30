@@ -16,6 +16,7 @@ mouse = Controller()
 from ark.window import ArkWindow
 from bot.settings import DiscordSettings, Keybinds
 
+pg.FAILSAFE = False
 
 class TerminatedException(Exception):
     """Raised when the script is terminated by keypress"""
