@@ -360,7 +360,7 @@ class GrindBot(ArkBot):
             any_found = True
 
             # deposit the grinded items, turn back to gear vault
-            self.deposit(["Electronics"] if piece is miner_helmet else "pearls")
+            self.deposit(["Electronics"] if piece is miner_helmet else "Pearls")
             self.turn_to(Stations.GEAR_VAULT)
         self.vault.close()
 
@@ -705,13 +705,13 @@ class GrindBot(ArkBot):
         """Starts the crafting station"""
         print("A grinding session has been created!")
 
-        # self.beds.travel_to(self.bed)
-        # self.player.await_spawned()
-        # self.sleep(1)
+        self.beds.travel_to(self.bed)
+        self.player.await_spawned()
+        self.sleep(1)
 
-        # self.grind_armor()
-        # self.grind_weapons()
-        # self.empty_grinder()
+        self.grind_armor()
+        self.grind_weapons()
+        self.empty_grinder()
 
         self.get_crafting_method(self.get_dedi_materials())
         print(

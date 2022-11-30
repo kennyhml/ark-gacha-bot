@@ -305,7 +305,7 @@ class Inventory(ArkBot):
 
     def get_slots(self) -> int:
         slots = self.grab_screen((1090, 503, 41, 15))
-        masked = self.denoise_text(slots, (116, 212, 234), variance=30, upscale=True)
+        masked = self.denoise_text(slots, (251 ,227, 124), variance=30, upscale=True)
 
         result = tes.image_to_string(
             masked,

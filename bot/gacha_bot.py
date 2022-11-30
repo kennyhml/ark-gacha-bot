@@ -40,7 +40,7 @@ class GachaBot(ArkBot):
         self._total_bps_made = 0
         self._total_pickups = 0
         self._laps_completed = 0
-        self._current_bed = 0
+        self._current_bed = 16
         self._current_lap = 0
         self._station_times = []
         self._session_start = time.time()
@@ -502,8 +502,8 @@ class GachaBot(ArkBot):
 
     def electronics_need_requeue(self) -> bool:
         return (
-            self.grind_station.session_cost is not None
-            and (time.time() - self.grind_station.last_crafted) > 240
+            self.grind_station.session_cost
+            and (time.time() - self.grind_station.last_crafted) > 180
         )
 
     def do_next_task(self) -> None:
@@ -525,7 +525,9 @@ class GachaBot(ArkBot):
                 self.grind_station = GrindBot(self.create_grinder_bed())
 
         # check if its time to pick crystals
-        if self.crystals_need_pickup() and self._ytraps_deposited > 2000:
+        if self.crystals_need_pickup() and (
+            self._ytraps_deposited > 2000 or self._laps_completed
+        ):
             for bed in self.crystal_beds:
                 # returns true if the vault is filled and we need to start grinding
                 if self.do_crystal_station(bed):

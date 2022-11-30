@@ -188,8 +188,11 @@ class CrystalCollection(ArkBot):
         vault_full = False
 
         # put the grinding items in the left vault
+        self.sleep(0.3)
         self.player.turn_90_degrees("left")
+        self.sleep(1)
         vault.open()
+        
         if not vault.is_full():
             # drop the shitty quality ones
             for item in drop_items:
