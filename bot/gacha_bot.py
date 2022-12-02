@@ -537,7 +537,7 @@ class GachaBot(ArkBot):
             if self.crystals_need_pickup():
                 # returns true if the vault is filled and we need to start grinding
                 if self.do_crystal_station(self.crystal_bed):
-                    self.grind_station.grind_all_gear()
+                    self.grind_station.run()
                 return
 
             # do regular gacha seeding task
