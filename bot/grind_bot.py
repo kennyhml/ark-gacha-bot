@@ -76,6 +76,7 @@ class GrindBot(ArkBot):
 
     grinder_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/f/fe/Industrial_Grinder.png/revision/latest/scale-to-width-down/228?cb=20160728174054"
     exomek_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/6/6d/Unassembled_Exo-Mek_%28Genesis_Part_2%29.png/revision/latest/scale-to-width-down/228?cb=20210603184626"
+    electronics_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/d/dd/Electronics.png/revision/latest/scale-to-width-down/228?cb=20150615100650"
 
     def __init__(self, bed: Bed, info_webhook: discord.Webhook) -> None:
         super().__init__()
@@ -108,6 +109,8 @@ class GrindBot(ArkBot):
         }
 
     def session_reset(self) -> None:
+        """Resets the session attributes. Intended to be called once
+        the crafting has been finished and the exomek has been cleaned up."""
         self.electronics_to_craft = 0
         self.electronics_crafted = 0
         self.session_turrets = 0
@@ -252,6 +255,14 @@ class GrindBot(ArkBot):
         self.grinder.close()
 
     def deposit(self, items: list[Item | str] | Item | str) -> None:
+        """Deposits the given item into its respective dedi, assuming no
+        current UI window is open.
+
+        Parameters:
+        ------------
+        items :class:`list` | `str` | `Item`:
+            The item(s) either as Item object(s) or string representation(s)
+        """
         # turn it into a list if only 1 item was passed
         if not isinstance(items, list):
             items = [items]
@@ -455,8 +466,17 @@ class GrindBot(ArkBot):
 
     def get_dedi_screenshot(self, spawn: bool = True) -> Image.Image:
         """Grabs a screenshot of the dedi wall to later determine the
-        amount of resources available. Syncs by spawning at the bed first.
-        Returns the PIL Image object of the dedi wall."""
+        amount of resources available.
+
+        Parameters:
+        -----------
+        spawn :class:`bool`:
+            Whether the bot should resync to the bed first
+
+        Returns:
+        ----------
+        A PIL Image of the current dedi wall.
+        """
 
         # sync to bed, look at dedi wall
         if spawn:
@@ -482,13 +502,15 @@ class GrindBot(ArkBot):
         return img
 
     def walk_back_little(self) -> None:
+        """Crouches and walks back a tiny bit, attempting to getting a better
+        view on the dedis."""
         self.player.crouch()
         self.sleep(0.1)
         input.press("s")
         self.player.crouch()
         self.sleep(0.5)
 
-    def get_dedi_materials(self):
+    def get_dedi_materials(self) -> None:
         """Tries to get the dedi materials up to 10 times. Will return a dict
         of the material and its amount on the first successful attempt.
 
@@ -513,12 +535,13 @@ class GrindBot(ArkBot):
                     # replace common tesseract fuckups
                     for c in DEDI_NUMBER_MAPPING:
                         raw_result = raw_result.replace(c, DEDI_NUMBER_MAPPING[c])
-
                     final_result = int(raw_result)
+
+                    # validate that the result is within a logical range
                     if not self.amount_valid(name, final_result):
-                        print(f"Invalid amount determined {final_result}!")
-                        raise ValueError
-                    print(f"Amount for {name} is valid!")
+                        raise ValueError(
+                            f"Invalid amount of resources detected for {name}: {final_result}"
+                        )
                     amounts[name] = int(final_result)
 
             except (TypeError, ValueError) as e:
@@ -528,15 +551,26 @@ class GrindBot(ArkBot):
             # add material and its amount to our dict
             self.post_available_materials(amounts)
             return amounts
-        raise DedisNotDetermined
+        raise DedisNotDetermined(
+            "Failed to determine the amounts of resources within one or more dedis!\n"
+            "This could have been caused by poor tesseract performance, bad dedi placement "
+            "or simply too much materials within the dedis. Please check on the dedis!"
+        )
 
     def amount_valid(self, material, amount) -> bool:
-        expected = {"Pearls": 7000, "Paste": 7000, "Electronics": 800, "Ingot": 9000}
+        expected = {
+            "Pearls": (7000, 60000),
+            "Paste": (7000, 160000),
+            "Electronics": (800, 6000),
+            "Ingot": (9000, 40000),
+        }
+        # we dont care about crystal or hide
         if material not in expected:
             return True
 
+        # ensure the OCRd amount is within a valid range
         expected_amount = expected[material]
-        return expected_amount * 5 >= amount >= expected_amount - 300
+        return expected_amount[1] >= amount >= expected_amount[0] - 300
 
     def post_available_materials(self, owned_mats: dict[str:int]) -> None:
         formatted = {}
@@ -646,14 +680,18 @@ class GrindBot(ArkBot):
         )
 
     def post_crafting_plan(self) -> None:
+        """Sends an embed to the info webhook informing about the crafting
+        plan that has been calculated for the ongoing session. Takes its data
+        from the session class attributes."""
 
+        # reformat the amounts to make it look nicer
         formatted = {}
         desired_order = ["Ingot", "Paste", "Electronics", "Pearls"]
-
         for resource in self.session_cost:
             formatted[resource] = f"{self.session_cost[resource]:_}x".replace("_", " ")
         formatted = {k: formatted[k] for k in desired_order}
 
+        # create embed, black sidebar
         embed = discord.Embed(
             type="rich",
             title="Calculated crafting!",
@@ -661,6 +699,8 @@ class GrindBot(ArkBot):
             color=0x000000,
         )
 
+        # add each resource to the embed, heavies and electronics on the
+        # righthand side
         for resource in formatted:
             embed.add_field(name=f"{resource}:ㅤ", value=formatted[resource])
             if resource == "Paste":
@@ -672,20 +712,34 @@ class GrindBot(ArkBot):
             name="Electronics to craft:", value=f"{self.electronics_to_craft}x"
         )
 
+        # set exo mek image
         embed.set_thumbnail(url=self.exomek_avatar)
         embed.set_footer(text="Ling Ling on top!")
 
+        # send the embed
         self.info_webhook.send(
             embed=embed,
             username="Ling Ling",
         )
 
-    def post_electronics_crafting(self, time_taken) -> None:
+    def post_electronics_crafting(self, time_taken: time.time) -> None:
+        """Sends an embed to the info webhook informing that electronics
+        have been queued. Contains the time taken to queue the electronics
+        and how many have been crafted/how many to craft are left.
+
+        Parameters:
+        ------------
+        time_taken :class:`time`:
+            The timestamp when the queue function was started
+        """
+        # create embed, yellowsidebar
         embed = discord.Embed(
             type="rich",
             title="Queued electronics!",
             color=0xFCFC2C,
         )
+
+        # add contents
         embed.add_field(
             name=f"Time taken:",
             value=f"{round(time.time() - time_taken)} seconds",
@@ -695,9 +749,11 @@ class GrindBot(ArkBot):
             value=f"{self.electronics_crafted}/{self.electronics_to_craft}",
         )
 
-        embed.set_thumbnail(url=self.exomek_avatar)
+        # set electronics picture
+        embed.set_thumbnail(url=self.electronics_avatar)
         embed.set_footer(text="Ling Ling on top!")
 
+        # send to the webhook as Ling Ling
         self.info_webhook.send(
             embed=embed,
             username="Ling Ling",
@@ -795,10 +851,7 @@ class GrindBot(ArkBot):
 
     def craft_turrets(self):
         # spawn at station
-        self.beds.travel_to(self.bed)
-        self.player.await_spawned()
-        self.current_station = "Gear Vault"
-        self.sleep(1)
+        self.spawn()
 
         for resource in ["Paste", "Electronics", "Ingot"]:
             print(f"Transferring {resource} into exo mek...")
@@ -827,7 +880,7 @@ class GrindBot(ArkBot):
         try:
             # clean up the remaining mats from exo mek
             self.turn_to(Stations.EXO_MEK)
-            self.player.do_drop_script(metal_ingot, self.exo_mek)
+            self.player.do_drop_script(metal_ingot, self.exo_mek, 1)
             self.player.turn_y_by(-163)
             self.deposit(metal_ingot)
 
@@ -846,25 +899,30 @@ class GrindBot(ArkBot):
         # deposit the lightweight mats
         for item in ["Pearls", "Paste", "Electronics"]:
             self.deposit(item)
-
-    def grind_all_gear(self) -> tuple[int, dict]:
-        """Starts the crafting station"""
-        print("A grinding session has been created!")
-
+    def spawn(self) -> None:
         self.beds.travel_to(self.bed)
         self.player.await_spawned()
         self.current_station = Stations.GEAR_VAULT
         self.sleep(1)
 
-        self.grind_armor()
-        self.grind_weapons()
+    def run(self):
+        print("A grinding session has been created!")
+        self.spawn()
+
+        # get all resources from grinding, turn off grinder when finished
+        self.grind_all_gear()
         self.empty_grinder(turn_off=True)
 
-        self.get_crafting_method(self.get_dedi_materials())
-        print(
-            f"Grinding gear successful. Crafting cost: {self.session_cost}, electronics to be crafted: {self.electronics_to_craft}!"
-        )
+        available_mats = self.get_dedi_materials()
+        self.get_crafting_method(available_mats)
 
+        # craft the first batch of electronics, should we for whatever reason
+        # not have to craft any, craft turrets straight away to avoid breaking
         if not self.need_to_craft_electronics():
             self.craft_turrets()
             return True
+
+    def grind_all_gear(self) -> None:
+        """Grinds armor, then gear"""
+        self.grind_armor()
+        self.grind_weapons()

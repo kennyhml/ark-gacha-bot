@@ -134,3 +134,7 @@ class TekSuitPainter(ArkBot):
             self.paint_all_pieces(pieces_to_paint)
             self.player.inventory.transfer_all(self.vault, "tek")
             self.vault.close()
+
+if __name__ == "__main__":
+    painter = TekSuitPainter()
+    painter.run()

@@ -242,13 +242,13 @@ class Player(ArkBot):
         self.press("o")
         self.sleep(1)
 
-    def do_drop_script(self, item: Item, target_inventory: Inventory):
+    def do_drop_script(self, item: Item, target_inventory: Inventory, slot=2):
 
         self.crouch()
         self.sleep(0.5)
         target_inventory.open()
 
-        self.inventory.take_one_item(item, slot=2, inventory=target_inventory)
+        self.inventory.take_one_item(item, slot=slot, inventory=target_inventory)
         self.inventory.await_items_added()
         self.sleep(0.3)
         self.inventory.drop_all_items(item.name)
