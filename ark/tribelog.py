@@ -182,7 +182,7 @@ class TribeLog(ArkBot):
         while not self.is_open():
             self.sleep(0.1)
             c += 1
-            if c > 50:
+            if c > 10:
                 return False
         return True
 
