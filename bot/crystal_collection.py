@@ -183,7 +183,7 @@ class CrystalCollection(ArkBot):
         self.player.turn_x_by(40)
         return gains, round(time.time() - self.started)
 
-    def deposit_items(self, drop_items: list, keep_items: list) -> None:
+    def deposit_items(self, drop_items: list) -> None:
         vault = Vault()
         vault_full = False
 
@@ -203,6 +203,7 @@ class CrystalCollection(ArkBot):
             for item in ["riot", "ass", "fab", "miner", "pump"]:
                 self.player.inventory.transfer_all(vault, item)
                 self.sleep(0.2)
+            vault_full = vault.is_full()
         else:
             vault_full = True
 
