@@ -189,8 +189,7 @@ class GachaBot(ArkBot):
 
             # put items into vault
             vault_full = crystals.deposit_items(
-                self.tower_settings.drop_items,
-                self.tower_settings.keep_items,
+                self.tower_settings.drop_items
             )
 
             self.inform_resources_deposited(
