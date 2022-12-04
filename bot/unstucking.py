@@ -1,12 +1,16 @@
+import webbrowser
+
 import psutil
 import pygetwindow
 
-from ark.menus import MainMenu, SessionList, IngameMenu
+from ark.menus import IngameMenu, MainMenu, SessionList
 from ark.server import Server
 from bot.ark_bot import ArkBot
 
 
 class UnstuckHandler(ArkBot):
+    """Handles stuck cases for server crashes, bot errors or game crashes."""
+
     def __init__(self) -> None:
         super().__init__()
         self._main_menu = MainMenu()
@@ -14,59 +18,44 @@ class UnstuckHandler(ArkBot):
         self._ingame_menu = IngameMenu()
         self._server = Server("47", "s47", "TheCenter")
 
-    def attempt_fix(self) -> None:
-
+    def attempt_fix(self) -> bool:
+        """Runs an analysis through different possible problems and attempts
+        to fix them upon detection."""
         if self.game_crashed():
-            # restart
-            return
+            print("Analysis: Game is crashed! Restarting...")
+            self.press("esc")
+            self.sleep(30)
+            self.restart()
+            self.reconnect()
 
-        if not self.process_active():
-            # fatal error already closed somehow, game fully closed
-            # restart
-            return
+        elif not self.process_active():
+            print("Analysis: Game is fully closed! Restarting...")
+            self.restart()
+            self.reconnect()
+            self.update_boundaries()
 
-        if self._main_menu.player_disconnected() or self._main_menu.is_open():
-            print("Disconnected!")
+        elif self._main_menu.player_disconnected() or self._main_menu.is_open():
+            print("Analysis: Player got disconnected! Restarting...")
             self.press("esc")
             self.reconnect()
-            return
 
-        print("Got stuck in some menu?")
-        self.game_responding()
-        # could also have knocked out or been moved away from a
-        # bed, gonna have to wait to die :(
+        return self._ingame_menu.check_reponding()
+
+    def restart(self) -> None:
+        """Restarts the game for epic only, waits for the main menu to load.
+        Refreshes window boundaries once launched."""
+        webbrowser.open_new(
+            "com.epicgames.launcher://apps/ark%3A743e47ee84ac49a1a49f4781da70e0d0%3Aaafc587fbf654758802c8e41e4fb3255?action=launch&silent=true"
+        )
+        while not self._main_menu.is_open():
+            self.sleep(1)
+        self.update_boundaries()
 
     def reconnect(self) -> None:
+        """Reconnects to the server."""
         self._main_menu.open_session_list()
         self._session_list.join_server(self._server)
-
-    def game_responding(self) -> bool:
-        """Checks if the game is responsive by seeing if the escape
-        menu comes up when pressing escape, after 60 seconds of unsuccessful
-        attempts it will assume the game is not responding.
-
-        Leaves the escape menu in a closed state.
-        """
-        count = 0
-
-        if self._ingame_menu.is_open():
-            while self._ingame_menu.is_open():
-                count += 1
-                self.press("esc")
-                self.sleep(2)
-                if count > 30:
-                    return False
-            return True
-
-        while not self._ingame_menu.is_open():
-            count += 1
-            self.press("esc")
-            self.sleep(2)
-            if count > 30:
-                return False
-        self.press("esc")
-        self.sleep(2)
-        return True
+        self.sleep(30)
 
     def process_active(self) -> bool:
         """Checks if ark is an active process"""

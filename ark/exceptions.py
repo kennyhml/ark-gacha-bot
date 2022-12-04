@@ -47,3 +47,6 @@ class InvalidStationError(Exception):
 
 class DedisNotDetermined(Exception):
     """Raised when one or more dedis could not be determined whatsoever."""
+
+class ServerNotFoundError(Exception):
+    """Raised when a server could not be found after 15 minutes."""

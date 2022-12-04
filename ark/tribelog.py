@@ -15,7 +15,7 @@ from bot.ark_bot import ArkBot
 
 # configure logging file, helps debugging why certain stuff didnt get posted
 now = datetime.now()
-now = now.strftime("%d-%m-%H-%M")
+now = now.strftime("%d-%m")
 logging.basicConfig(
     level=logging.INFO,
     filename=f"logs/tribelogs {now}.log",

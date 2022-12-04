@@ -561,7 +561,7 @@ class GrindBot(ArkBot):
         expected = {
             "Pearls": (7000, 60000),
             "Paste": (7000, 160000),
-            "Electronics": (800, 6000),
+            "Electronics": (800, 10000),
             "Ingot": (9000, 40000),
         }
         # we dont care about crystal or hide

@@ -665,7 +665,7 @@ class DedicatedStorage(Inventory):
         return (
             self.locate_template(
                 "templates/items_deposited.png",
-                region=(710, 4, 460, 90),
+                region=(710, 4, 460, 130),
                 confidence=0.75,
             )
             is not None
