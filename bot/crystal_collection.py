@@ -72,12 +72,13 @@ class CrystalCollection(ArkBot):
         self.player.turn_y_by(-70)
 
         # try to access the dedi, if its not possible rewalk
-        while not dedi.can_be_opened():
-            while not dedi.can_deposit():
-                self.player.walk("w", 1)
+        for _ in range(2):
+            while not dedi.can_be_opened():
+                while not dedi.can_deposit():
+                    self.player.walk("w", 1)
 
-            self.player.walk("w", 1)
-        dedi.close()
+                self.player.walk("w", 1)
+            dedi.close()
 
     def pick_crystals(self):
         """Picks up the crystals in the collection point

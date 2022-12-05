@@ -1,0 +1,21 @@
+{
+    "console": "subtract",
+    "crouch": "mouse5",
+    "drop": "o",
+    "hotbar_0": "0",
+    "hotbar_1": "1",
+    "hotbar_2": "2",
+    "hotbar_3": "3",
+    "hotbar_4": "4",
+    "hotbar_5": "5",
+    "hotbar_6": "6",
+    "hotbar_7": "7",
+    "hotbar_8": "8",
+    "hotbar_9": "9",
+    "inventory": "tab",
+    "prone": "mouse4",
+    "target_inventory": "f",
+    "toggle_hud": "h",
+    "logs": "l",
+    "use": "e"
+}

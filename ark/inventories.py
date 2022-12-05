@@ -133,7 +133,7 @@ class Inventory(ArkBot):
             self.sleep(0.1)
             c += 1
             if c > 300:
-                raise ReceivingRemoveInventoryTimeout
+                raise ReceivingRemoveInventoryTimeout("Timed out waiting to receive remote inventory!")
 
     def await_open(self) -> bool:
         """Waits for the inventory to be open, for time efficiency.
@@ -203,11 +203,11 @@ class Inventory(ArkBot):
             # 10 seconds passed, check if we can access it at all
             if c == 2:
                 if not self.in_access_range():
-                    raise InventoryNotAccessibleError(self._name)
+                    raise InventoryNotAccessibleError(f"Failed to access {self._name}!")
                 print("Timer appears to be popping, or the server is lagging!")
 
             if c >= 6:
-                raise InventoryNotAccessibleError(self._name)
+                raise InventoryNotAccessibleError(f"Failed to access {self._name}!")
 
         self.await_receiving_remove_inventory()
         print(f"Opened {self._name}!")
@@ -228,7 +228,7 @@ class Inventory(ArkBot):
                 break
 
             if c >= 6:
-                raise InventoryNotClosableError(self._name)
+                raise InventoryNotClosableError(f"Failed to close {self._name}!")
         self.sleep(0.2)
 
     def click_search(self, delete_prior: bool = True) -> None:
@@ -340,7 +340,7 @@ class Inventory(ArkBot):
         self.search_for(item)
         self.click_at(1294, 290, delay=1)
 
-        if amount < 30:
+        if amount < 50:
             for _ in range(amount):
                 self.press("e")
                 self.sleep(0.3)
@@ -382,7 +382,7 @@ class PlayerInventory(Inventory):
             self.sleep(1.5)
 
             if c > 20:
-                raise InventoryNotAccessibleError(self._name)
+                raise InventoryNotAccessibleError(f"Failed to open {self._name}!")
 
     def transfer_amount(self, item: str, amount: int, stacksize: int) -> None:
         """Transfers the amount of the given item into the target inventory.

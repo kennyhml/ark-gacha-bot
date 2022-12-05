@@ -191,7 +191,9 @@ class ArkWindow:
 
     def update_boundaries(self):
         """Re-initializes the class to update the window"""
-        self.__init__()
+        self._window = self.get_window()
+        self._monitor = self.get_monitor()
+        self._fullscreen = self.check_fullscreen()
 
     def convert_width(self, width) -> int:
         if not self.need_boundary_scaling():

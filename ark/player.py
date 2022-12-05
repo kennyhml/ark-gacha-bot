@@ -6,7 +6,7 @@ from ark.buffs import Buff, thirsty, hungry, pod_xp, broken_bones
 from ark.items import y_trap, Item
 from bot.ark_bot import ArkBot
 
-from ark.exceptions import InventoryNotAccessibleError
+from ark.exceptions import InventoryNotAccessibleError, PlayerDidntTravelError
 
 
 class Player(ArkBot):
@@ -52,8 +52,13 @@ class Player(ArkBot):
         )
 
     def await_spawned(self) -> None:
+        counter = 0
         while not self.is_spawned():
             self.sleep(0.5)
+            counter += 1
+
+            if counter > 100:
+                raise PlayerDidntTravelError("Failed to spawn in!")
         print("Now spawned!")
 
     def turn_90_degrees(self, direction: str = "right") -> None:
@@ -89,6 +94,7 @@ class Player(ArkBot):
         """Empties all stacks of crop plots
         Starts facing the gacha, ends facing the gacha
         """
+        self.sleep(0.5)
         self.press(self.keybinds.crouch)
 
         for _ in range(3):

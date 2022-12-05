@@ -165,7 +165,7 @@ class TribeLog(ArkBot):
                 break
             c += 1
             if c > 20:
-                raise LogsNotOpenedError
+                raise LogsNotOpenedError("Failed to open logs!")
 
         # litle buffer in case timer pops or server lags
         self.sleep(2)

@@ -7,7 +7,8 @@ from ark.buffs import pod_xp
 from ark.exceptions import BedNotAccessibleError, PlayerDidntTravelError
 from ark.player import Player
 from bot.ark_bot import ArkBot
-
+from bot.unstucking import UnstuckHandler
+from ark.server import Server
 
 @dataclass
 class Bed:
@@ -46,7 +47,7 @@ class BedMap(ArkBot):
             self.sleep(1)
 
             if c > 30:
-                raise BedNotAccessibleError
+                raise BedNotAccessibleError("Failed to access the bed!")
 
     def travelling(self) -> bool:
         """Check if we are currently travelling (whitescreen)"""
@@ -61,7 +62,7 @@ class BedMap(ArkBot):
             self.sleep(0.1)
             c += 1
             if c > 300:
-                raise PlayerDidntTravelError
+                raise PlayerDidntTravelError("Failed to travel!")
 
         print("Now travelling!")
 
@@ -104,11 +105,11 @@ class BedMap(ArkBot):
                 return
 
             except PlayerDidntTravelError:
+                if not UnstuckHandler(Server("47", "s47", "Center")).attempt_fix():
+                    self.running = False
                 print("Unable to travel! Trying again...")
                 self.sleep(20)
         
-        raise PlayerDidntTravelError
-
     def lay_down(self) -> None:
         # lay into the bed to make sure we dont access bags
         player = Player()

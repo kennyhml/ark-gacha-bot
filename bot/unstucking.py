@@ -3,6 +3,7 @@ import webbrowser
 import psutil
 import pygetwindow
 
+from ark.console import Console
 from ark.menus import IngameMenu, MainMenu, SessionList
 from ark.server import Server
 from bot.ark_bot import ArkBot
@@ -11,12 +12,12 @@ from bot.ark_bot import ArkBot
 class UnstuckHandler(ArkBot):
     """Handles stuck cases for server crashes, bot errors or game crashes."""
 
-    def __init__(self) -> None:
+    def __init__(self, server) -> None:
         super().__init__()
         self._main_menu = MainMenu()
         self._session_list = SessionList()
         self._ingame_menu = IngameMenu()
-        self._server = Server("47", "s47", "TheCenter")
+        self._server = server
 
     def attempt_fix(self) -> bool:
         """Runs an analysis through different possible problems and attempts
@@ -56,7 +57,8 @@ class UnstuckHandler(ArkBot):
         self._main_menu.open_session_list()
         self._session_list.join_server(self._server)
         self.sleep(30)
-
+        Console().set_gamma()
+        
     def process_active(self) -> bool:
         """Checks if ark is an active process"""
         for process in psutil.process_iter():

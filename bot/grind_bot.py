@@ -510,7 +510,7 @@ class GrindBot(ArkBot):
         self.player.crouch()
         self.sleep(0.5)
 
-    def get_dedi_materials(self) -> None:
+    def get_dedi_materials(self) -> dict:
         """Tries to get the dedi materials up to 10 times. Will return a dict
         of the material and its amount on the first successful attempt.
 
@@ -531,6 +531,10 @@ class GrindBot(ArkBot):
                     tes_config = (
                         "-c tessedit_char_whitelist=0123456789liI|O --psm 6 -l eng"
                     )
+                    import cv2 as cv
+                    cv.imshow("", img)
+                    cv.waitKey(0)
+
                     raw_result = tes.image_to_string(img, config=tes_config).strip()
                     # replace common tesseract fuckups
                     for c in DEDI_NUMBER_MAPPING:
@@ -595,6 +599,34 @@ class GrindBot(ArkBot):
 
         self.info_webhook.send(
             embed=embed,
+            username="Ling Ling",
+        )
+
+    def post_dedis_not_determined(self) -> None:
+        """Posts an embed informing that the dedis could not be determined and
+        that an average amount will be assumed."""
+        embed = discord.Embed(
+            type="rich",
+            title="Finished grinding, but failed to determine the resources!",
+            description="Something went wrong trying to determine the resources",
+            color=0x03DD74,
+        )
+        file = discord.File(
+            self.grab_screen((0, 0, 1920, 1080), "temp/unknown_error.png"),
+            filename="image.png",
+        )
+        embed.set_image(url="attachment://image.png"),
+
+        embed.add_field(
+            name=f"Ling ling will assume a 13x Heavy Turret craft!", value="\u200b"
+        )
+
+        embed.set_thumbnail(url=self.grinder_avatar)
+        embed.set_footer(text="Ling Ling on top!")
+
+        self.info_webhook.send(
+            embed=embed,
+            file=file,
             username="Ling Ling",
         )
 
@@ -673,7 +705,6 @@ class GrindBot(ArkBot):
         self.session_turrets = floor(lowest_1 + lowest_2)
         self.session_cost = cost
 
-        print(cost)
         self.post_crafting_plan()
         print(
             f"Need to craft {self.electronics_to_craft} electronics for {self.session_turrets} Turrets"
@@ -899,6 +930,7 @@ class GrindBot(ArkBot):
         # deposit the lightweight mats
         for item in ["Pearls", "Paste", "Electronics"]:
             self.deposit(item)
+
     def spawn(self) -> None:
         self.beds.travel_to(self.bed)
         self.player.await_spawned()
@@ -913,9 +945,21 @@ class GrindBot(ArkBot):
         self.grind_all_gear()
         self.empty_grinder(turn_off=True)
 
-        available_mats = self.get_dedi_materials()
-        self.get_crafting_method(available_mats)
+        try:
+            available_mats = self.get_dedi_materials()
 
+        except DedisNotDetermined:
+            self.post_dedis_not_determined()
+            available_mats = {
+                "Pearls": 5211,
+                "Paste": 2600,
+                "Ingot": 8757,
+                "Electronics": 1773,
+                "Crystal": 10000,
+                "Hide": 20000,
+            }
+
+        self.get_crafting_method(available_mats)
         # craft the first batch of electronics, should we for whatever reason
         # not have to craft any, craft turrets straight away to avoid breaking
         if not self.need_to_craft_electronics():

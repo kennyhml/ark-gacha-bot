@@ -7,15 +7,21 @@ from dacite import from_dict
 
 from ark.beds import Bed, BedMap, TekPod
 from ark.console import Console
-from ark.exceptions import InventoryNotAccessibleError, TekPodNotAccessibleError
+from ark.exceptions import (
+    InventoryNotAccessibleError,
+    TekPodNotAccessibleError,
+    InventoryNotClosableError,
+)
 from ark.inventories import Gacha, Inventory
 from ark.items import pellet
 from ark.player import Player
+from ark.server import Server
 from ark.tribelog import TribeLog
 from bot.ark_bot import ArkBot, TerminatedException
 from bot.crystal_collection import CrystalCollection
 from bot.grind_bot import GrindBot
 from bot.settings import DiscordSettings, TowerSettings
+from bot.unstucking import UnstuckHandler
 
 
 class GachaBot(ArkBot):
@@ -34,6 +40,7 @@ class GachaBot(ArkBot):
         self.seed_beds = self.create_seed_beds()
         self.crystal_bed = self.create_crystal_bed()
         self.tek_pod = self.create_tek_pod()
+        self.server = self.create_server()
 
         self._ytraps_deposited = 0
         self._total_dust_made = 0
@@ -44,7 +51,7 @@ class GachaBot(ArkBot):
         self._current_lap = 0
         self._station_times = []
         self._session_start = time.time()
-
+        self.current_task = None
         self._first_pickup = True
         self._at_pod = False
         self._least_healed = time.time()
@@ -62,6 +69,11 @@ class GachaBot(ArkBot):
     @current_bed.setter
     def current_bed(self, value: int) -> None:
         self._current_bed = value
+
+    def travel_to_station(self, station):
+        self.beds.travel_to(station, self._at_pod)
+        self.tribelogs.check_tribelogs()
+        self.player.await_spawned()
 
     def inform_started(self) -> None:
         """Sends a message to discord that the bot has been started"""
@@ -136,6 +148,13 @@ class GachaBot(ArkBot):
     def create_grinder_bed(self) -> Bed:
         return Bed("grinding", (self.tower_settings.bed_x, self.tower_settings.bed_y))
 
+    def create_server(self) -> Server:
+        return Server(
+            self.tower_settings.server_name,
+            self.tower_settings.server_search,
+            "TheCenter",
+        )
+
     def load_settings(self) -> None:
         """Loads the configuration for the selected tower.
         Uses dactite.from_dict to load the dictionary into corresponding dataclasses.
@@ -174,10 +193,11 @@ class GachaBot(ArkBot):
         bed :class:`Bed`:
             The crystal bed to spawn at
         """
+        self.current_task = "Crystal Collection"
         try:
             # spawn at crystal bed and pick up the crystals
             crystals = CrystalCollection(self.player)
-            self.beds.travel_to(bed, self._at_pod)
+            self.travel_to_station(bed)
             self.tribelogs.check_tribelogs()
             self.player.await_spawned()
             crystals.pick_crystals()
@@ -188,9 +208,7 @@ class GachaBot(ArkBot):
             self._first_pickup = False
 
             # put items into vault
-            vault_full = crystals.deposit_items(
-                self.tower_settings.drop_items
-            )
+            vault_full = crystals.deposit_items(self.tower_settings.drop_items)
 
             self.inform_resources_deposited(
                 time_taken, crystals_opened, resources_deposited, bed
@@ -208,10 +226,26 @@ class GachaBot(ArkBot):
             self.inform_inventory_not_accessible(bed, err.args[0])
 
         except Exception as e:
-            self.inform_unknown_exception(bed, e)
+            self.inform_error(bed, e)
 
         finally:
             self.last_emptied = time.time()
+
+    def take_pellets_from_gacha(self, gacha: Gacha) -> None:
+        # check if we need to take pellets first
+        if not self._laps_completed:
+            if self.current_bed == 0:
+                Console().set_gamma()
+
+            gacha.open()
+            gacha.search_for("ll")
+            self.sleep(0.3)
+            if gacha.has_item(pellet):
+                gacha.take_all()
+                self.player.inventory.await_items_added()
+                self.sleep(0.5)
+                self.player.inventory.transfer_some_pellets(self.player.inventory)
+            gacha.close()
 
     def do_gacha_station(self, bed: Bed) -> None:
         """Completes the gacha station of the given bed.
@@ -229,44 +263,25 @@ class GachaBot(ArkBot):
         -----------
             `InventoryNotAccessible` Exception if the gacha could not be opened
         """
-        gacha = Gacha()
-        self.beds.travel_to(bed, self._at_pod)
-        self.tribelogs.check_tribelogs()
-        self.player.await_spawned()
+        # set times and tasks, travel to station
+        self.travel_to_station(bed)
         start = time.time()
+        self.current_task = f"Gacha Station {self.current_bed + 1}"
 
+        # do the crop plots and load the gacha, post records
         try:
-            # check if we need to take pellets first
-            if not self._laps_completed:
-                if self.current_bed == 0:
-                    Console().set_gamma()
-
-                gacha.open()
-                gacha.search_for("ll")
-                self.sleep(0.3)
-                if gacha.has_item(pellet):
-                    gacha.take_all()
-                    self.player.inventory.await_items_added()
-                    self.sleep(0.5)
-                    self.player.inventory.transfer_some_pellets(self.player.inventory)
-                gacha.close()
-
-            # do the crop plots and load the gacha, post records
-            self.sleep(0.5)
+            gacha = Gacha()
+            self.take_pellets_from_gacha(gacha)
             self.player.do_crop_plots()
             added_traps = self.player.load_gacha(gacha)
             self._ytraps_deposited += added_traps * 10
             self.inform_station_finished(bed, round(time.time() - start), added_traps)
             self._station_times.append(round(time.time() - start))
 
-        except TerminatedException:
-            pass
-
-        except InventoryNotAccessibleError:
-            self.inform_inventory_not_accessible(bed, gacha._name)
-
-        except Exception as e:
-            self.inform_unknown_exception(bed, e)
+        except (InventoryNotAccessibleError, InventoryNotAccessibleError) as e:
+            self.inform_error(f"Seeding Gacha {self.current_bed + 1}", e)
+            if not UnstuckHandler(self.server).attempt_fix():
+                self.running = False
 
     def format_time_taken(self, time_taken: time.time) -> str:
         """Returns the given time.time object in a formatted string"""
@@ -287,7 +302,7 @@ class GachaBot(ArkBot):
             "_", " "
         )
 
-    def inform_unknown_exception(self, bed: Bed, exception: Exception) -> None:
+    def inform_error(self, task: str, exception: Exception) -> None:
         """Posts an image of the current screenshot alongside current
         bed and the exception to discord for debugging purposes.
 
@@ -299,19 +314,31 @@ class GachaBot(ArkBot):
         exception: :class:`Exception`:
             The description of the occured exception
         """
-        formatted_text = (
-            f"Ran into an unhandled exception at task `{bed.name}`!\n" f"{exception}"
+        embed = discord.Embed(
+            type="rich",
+            title="Ran into an unhandled exception!",
+            description="Something went wrong! Attempting to unstuck..",
+            color=0xF20A0A,
         )
+
+        embed.add_field(name=f"Task:", value=task if task else "?")
+        embed.add_field(name=f"Error:", value=exception if exception else "?")
+
+        file = discord.File(
+            self.grab_screen((0, 0, 1920, 1080), "temp/unknown_error.png"),
+            filename="image.png",
+        )
+        embed.set_image(url="attachment://image.png"),
+
         Thread(
-            target=self.send_to_discord,
+            target=self.info_webhook.send,
             name="Posting to discord",
-            args=(
-                self.info_webhook,
-                formatted_text,
-                self.grab_screen((0, 0, 1920, 1080), "temp/unknown_error.png"),
-                "Ling Ling",
-                self.discord_avatar,
-            ),
+            kwargs={
+                "username": "Ling Ling",
+                "embed": embed,
+                "file": file,
+                "avatar_url": self.discord_avatar,
+            },
         ).start()
 
     def inform_station_finished(self, bed: Bed, time: int, traps: int) -> None:
@@ -528,6 +555,7 @@ class GachaBot(ArkBot):
 
             # check if any electronics are crafting and if they need to be requeued
             if self.electronics_finished():
+                self.current_task = "Grinding Station"
                 if not self.grind_station.need_to_craft_electronics():
                     self.grind_station.craft_turrets()
                 return
@@ -540,21 +568,29 @@ class GachaBot(ArkBot):
                 return
 
             # do regular gacha seeding task
+            # increment bed counter
             self.do_gacha_station(self.seed_beds[self.current_bed])
-
-            # increment bed counter, make sure its not out of range!
-            if self.current_bed < self.tower_settings.seed_beds - 1:
-                self.current_bed += 1
-                return
-
-            # reset bed counter, increment laps
-            self.lap_finished()
 
         except TerminatedException:
             pass
 
         except Exception as e:
-            self.inform_unknown_exception(self.seed_beds[self.current_bed], e)
+            self.inform_error(self.current_task, e)
+            unstucking = UnstuckHandler(self.server)
+            if not unstucking.attempt_fix():
+                print("Failed to unstuck...")
+                self.running = False
+        finally:
+            self.increment_counter()
+
+    def increment_counter(self) -> None:
+        # increment bed counter, make sure its not out of range!
+        if self.current_bed < self.tower_settings.seed_beds - 1:
+            self.current_bed += 1
+            return
+
+        # reset bed counter, increment laps
+        self.lap_finished()
 
     def lap_finished(self) -> None:
         self.current_bed = 0
@@ -569,11 +605,9 @@ class GachaBot(ArkBot):
         is raised.
         """
         start = time.time()
-
+        self.current_task = "Healing"
         # travel to the pod
-        self.beds.travel_to(self.tek_pod)
-        self.tribelogs.check_tribelogs()
-        self.player.await_spawned()
+        self.travel_to_station(self.tek_pod)
 
         # try to enter the pod 3 times
         for _ in range(3):
@@ -588,4 +622,4 @@ class GachaBot(ArkBot):
             return
 
         # we cant heal, raise an error so we can try to unstuck
-        raise TekPodNotAccessibleError
+        raise TekPodNotAccessibleError("Failed to access the tek pod!")
