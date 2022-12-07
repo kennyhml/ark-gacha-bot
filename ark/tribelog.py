@@ -219,11 +219,11 @@ class TribeLog(ArkBot):
 
         messages = []
         for i, box in enumerate(days_in_order):
-            # grab day region
-            day_region = (int(box[0] - 5), int(box[1] - 5), box[0] + 170, box[1] + 15)
-
-            # each frame ends where the next frame y starts
             try:
+                # grab day region
+                day_region = (int(box[0] - 5), int(box[1] - 5), box[0] + 170, box[1] + 15)
+
+                # each frame ends where the next frame y starts
                 message_region = (
                     int(box[0] - 5),
                     int(box[1] - 5),
@@ -231,26 +231,25 @@ class TribeLog(ArkBot):
                     int(days_in_order[i + 1][1] - 2),
                 )
 
-            # not worth checking the last log message because its shadowed
-            except IndexError:
-                continue
+                # OCR the day and validate it, continue if the day is invalid
+                if not (day := self.get_daytime(log_img.crop(day_region))):
+                    continue
 
-            # OCR the day and validate it, continue if the day is invalid
-            if not (day := self.get_daytime(log_img.crop(day_region))):
-                continue
+                # OCR the contents, None if its irrelevant
+                if not (content := self.get_message_contents(log_img.crop(message_region))):
+                    continue
+                logging.log(logging.INFO, f"Found {day} with contents {content}")
 
-            # OCR the contents, None if its irrelevant
-            if not (content := self.get_message_contents(log_img.crop(message_region))):
-                continue
-            logging.log(logging.INFO, f"Found {day} with contents {content}")
+                if not self.day_is_known(day):
+                    message = TribeLogMessage(day, *content)
+                    messages.append(message)
 
-            if not self.day_is_known(day):
-                message = TribeLogMessage(day, *content)
-                messages.append(message)
+                    if self._tribe_log:
+                        logging.log(logging.INFO, f"Sending an alert for {message}!")
+                        self.send_alert(message)
 
-                if self._tribe_log:
-                    logging.log(logging.INFO, f"Sending an alert for {message}!")
-                    self.send_alert(message)
+            except Exception as e:
+                print(e)
 
         logging.log(logging.INFO, f"New messages added: {messages}!")
         self._tribe_log += reversed(messages)
@@ -301,8 +300,12 @@ class TribeLog(ArkBot):
     def get_day_occurrences(self) -> list[tuple]:
         """Retuns a list of all days, each day being a
         tuple containing top, left, widht and height"""
+
+        img = Image.open("temp/tribelog.png")
+        img = img.crop(box=(0, 0, 50, img.height))
+
         return self.locate_all_in_image(
-            "templates/tribelog_day.png", "temp/tribelog.png", confidence=0.8
+            "templates/tribelog_day.png", img, confidence=0.8
         )
 
     def get_daytime(self, image: str | Image.Image | ScreenShot) -> str | None:

@@ -531,10 +531,7 @@ class GrindBot(ArkBot):
                     tes_config = (
                         "-c tessedit_char_whitelist=0123456789liI|O --psm 6 -l eng"
                     )
-                    import cv2 as cv
-                    cv.imshow("", img)
-                    cv.waitKey(0)
-
+                
                     raw_result = tes.image_to_string(img, config=tes_config).strip()
                     # replace common tesseract fuckups
                     for c in DEDI_NUMBER_MAPPING:
@@ -827,9 +824,11 @@ class GrindBot(ArkBot):
         self.exo_mek.open()
         self.player.inventory.transfer_amount(resource, amount, stacksize)
         self.exo_mek.close()
+        self.sleep(1)
 
         # put remaining resources back into dedi
         self.turn_to(resource)
+        self.sleep(1)
         self.dedis.attempt_deposit(resource, False)
 
     def craft(self, item, amount) -> None:
@@ -878,6 +877,7 @@ class GrindBot(ArkBot):
         self.electronics_crafted += to_craft
         self.last_crafted = time.time()
         self.post_electronics_crafting(start)
+        self.player.drop_all()
         return True
 
     def craft_turrets(self):
@@ -939,13 +939,14 @@ class GrindBot(ArkBot):
 
     def run(self):
         print("A grinding session has been created!")
-        self.spawn()
+        # self.spawn()
 
         # get all resources from grinding, turn off grinder when finished
-        self.grind_all_gear()
-        self.empty_grinder(turn_off=True)
+        # self.grind_all_gear()
+        # self.empty_grinder(turn_off=True)
 
         try:
+            raise DedisNotDetermined
             available_mats = self.get_dedi_materials()
 
         except DedisNotDetermined:
@@ -962,7 +963,7 @@ class GrindBot(ArkBot):
         self.get_crafting_method(available_mats)
         # craft the first batch of electronics, should we for whatever reason
         # not have to craft any, craft turrets straight away to avoid breaking
-        if not self.need_to_craft_electronics():
+        if 1 or not self.need_to_craft_electronics():
             self.craft_turrets()
             return True
 
