@@ -77,7 +77,19 @@ CONTENTS_MAPPING = {
     "iCarbonemysi": "(Carbonemys)",
     "(Shadowmane!": "(Shadowmane)!",
     "Desmadus": "Desmodus",
-    "Desmoadus": "Desmodus"
+    "Desmoadus": "Desmodus",
+    "(€lonel": "[CLONE]",
+    "Liahtnina": "Lightning",
+    "Wvvern": "Wyvern",
+    "fLi": "(Li",
+    "ernl": "ern)",
+    "Fiardhawk": "Fjordhawk",
+    "fF": "(F",
+    "wki": "wk)",
+    "iTek": "(Tek",
+    "iTribe": "(Tribe",
+    "i!": ")!",
+    "saurus!": "saurus)!",
 }
 
 # RGB to denoise with if the templates are located in the tribelog message
@@ -221,7 +233,12 @@ class TribeLog(ArkBot):
         for i, box in enumerate(days_in_order):
             try:
                 # grab day region
-                day_region = (int(box[0] - 5), int(box[1] - 5), box[0] + 170, box[1] + 15)
+                day_region = (
+                    int(box[0] - 5),
+                    int(box[1] - 5),
+                    box[0] + 170,
+                    box[1] + 15,
+                )
 
                 # each frame ends where the next frame y starts
                 message_region = (
@@ -236,17 +253,19 @@ class TribeLog(ArkBot):
                     continue
 
                 # OCR the contents, None if its irrelevant
-                if not (content := self.get_message_contents(log_img.crop(message_region))):
+                if not (
+                    content := self.get_message_contents(log_img.crop(message_region))
+                ):
                     continue
                 logging.log(logging.INFO, f"Found {day} with contents {content}")
 
-                if not self.day_is_known(day):
+                if not "C4 Charge" in content and not self.day_is_known(day):
                     message = TribeLogMessage(day, *content)
                     messages.append(message)
 
                     if self._tribe_log:
                         logging.log(logging.INFO, f"Sending an alert for {message}!")
-                        self.send_alert(message)
+                        self.send_alert(message, multiple=len(messages) == 3)
 
             except Exception as e:
                 print(e)
@@ -263,7 +282,7 @@ class TribeLog(ArkBot):
         )
         logging.log(logging.INFO, f"Updated tribelog: {self._tribe_log}")
 
-    def send_alert(self, message: TribeLogMessage) -> None:
+    def send_alert(self, message: TribeLogMessage, multiple: bool = False) -> None:
         """Sends an alert to discord with the given message."""
         # create our webhook, action and description in the header
         embed = discord.Embed(
@@ -287,7 +306,10 @@ class TribeLog(ArkBot):
         embed.set_footer(text="Ling Ling on top!")
 
         # mention if a relevant event happened
-        mention = any(msg in message.content for msg in ("enemy survivor", "Pin Coded"))
+        mention = (
+            any(msg in message.content for msg in ("enemy survivor", "Pin Coded"))
+            or multiple
+        )
 
         # send the message
         self.alert_webhook.send(
@@ -504,4 +526,7 @@ class TribeLog(ArkBot):
 
         old_length = len(self._tribe_log)
         self._tribe_log = self._tribe_log[-30:]
-        logging.log(logging.INFO, f"Deleted {old_length - len(self._tribe_log)} old tribelog messages.")
+        logging.log(
+            logging.INFO,
+            f"Deleted {old_length - len(self._tribe_log)} old tribelog messages.",
+        )
