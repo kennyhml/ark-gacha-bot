@@ -18,6 +18,7 @@ class UnstuckHandler(ArkBot):
         self._session_list = SessionList()
         self._ingame_menu = IngameMenu()
         self._server = server
+        self.reconnected = False
 
     def attempt_fix(self) -> bool:
         """Runs an analysis through different possible problems and attempts
@@ -54,6 +55,7 @@ class UnstuckHandler(ArkBot):
 
     def reconnect(self) -> None:
         """Reconnects to the server."""
+        self.reconnected = True
         self._main_menu.open_session_list()
         self._session_list.join_server(self._server)
         self.sleep(30)

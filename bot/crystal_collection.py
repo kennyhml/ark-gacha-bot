@@ -1,6 +1,7 @@
 import pyautogui as pg
 import pydirectinput as inp
 
+from ark.exceptions import DediNotInRangeError
 from ark.inventories import DedicatedStorage, Vault
 from ark.items import black_pearl, dust, gacha_crystal
 from ark.player import Player
@@ -73,10 +74,13 @@ class CrystalCollection(ArkBot):
 
         # try to access the dedi, if its not possible rewalk
         for _ in range(2):
+            count = 0
             while not dedi.can_be_opened():
                 while not dedi.can_deposit():
                     self.player.walk("w", 1)
-
+                    count += 1
+                    if count > 30:
+                        raise DediNotInRangeError
                 self.player.walk("w", 1)
             dedi.close()
 

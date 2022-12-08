@@ -69,10 +69,11 @@ class ArkBot(ArkWindow):
         """Bot runtime check, raises `TerminatedException` if the
         bot has been terminated (by user keypress). Sleeps indefinitely
         while paused by user."""
-        if not self._running:
+
+        if not self.running:
             raise TerminatedException
 
-        while self._paused:
+        while self.paused:
             time.sleep(0.1)
             if not self._running:
                 raise TerminatedException

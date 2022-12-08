@@ -70,7 +70,29 @@ class GachaBot(ArkBot):
     def current_bed(self, value: int) -> None:
         self._current_bed = value
 
+    def unstuck(self, task: str, error: str) -> None:
+        """Attempts to unstuck when the bot has failed to proceed from the current task.
+        Terminates the bot entirely on failure.
+
+        Parameters:
+        ------------
+        task :class:`str`:
+            The task the bot got stuck at [for discord information]
+
+        error :class:`str`:
+            The error the bot got stuck with [for discord information]
+        """
+        self.inform_error(task, error)
+        unstucking = UnstuckHandler(self.server)
+        if not unstucking.attempt_fix():
+            print("Failed to unstuck...")
+            self.running = False
+            
+        if unstucking.reconnected:
+            self.last_emptied = time.time()
+
     def travel_to_station(self, station):
+        self.check_status()
         self.beds.travel_to(station, self._at_pod)
         self.tribelogs.check_tribelogs()
         self.player.await_spawned()
@@ -222,11 +244,8 @@ class GachaBot(ArkBot):
         except TerminatedException:
             pass
 
-        except InventoryNotAccessibleError as err:
-            self.inform_inventory_not_accessible(bed, err.args[0])
-
         except Exception as e:
-            self.inform_error(bed, e)
+            self.unstuck(self.current_task, e)
 
         finally:
             self.last_emptied = time.time()
@@ -282,6 +301,9 @@ class GachaBot(ArkBot):
             self.inform_error(f"Seeding Gacha {self.current_bed + 1}", e)
             if not UnstuckHandler(self.server).attempt_fix():
                 self.running = False
+                
+        finally:
+            self.increment_counter()
 
     def format_time_taken(self, time_taken: time.time) -> str:
         """Returns the given time.time object in a formatted string"""
@@ -548,6 +570,7 @@ class GachaBot(ArkBot):
         gacha feeding and grinding gear where healing wont block the next task.
         """
         try:
+            self.check_status()
             # check if we need to go heal
             if healed := self.player.needs_recovery():
                 self.go_heal()
@@ -575,14 +598,8 @@ class GachaBot(ArkBot):
             pass
 
         except Exception as e:
-            self.inform_error(self.current_task, e)
-            unstucking = UnstuckHandler(self.server)
-            if not unstucking.attempt_fix():
-                print("Failed to unstuck...")
-                self.running = False
-        finally:
-            self.increment_counter()
-
+            self.unstuck(self.current_task, e)
+            
     def increment_counter(self) -> None:
         # increment bed counter, make sure its not out of range!
         if self.current_bed < self.tower_settings.seed_beds - 1:

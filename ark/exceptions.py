@@ -50,3 +50,6 @@ class DedisNotDetermined(Exception):
 
 class ServerNotFoundError(Exception):
     """Raised when a server could not be found after 15 minutes."""
+
+class DediNotInRangeError(Exception):
+    """Raised when the dedi deposit text could not be detected"""

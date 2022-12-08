@@ -939,14 +939,13 @@ class GrindBot(ArkBot):
 
     def run(self):
         print("A grinding session has been created!")
-        # self.spawn()
+        self.spawn()
 
         # get all resources from grinding, turn off grinder when finished
-        # self.grind_all_gear()
-        # self.empty_grinder(turn_off=True)
+        self.grind_all_gear()
+        self.empty_grinder(turn_off=True)
 
         try:
-            raise DedisNotDetermined
             available_mats = self.get_dedi_materials()
 
         except DedisNotDetermined:
@@ -963,7 +962,7 @@ class GrindBot(ArkBot):
         self.get_crafting_method(available_mats)
         # craft the first batch of electronics, should we for whatever reason
         # not have to craft any, craft turrets straight away to avoid breaking
-        if 1 or not self.need_to_craft_electronics():
+        if not self.need_to_craft_electronics():
             self.craft_turrets()
             return True
 
