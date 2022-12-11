@@ -929,20 +929,23 @@ class GrindBot(ArkBot):
         """Crafts the turrets after all electronics have been crafted."""
         # spawn and get the resources
         self.spawn()
-        self.transfer_turret_resources()
+        try:
+            self.transfer_turret_resources()
 
-        # craft the turrets
-        self.craft("Auto Turret", self.session_turrets)
-        self.craft("Heavy Auto Turret", self.session_turrets + 3)
+            # craft the turrets
+            self.craft("Auto Turret", self.session_turrets)
+            self.craft("Heavy Auto Turret", self.session_turrets + 3)
 
-        # take out the turrets
-        self.exo_mek.open()
-        self.exo_mek.take_all_items("Heavy Auto Turret")
-        self.exo_mek.close()
+            # take out the turrets
+            self.exo_mek.open()
+            self.exo_mek.take_all_items("Heavy Auto Turret")
+            self.exo_mek.close()
 
-        # deposit turrets and clear up the exo mek
-        self.clear_up_exo_mek()
-        self.session_reset()
+            # deposit turrets and clear up the exo mek
+            self.clear_up_exo_mek()
+            
+        finally:
+            self.session_reset()
 
     def clear_up_exo_mek(self) -> None:
         """Clears the exo mek after a crafting session."""

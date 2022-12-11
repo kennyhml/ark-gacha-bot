@@ -143,55 +143,8 @@ class Player(ArkBot):
         # back to crouching
         self.press(self.keybinds.crouch)
 
-    def look_for_gacha(self, gacha: Gacha) -> None:
-        """Locates the gacha using vertical and horizontal
-        movements after each it attempts to locate the `Ride`
-        template.
-
-        Parameters:
-        -----------
-        gacha :class:`Gacha`:
-            The instance of the gacha to locate
-
-        Returns:
-        -----------
-        `True` if the gacha could be found else `None`
-        """
-        # check if we need to move at all
-        if gacha.can_access():
-            return True
-
-        # look down then straight forward to sync
-        self.look_down_hard()
-        self.sleep(0.1)
-        self.turn_y_by(-180)
-        if gacha.can_access():
-            return True
-
-        # look further up 6 times, every 3 times check left & right
-        for i in range(6):
-            self.turn_y_by(-10)
-            if gacha.can_access():
-                return True
-
-            # look at the sides every 3 steps
-            if (i + 1) % 3 == 0:
-
-                # look at left
-                for _ in range(4):
-                    self.turn_x_by(-20)
-                    if gacha.can_access():
-                        return True
-                # look at right
-                for _ in range(8):
-                    self.turn_x_by(20)
-                    if gacha.can_access():
-                        return True
-                # back to middle
-                for _ in range(4):
-                    self.turn_x_by(-20)
-                    if gacha.can_access():
-                        return True
+    def do_precise_crop_plot_stack(self) -> None:
+        pass
 
     def load_gacha(self, gacha: Gacha) -> None:
         """Fills the gacha after emptying crop plots.

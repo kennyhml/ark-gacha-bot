@@ -18,7 +18,7 @@ from ark.exceptions import (
     NoItemsDepositedError,
     ReceivingRemoveInventoryTimeout,
     NoGasolineError,
-    NoItemsAddedError
+    NoItemsAddedError,
 )
 from ark.items import Item, pellet
 from bot.ark_bot import ArkBot
@@ -61,7 +61,7 @@ class Inventory(ArkBot):
 
     def drop_all(self) -> None:
         self.click_at(self.DROP_ALL)
-        
+
     def receiving_remote_inventory(self) -> bool:
         """Checks if the 'Receiving Remote Inventory' text is visible."""
         return (
@@ -134,7 +134,9 @@ class Inventory(ArkBot):
             self.sleep(0.1)
             c += 1
             if c > 300:
-                raise ReceivingRemoveInventoryTimeout("Timed out waiting to receive remote inventory!")
+                raise ReceivingRemoveInventoryTimeout(
+                    "Timed out waiting to receive remote inventory!"
+                )
 
     def await_open(self) -> bool:
         """Waits for the inventory to be open, for time efficiency.
@@ -301,7 +303,7 @@ class Inventory(ArkBot):
 
     def get_slots(self) -> int:
         slots = self.grab_screen((1090, 503, 41, 15))
-        masked = self.denoise_text(slots, (251 ,227, 124), variance=30, upscale=True)
+        masked = self.denoise_text(slots, (251, 227, 124), variance=30, upscale=True)
 
         result = tes.image_to_string(
             masked,
@@ -382,7 +384,7 @@ class PlayerInventory(Inventory):
 
     def transfer_amount(self, item: str, amount: int, stacksize: int) -> None:
         """Transfers the amount of the given item into the target inventory.
-        After each transfer, a check on the amount is made that may cancel the transfers if 
+        After each transfer, a check on the amount is made that may cancel the transfers if
         the OCR'd amount is in a valid range.
 
         Parameters:
@@ -392,7 +394,7 @@ class PlayerInventory(Inventory):
 
         amount :class:`int`:
             The quantity of items to be transferred
-        
+
         stacksize :class:`int`
             The amount the item stacks to to calculate transfers
         """
@@ -400,7 +402,9 @@ class PlayerInventory(Inventory):
         self.search_for(item)
 
         # get total row transfers, add a little buffer for lag (1.5 by default)
-        total_transfers = round((int(math.ceil(amount / 100.0)) * 100 / stacksize) / 6 * 2)
+        total_transfers = round(
+            (int(math.ceil(amount / 100.0)) * 100 / stacksize) / 6 * 2
+        )
 
         # transfer the items
         for _ in range(total_transfers):
@@ -412,7 +416,7 @@ class PlayerInventory(Inventory):
                 transferred = self.get_amount_transferred()
                 if not transferred:
                     continue
-                
+
                 print(f"Transferred {transferred}...")
 
                 # if the amount of items we transferred makes sense we can cancel
@@ -577,6 +581,20 @@ class CropPlot(Inventory):
     def __init__(self):
         super().__init__("Tek Crop Plot", "tek_crop_plot")
 
+    def get_stack_index(self) -> int:
+        """Returns the number of the crop plot in the stack by checking for
+        the folder name from AAA to HHH, being 1 to 9."""
+
+        options = ["AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG", "HHH"]
+
+        for index, option in enumerate(options, start=1):
+            if self.locate_template(
+                f"templates/folder_{option}.png",
+                region=(1240, 290, 55, 34),
+                confidence=0.9,
+            ):
+                return index
+
     def has_traps(self) -> bool:
         """Checks if the crop plot has traps so we dont waste time
         searching and taking items that dont exist.
@@ -588,7 +606,9 @@ class CropPlot(Inventory):
             is not None
         )
 
-    def take_traps_put_pellets(self, player_inv: PlayerInventory, first_lap: bool = False):
+    def take_traps_put_pellets(
+        self, player_inv: PlayerInventory, first_lap: bool = False
+    ):
         """Opens the crop plots, takes all traps if there are any
         and hits transfer all to put pellets in.
         """
@@ -600,7 +620,7 @@ class CropPlot(Inventory):
             if self.has_traps():
                 self.take_all()
                 player_inv.transfer_all(self)
-                
+
             elif first_lap:
                 # put pellets in and close
                 player_inv.transfer_all(self)

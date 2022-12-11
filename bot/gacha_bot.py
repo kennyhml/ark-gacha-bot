@@ -604,10 +604,13 @@ class GachaBot(ArkBot):
     def electronics_finished(self) -> bool:
         """Returns true if there is an ongoing grinding session and more than
         3 minutes have passed since the last electronics craft."""
-        return (
-            self.grind_station.session_cost
-            and (time.time() - self.grind_station.last_crafted) > 180
-        )
+        try:
+            return (
+                self.grind_station.session_cost
+                and (time.time() - self.grind_station.last_crafted) > 180
+            )
+        except TypeError:
+            return False
 
     def do_next_task(self) -> None:
         """Gacha bot main call method, runs the next task in line.

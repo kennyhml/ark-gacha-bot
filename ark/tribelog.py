@@ -58,6 +58,7 @@ CONTENTS_MAPPING = {
     "C4 Charce": "C4 Charge",
     "C4& Charae": "C4 Charge",
     "C4 Charace": "C4 Charge",
+    "C4 Chareae": "C4 Charge",
     "(Pin Coded!": "(Pin Coded)",
     "(Pin Codedl": "(Pin Coded)",
     "tExo": "(Exo",
@@ -161,7 +162,7 @@ DAYTIME_MAPPING = {
 }
 
 # terms to prevent alerting for
-INGORED_TERMS = ["C4 Charge", "Baby"]
+INGORED_TERMS = ["C4", "Baby"]
 
 
 @dataclass
