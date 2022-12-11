@@ -90,7 +90,7 @@ class Player(ArkBot):
         self.check_status()
         input.moveRel(amount, 0, 0, None, False, False, True)
 
-    def do_crop_plots(self) -> None:
+    def do_crop_plots(self, first_lap: bool = False) -> None:
         """Empties all stacks of crop plots
         Starts facing the gacha, ends facing the gacha
         """
@@ -99,11 +99,11 @@ class Player(ArkBot):
 
         for _ in range(3):
             self.turn_90_degrees()
-            self.do_crop_plot_stack()
+            self.do_crop_plot_stack(first_lap)
         self.turn_90_degrees()
         self.sleep(0.2)
 
-    def do_crop_plot_stack(self) -> None:
+    def do_crop_plot_stack(self, first_lap: bool = False) -> None:
         """Empties the current stack of crop plots.
 
         Takes all traps from the crop plots using the searchbar, then transfers
@@ -123,22 +123,22 @@ class Player(ArkBot):
         # take the bottom most crop plot
         self.turn_y_by(-130)
         self.sleep(0.5)
-        crop_plot.take_traps_put_pellets(self.inventory)
+        crop_plot.take_traps_put_pellets(self.inventory, first_lap)
 
         # look up slightly emptying the next 5
         for _ in range(5):
             self.turn_y_by(-17)
-            crop_plot.take_traps_put_pellets(self.inventory)
+            crop_plot.take_traps_put_pellets(self.inventory, first_lap)
 
         # stand up and take the current one
         self.press(self.keybinds.crouch)
         self.turn_y_by(50)
-        crop_plot.take_traps_put_pellets(self.inventory)
+        crop_plot.take_traps_put_pellets(self.inventory, first_lap)
 
         # take next two
         for _ in range(2):
             self.turn_y_by(-17)
-            crop_plot.take_traps_put_pellets(self.inventory)
+            crop_plot.take_traps_put_pellets(self.inventory, first_lap)
 
         # back to crouching
         self.press(self.keybinds.crouch)

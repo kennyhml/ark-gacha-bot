@@ -1,6 +1,7 @@
 import json
 import time
 from threading import Thread
+from datetime import datetime
 
 import discord
 from dacite import from_dict
@@ -30,6 +31,7 @@ class GachaBot(ArkBot):
     y_trap_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/cb/Plant_Species_Y_Trap_%28Scorched_Earth%29.png/revision/latest?cb=20160901233007"
     crystal_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/c3/Gacha_Crystal_%28Extinction%29.png/revision/latest?cb=20181108100408"
     dust_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b1/Element_Dust.png/revision/latest/scale-to-width-down/228?cb=20181107161643"
+    whip_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b9/Whip_%28Scorched_Earth%29.png/revision/latest/scale-to-width-down/228?cb=20160901213011"
 
     def __init__(self) -> None:
         super().__init__()
@@ -50,7 +52,7 @@ class GachaBot(ArkBot):
         self._total_pickups = 0
         self._laps_completed = 0
         self._current_bed = 0
-        self._current_lap = 0
+        self._current_lap = 1
         self._station_times = []
         self._session_start = time.time()
         self.current_task = None
@@ -101,11 +103,24 @@ class GachaBot(ArkBot):
 
     def inform_started(self) -> None:
         """Sends a message to discord that the bot has been started"""
-        self.send_to_discord(
-            self.info_webhook,
-            "Ling Ling is starting!",
-            name="Ling Ling",
-            avatar=self.discord_avatar,
+        now = datetime.now()
+        now = now.strftime("%H:%M")
+        
+        embed = discord.Embed(
+            type="rich",
+            title="Ling Ling has been started!",
+            description=f"Ling Ling has been started at {now}!",
+            color=0xF20A0A,
+        )
+        embed.add_field(name=f"Account:", value=self.tower_settings.account_name)
+        embed.add_field(name=f"Server:", value=self.tower_settings.server_name)
+        embed.set_thumbnail(url=self.whip_avatar)
+        embed.set_footer(text="Ling Ling on top!")
+
+        self.info_webhook.send(
+            avatar_url=self.discord_avatar,
+            embed=embed,
+            username="Ling Ling",
         )
 
     def create_webhooks(self) -> None:
@@ -293,7 +308,7 @@ class GachaBot(ArkBot):
         try:
             gacha = Gacha()
             self.take_pellets_from_gacha(gacha)
-            self.player.do_crop_plots()
+            self.player.do_crop_plots(first_lap=self._current_lap == 1)
             added_traps = self.player.load_gacha(gacha)
             self._ytraps_deposited += added_traps * 10
             self.inform_station_finished(bed, round(time.time() - start), added_traps)
@@ -614,8 +629,8 @@ class GachaBot(ArkBot):
     def lap_finished(self) -> None:
         self.current_bed = 0
         self._laps_completed += 1
-        self._current_lap += 1
         self.inform_lap_finished()
+        self._current_lap += 1
         self.lap_started = time.time()
 
     def go_heal(self) -> None:

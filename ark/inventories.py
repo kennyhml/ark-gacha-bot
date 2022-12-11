@@ -494,8 +494,9 @@ class PlayerInventory(Inventory):
             return
         if item:
             self.search_for(item)
-        self.click_at(self.TRANSFER_ALL)
-        self.sleep(0.1)
+        self.move_to(self.TRANSFER_ALL)
+        self.sleep(0.3)
+        self.click("left")
 
     def pellets_left_to_tranfer(self) -> bool:
         """Checks if there are any pellets left to even transfer,
@@ -587,7 +588,7 @@ class CropPlot(Inventory):
             is not None
         )
 
-    def take_traps_put_pellets(self, player_inv: PlayerInventory):
+    def take_traps_put_pellets(self, player_inv: PlayerInventory, first_lap: bool = False):
         """Opens the crop plots, takes all traps if there are any
         and hits transfer all to put pellets in.
         """
@@ -597,11 +598,13 @@ class CropPlot(Inventory):
 
             # check theres traps in the crop plot
             if self.has_traps():
-                self.take_all_items("trap")
-
-            # put pellets in and close
-            if player_inv.has_item(pellet):
+                self.take_all()
                 player_inv.transfer_all(self)
+                
+            elif first_lap:
+                # put pellets in and close
+                player_inv.transfer_all(self)
+
             self.close()
 
         except InventoryNotAccessibleError:
