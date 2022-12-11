@@ -39,7 +39,7 @@ class ArkBot(ArkWindow):
 
     """
 
-    __verion__ = "3.0"
+    __version__ = "1.3.3"
     _paused = False
     _running = True
     default_avatar = "https://steamuserimages-a.akamaihd.net/ugc/883133594330098188/6F62B1436FB2C7F26F028ACCA931CB5AE7C3F4F3/?imw=512&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false"
@@ -84,7 +84,7 @@ class ArkBot(ArkWindow):
         Parameters:
         -------------
         duration :class:`int` | `float`:
-            The button click to emulate.
+            The duration to sleep.
         """
         self.check_status()
         time.sleep(duration)

@@ -18,6 +18,7 @@ from ark.exceptions import (
     NoItemsDepositedError,
     ReceivingRemoveInventoryTimeout,
     NoGasolineError,
+    NoItemsAddedError
 )
 from ark.items import Item, pellet
 from bot.ark_bot import ArkBot
@@ -477,7 +478,7 @@ class PlayerInventory(Inventory):
             c += 1
             self.sleep(0.1)
             if c > 300:
-                raise TimeoutError("No Items added after 30 seconds!")
+                raise NoItemsAddedError("No Items added after 30 seconds!")
 
     def transfer_all(self, inventory: Inventory, item: str = None):
         """Transfers all of the given item into the target inventory

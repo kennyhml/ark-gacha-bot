@@ -9,11 +9,18 @@ from pytesseract import pytesseract as tes
 from strenum import StrEnum
 
 from ark.beds import Bed, BedMap
-from ark.exceptions import DedisNotDetermined, InvalidStationError, NoItemsAddedError
+from ark.exceptions import (
+    DedisNotDetermined,
+    InvalidStationError,
+    NoItemsAddedError,
+    NoItemsDepositedError,
+)
 from ark.inventories import DedicatedStorage, Grinder, Inventory, Vault
 from ark.items import *
 from ark.player import Player
+from ark.server import Server
 from bot.ark_bot import ArkBot
+from bot.unstucking import UnstuckHandler
 
 # map costs for turrets
 AUTO_TURRET_COST = {"Paste": 50, "Electronics": 70, "Ingot": 140, "poly": 20}
@@ -78,7 +85,7 @@ class GrindBot(ArkBot):
     exomek_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/6/6d/Unassembled_Exo-Mek_%28Genesis_Part_2%29.png/revision/latest/scale-to-width-down/228?cb=20210603184626"
     electronics_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/d/dd/Electronics.png/revision/latest/scale-to-width-down/228?cb=20150615100650"
 
-    def __init__(self, bed: Bed, info_webhook: discord.Webhook) -> None:
+    def __init__(self, bed: Bed, info_webhook: discord.Webhook, server: Server) -> None:
         super().__init__()
         self.player = Player()
         self.beds = BedMap()
@@ -87,6 +94,7 @@ class GrindBot(ArkBot):
         self.dedis = DedicatedStorage()
         self.exo_mek = Inventory("Exo Mek", "exo_mek")
         self.bed = bed
+        self.server = server
         self.info_webhook = info_webhook
         self.current_station = "Gear Vault"
         self.electronics_to_craft = 0
@@ -107,6 +115,12 @@ class GrindBot(ArkBot):
             "Paste": (self.player.turn_y_by, 40),
             "Gear Vault": [(self.player.turn_y_by, -40), (self.player.turn_x_by, -70)],
         }
+
+    def resync_to_bed(self) -> None:
+        """Resyncs to the bed to fix movements being messed up."""
+        self.beds.lay_down()
+        self.player.turn_90_degrees("left")
+        self.current_station = Stations.GEAR_VAULT
 
     def session_reset(self) -> None:
         """Resets the session attributes. Intended to be called once
@@ -531,7 +545,7 @@ class GrindBot(ArkBot):
                     tes_config = (
                         "-c tessedit_char_whitelist=0123456789liI|O --psm 6 -l eng"
                     )
-                
+
                     raw_result = tes.image_to_string(img, config=tes_config).strip()
                     # replace common tesseract fuckups
                     for c in DEDI_NUMBER_MAPPING:
@@ -822,6 +836,12 @@ class GrindBot(ArkBot):
         # transfer the amount into the exo mek
         self.turn_to(Stations.EXO_MEK)
         self.exo_mek.open()
+        if self.exo_mek.has_item(gacha_crystal):
+            self.move_to(1287, 289)
+            self.press("o")
+            self.sleep(1)
+            self.exo_mek.open()
+
         self.player.inventory.transfer_amount(resource, amount, stacksize)
         self.exo_mek.close()
         self.sleep(1)
@@ -856,10 +876,7 @@ class GrindBot(ArkBot):
 
         # spawn at station
         start = time.time()
-        self.beds.travel_to(self.bed)
-        self.player.await_spawned()
-        self.current_station = "Gear Vault"
-        self.sleep(1)
+        self.spawn()
 
         if self.electronics_crafted + 1000 <= self.electronics_to_craft:
             to_craft = 1000
@@ -880,25 +897,50 @@ class GrindBot(ArkBot):
         self.player.drop_all()
         return True
 
-    def craft_turrets(self):
-        # spawn at station
-        self.spawn()
-
+    def transfer_turret_resources(self) -> None:
+        """Transfers all resources needed for turrets into the exo mek.
+        
+        Handles:
+        ----------
+        `NoItemsDepositedError` up to 3 times when failing to deposit the
+        remaining items by resyncing to the bed and trying again.
+        """
         for resource in ["Paste", "Electronics", "Ingot"]:
-            print(f"Transferring {resource} into exo mek...")
-            if resource == "Ingot":
-                self.put_resource_into_exo_mek(
-                    resource, self.session_cost[resource], 300
-                )
-            else:
-                self.put_resource_into_exo_mek(
-                    resource, self.session_cost[resource], 100
-                )
+            while True:
+                attempt = 0
+                try:
+                    if resource == "Ingot":
+                        self.put_resource_into_exo_mek(
+                            resource, self.session_cost[resource], 300
+                        )
+                    else:
+                        self.put_resource_into_exo_mek(
+                            resource, self.session_cost[resource], 100
+                        )
+                    break
+                except NoItemsDepositedError:
+                    attempt += 1
+                    unstucking = UnstuckHandler(self.server)
+                    if not unstucking._ingame_menu.check_reponding() or attempt > 3:
+                        raise
+                    self.resync_to_bed()
+
+    def craft_turrets(self) -> None:
+        """Crafts the turrets after all electronics have been crafted."""
+        # spawn and get the resources
+        self.spawn()
+        self.transfer_turret_resources()
+
+        # craft the turrets
         self.craft("Auto Turret", self.session_turrets)
         self.craft("Heavy Auto Turret", self.session_turrets + 3)
+
+        # take out the turrets
         self.exo_mek.open()
         self.exo_mek.take_all_items("Heavy Auto Turret")
         self.exo_mek.close()
+
+        # deposit turrets and clear up the exo mek
         self.clear_up_exo_mek()
         self.session_reset()
 
@@ -917,6 +959,7 @@ class GrindBot(ArkBot):
 
         except NoItemsAddedError:
             print("Failed to take metal from the exo mek!")
+            self.exo_mek.close()
             self.player.crouch()
 
         # get the non heavy mats, drop all on the rest (poly)

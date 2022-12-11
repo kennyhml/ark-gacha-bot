@@ -131,7 +131,7 @@ class BedMap(ArkBot):
 
         # 'use' only needs to be held if we hold for too long after clicking
         input.keyUp(player.keybinds.use)
-        player.sleep(5)
+        player.sleep(10)
 
 
 class TekPod(Bed):

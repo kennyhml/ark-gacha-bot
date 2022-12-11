@@ -35,12 +35,14 @@ class GachaBot(ArkBot):
         super().__init__()
         self.load_settings()
         self.create_webhooks()
-        self.tribelogs = TribeLog(self.alert_webhook, self.logs_webhook)
-        self.grind_station = GrindBot(self.create_grinder_bed(), self.info_webhook)
         self.seed_beds = self.create_seed_beds()
         self.crystal_bed = self.create_crystal_bed()
         self.tek_pod = self.create_tek_pod()
         self.server = self.create_server()
+        self.tribelogs = TribeLog(self.alert_webhook, self.logs_webhook)
+        self.grind_station = GrindBot(
+            self.create_grinder_bed(), self.info_webhook, self.server
+        )
 
         self._ytraps_deposited = 0
         self._total_dust_made = 0
@@ -87,7 +89,7 @@ class GachaBot(ArkBot):
         if not unstucking.attempt_fix():
             print("Failed to unstuck...")
             self.running = False
-            
+
         if unstucking.reconnected:
             self.last_emptied = time.time()
 
@@ -301,7 +303,7 @@ class GachaBot(ArkBot):
             self.inform_error(f"Seeding Gacha {self.current_bed + 1}", e)
             if not UnstuckHandler(self.server).attempt_fix():
                 self.running = False
-                
+
         finally:
             self.increment_counter()
 
@@ -599,7 +601,7 @@ class GachaBot(ArkBot):
 
         except Exception as e:
             self.unstuck(self.current_task, e)
-            
+
     def increment_counter(self) -> None:
         # increment bed counter, make sure its not out of range!
         if self.current_bed < self.tower_settings.seed_beds - 1:
