@@ -105,7 +105,7 @@ class GachaBot(ArkBot):
         """Sends a message to discord that the bot has been started"""
         now = datetime.now()
         now = now.strftime("%H:%M")
-        
+
         embed = discord.Embed(
             type="rich",
             title="Ling Ling has been started!",
@@ -219,6 +219,32 @@ class GachaBot(ArkBot):
             print(f"CRITICAL! Error loading settings!\n{e}")
             self._running = False
 
+    def validate_dust_amount(self, amount: int) -> int:
+        """Checks if the given amount of dust is valid compared to the usual average.
+
+        Parameters:
+        -----------
+        amount :class:`int`:
+            The amount of dust we think we got
+
+        Returns:
+        ----------
+        The given amount if its within a valid range, else the average amount
+        """
+        # likely small amounts
+        if self._ytraps_deposited < 15000:
+            return amount
+
+        try:
+            average_amount = self._total_dust_made / self._total_pickups
+        except ZeroDivisionError:
+            # assume 6000 dust / minute, or 100 / second
+            average_amount = 100 * self.tower_settings.crystal_interval
+
+        if average_amount - 5000 < amount < average_amount + 10000:
+            return amount
+        return average_amount
+
     def do_crystal_station(self, bed: Bed) -> bool:
         """Completes the crystal collection station of the given bed.
 
@@ -244,6 +270,9 @@ class GachaBot(ArkBot):
             # open the crystals and deposit the items into dedis
             crystals_opened = crystals.open_crystals(self._first_pickup)
             resources_deposited, time_taken = crystals.deposit_dedis()
+            resources_deposited["Element Dust"] = self.validate_dust_amount(
+                resources_deposited["Element Dust"]
+            )
             self._first_pickup = False
 
             # put items into vault
