@@ -1,3 +1,11 @@
+"""
+Ark API module representing the tribelog in ark. 
+Using tesseract OCR and discord webhooks to inform the user when getting raided.
+
+As tesseract tends to be fairly inaccurate, `CONTENTS_MAPPING` hashmap contains common
+mistakes and the respective correct version.
+"""
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -23,7 +31,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
-
 # common tesseract mistakes to account for in any tribelog messages
 CONTENTS_MAPPING = {
     "{": "(",
@@ -36,6 +43,7 @@ CONTENTS_MAPPING = {
     "\n": " ",
     "!!": "!",
     "Lvi": "Lvl",
+    "Lyi": "Lvl",
     "Gaby": "Baby",
     "destroved": "destroyed",
     "destroyedl": "destroyed!",
@@ -80,7 +88,9 @@ CONTENTS_MAPPING = {
     "Desmoadus": "Desmodus",
     "(€lonel": "[CLONE]",
     "Liahtnina": "Lightning",
+    "tLightning": "(Lightning",
     "Wvvern": "Wyvern",
+    "Wyvern!": "Wyvern!)",
     "fLi": "(Li",
     "ernl": "ern)",
     "Fiardhawk": "Fjordhawk",
@@ -90,6 +100,32 @@ CONTENTS_MAPPING = {
     "iTribe": "(Tribe",
     "i!": ")!",
     "saurus!": "saurus)!",
+    "(Fin": "(Pin",
+    "Caded": "Coded",
+    "Codedl": "Coded)",
+    "Daeedon": "Daeodon",
+    "Daeodon!": "Daeodon)",
+    "Heavv": "Heavy",
+    "fHeavy": "(Heavy",
+    "Astradelphis": "Astrodelphis",
+    "Astredelphis": "Astrodelphis",
+    "fAstra": "(Astra",
+    "Astrodelphisi": "Astrodelphis)",
+    "Vetonasaur": "Velonasaur",
+    "saurl": "saur)",
+    "Preranodon": "Pteranodon",
+    "Preranodon!": "Pteranodon)",
+    "iDesmodus": "(Desmodus",
+    "R - ": "R-",
+    "R- ": "R-",
+    "R -": "R-",
+    "IR-": "(R-",
+    "iTribe": "Tribe",
+    "i(": "(",
+    "!)": ")",
+    "fExo": "(Exo",
+    "Exo-Mete": "Exo-Mek",
+    "Exo-Met": "Exo-Mek",
 }
 
 # RGB to denoise with if the templates are located in the tribelog message
@@ -124,6 +160,9 @@ DAYTIME_MAPPING = {
     ";": "",
 }
 
+# terms to prevent alerting for
+INGORED_TERMS = ["C4 Charge", "Baby"]
+
 
 @dataclass
 class TribeLogMessage:
@@ -138,8 +177,21 @@ class TribeLogMessage:
 
 
 class TribeLog(ArkBot):
-    """Represents the ark tribe log.
-    Stores all previous logs as list of TribeLogMessages.
+    """Represents the ark tribe log. Stores all previous logs as a
+    list of `TribeLogMessages`.
+
+    Parameters:
+    -----------
+    alert webhook :class:`discord.Webhook`:
+        A discord webhook object to send the alerts to
+
+    log webhook :class:`discord.Webhook`:
+        A discord webhook object to send raw tribelog screenshots to
+
+    Attributes:
+    --------------------
+    _tribe_log :class:`list`:
+        A list containing the past 30 tribe log events as `TribeLogMessages`
     """
 
     sensor_icon = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/1/16/Tek_Sensor_%28Genesis_Part_1%29.png/revision/latest?cb=20200226080818"
@@ -156,9 +208,20 @@ class TribeLog(ArkBot):
         self.log_webhook = log_webhook
 
     def __repr__(self) -> str:
+        """A representative string of the log message"""
         return "".join(f"{log_message}\n" for log_message in self._tribe_log)
 
+    def check_tribelogs(self) -> None:
+        """Main tribelog check call. Opens and closes the tribelog to grab a screenshot of it,
+        then starts a thread processing the Image."""
+        logging.log(logging.INFO, "Updating tribelogs...")
+        self.open()
+        self.grab_screen(self.LOG_REGION, "temp/tribelog.png")
+        self.close()
+        Thread(target=self.update_tribelogs, name="Updating tribelogs...").start()
+
     def is_open(self) -> bool:
+        """Checks if the tribelog is open."""
         return (
             self.locate_template(
                 "templates/tribe_log.png", region=(1300, 70, 230, 85), confidence=0.8
@@ -211,64 +274,96 @@ class TribeLog(ArkBot):
                 return False
         return True
 
-    def check_tribelogs(self) -> None:
-        logging.log(logging.INFO, "Updating tribelogs...")
-        self.open()
-        self.grab_screen(self.LOG_REGION, "temp/tribelog.png")
-        self.close()
-        Thread(target=self.update_tribelogs, name="Updating tribelogs...").start()
+    def grab_day_region(self, box) -> tuple[int, int, int, int]:
+        """Grab the day regions located in the top left of the image.
+        Adds a little padding on the top, left corner.
+
+        NOTE:
+        Int typecasing is neccessary because `box` is of type np.int
+        which is not compatible with the cropping.
+        """
+        return (
+            int(box[0] - 5),
+            int(box[1] - 5),
+            box[0] + 170,
+            box[1] + 15,
+        )
+
+    def grab_message_region(self, box, next_box) -> tuple[int, int, int, int]:
+        """Grabs the region of the message to read using the following message
+        as delimiter for the y-axis.
+
+        NOTE:
+        Int typecasing is neccessary because `box` is of type np.int
+        which is not compatible with the cropping.
+        """
+        return (
+            int(box[0] - 5),
+            int(box[1] - 5),
+            440,
+            int(next_box[1] - 2),
+        )
+
+    def content_is_irrelevant(self, content: str) -> bool:
+        """Checks if the given content is relevant to be posted.
+
+        Parameters:
+        ------------
+        content :class:`str`:
+            The content to check
+
+        Returns:
+        ------------
+        Whether an ignored term was found in the contents
+        """
+        return any(term in content for term in INGORED_TERMS)
 
     def update_tribelogs(self) -> None:
         """Returns a list of tuples containing the daytime as string and the
-        corresponding log message image
+        corresponding log message image.
         """
-
+        # sort days from top to bottom by y-coordinate so we can get the message frame
         log_img = Image.open("temp/tribelog.png")
-        # sort days from top to bottom by y coordinate so we can get the message frame
         day_points = self.get_day_occurrences()
         days_in_order = sorted([day for day in day_points], key=lambda t: t[1])
         logging.log(logging.INFO, f"{len(day_points)} days found to check...")
 
         messages = []
-        for i, box in enumerate(days_in_order):
+        for i, box in enumerate(days_in_order, start=1):
             try:
-                # grab day region
-                day_region = (
-                    int(box[0] - 5),
-                    int(box[1] - 5),
-                    box[0] + 170,
-                    box[1] + 15,
-                )
+                # get relevant regions
+                day_region = self.grab_day_region(box)
+                message_region = self.grab_message_region(box, days_in_order[i])
 
-                # each frame ends where the next frame y starts
-                message_region = (
-                    int(box[0] - 5),
-                    int(box[1] - 5),
-                    440,
-                    int(days_in_order[i + 1][1] - 2),
-                )
+            except IndexError:
+                print("Reached the last message!")
+                break
 
-                # OCR the day and validate it, continue if the day is invalid
-                if not (day := self.get_daytime(log_img.crop(day_region))):
-                    continue
+            # OCR the day and validate it, continue if the day is invalid
+            day = self.get_daytime(log_img.crop(day_region))
+            if not day:
+                continue
 
-                # OCR the contents, None if its irrelevant
-                if not (
-                    content := self.get_message_contents(log_img.crop(message_region))
-                ):
-                    continue
-                logging.log(logging.INFO, f"Found {day} with contents {content}")
+            # OCR the contents, None if its irrelevant
+            content = self.get_message_contents(log_img.crop(message_region))
+            if not content:
+                continue
+            logging.log(logging.INFO, f"Found {day} with contents {content}")
+            print(f"Found {day} with contents {content}")
 
-                if not "C4 Charge" in content and not self.day_is_known(day):
-                    message = TribeLogMessage(day, *content)
-                    messages.append(message)
+            # check if the message is already known or if the contents are irrelevant
+            if self.day_is_known(day) or self.content_is_irrelevant(content[1]):
+                continue
 
-                    if self._tribe_log:
-                        logging.log(logging.INFO, f"Sending an alert for {message}!")
-                        self.send_alert(message, multiple=len(messages) == 3)
+            # new message with relevant contents, create message Object and add it to the new messages
+            message = TribeLogMessage(day, *content)
+            messages.append(message)
 
-            except Exception as e:
-                print(e)
+            # if its not the first time we update our internal logs, send out alerts for the message
+            # if 3 alerts are sent within the same log update, @everyone for the message
+            if self._tribe_log:
+                logging.log(logging.INFO, f"Sending an alert for {message}!")
+                self.send_alert(message, multiple=len(messages) == 3)
 
         logging.log(logging.INFO, f"New messages added: {messages}!")
         self._tribe_log += reversed(messages)
@@ -307,7 +402,10 @@ class TribeLog(ArkBot):
 
         # mention if a relevant event happened
         mention = (
-            any(msg in message.content for msg in ("enemy survivor", "Pin Coded"))
+            any(
+                msg in message.content
+                for msg in ("enemy survivor", "Pin Coded", "ALERT")
+            )
             or multiple
         )
 
@@ -370,7 +468,7 @@ class TribeLog(ArkBot):
             logging.log(logging.WARNING, f"Day {day_string} invalid!\n{e}")
             return None
 
-        return day_string
+        return day_string.strip()
 
     def get_message_contents(
         self, image: str | Image.Image | ScreenShot
@@ -410,12 +508,17 @@ class TribeLog(ArkBot):
         # replace the common known mistakes that tend to happen
         for c in CONTENTS_MAPPING:
             raw_res = raw_res.replace(c, CONTENTS_MAPPING[c])
-        filtered_res = raw_res
-        event = EVENT_MAPPING[denoise_rgb]
+        filtered_res = raw_res.rstrip()
 
-        if event == "Tek Sensor triggered!":
+        if EVENT_MAPPING[denoise_rgb] == "Tek Sensor triggered!":
             sensor_event = self.get_sensor_event(image)
             filtered_res = f"'{filtered_res.rstrip()}' triggered by {sensor_event}!"
+
+        if "killed" in filtered_res:
+            event = "Something killed!"
+        else:
+            event = "Something destroyed!"
+
         return event, filtered_res
 
     def get_denoise_rgb(self, image: str | Image.Image | ScreenShot) -> tuple:
@@ -444,51 +547,62 @@ class TribeLog(ArkBot):
             # convert PIL image to np array for template matching
             image = np.array(image)
             image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-
-        # filter out auto-decay
-        if (
-            self.locate_in_image(
+        try:
+            # filter out auto-decay
+            if self.locate_in_image(
                 "templates/tribelog_auto_decay.png", image, confidence=0.8
-            )
-            is not None
-        ):
-            return None
-
-        # find the RGB we need to denoise
-        for rgb in DENOISE_MAPPING:
-            template = DENOISE_MAPPING[rgb]
-
-            # only 1 template to match
-            if not isinstance(template, list):
-                if self.locate_in_image(template, image, confidence=0.8) is not None:
-                    return rgb
-                continue
-
-            # multiple templates to match, check if any match
-            if any(
-                self.locate_in_image(template, image, confidence=0.8) is not None
-                for template in DENOISE_MAPPING[rgb]
             ):
-                return rgb
+                return
 
-    def get_sensor_event(self, image) -> str:
-        if (
-            self.locate_in_image(
-                "templates/tribelog_enemy_survivor.png", image, confidence=0.8
-            )
-            is not None
+            # find the RGB we need to denoise
+            for rgb in DENOISE_MAPPING:
+                template = DENOISE_MAPPING[rgb]
+
+                # only 1 template to match
+                if not isinstance(template, list):
+                    if (
+                        self.locate_in_image(template, image, confidence=0.8)
+                        is not None
+                    ):
+                        return rgb
+                    continue
+
+                # multiple templates to match, check if any match
+                if any(
+                    self.locate_in_image(template, image, confidence=0.8) is not None
+                    for template in DENOISE_MAPPING[rgb]
+                ):
+                    return rgb
+
+        except Exception as e:
+            print(f"Something went wrong!\n{e}")
+            return
+
+    def get_sensor_event(self, image: Image.Image | str) -> str:
+        """Matches for different terms that could have triggered a tek sensor,
+        returns the corresponding term.
+
+        Parameters:
+        ------------
+        image :class:`Any image type compatible with pyautogui.locate`
+
+        Returns:
+        ------------
+        A string representing the tek sensor event in the passed image.
+        """
+        if self.locate_in_image(
+            "templates/tribelog_enemy_survivor.png", image, confidence=0.75
         ):
             return "an enemy survivor"
-        if (
-            self.locate_in_image(
-                "templates/tribelog_enemy_dino.png", image, confidence=0.8
-            )
-            is not None
+
+        if self.locate_in_image(
+            "templates/tribelog_enemy_dino.png", image, confidence=0.75
         ):
             return "an enemy dinosaur"
+        # not determined
         return "something (friendly or undetermined)"
 
-    def day_is_known(self, day) -> bool:
+    def day_is_known(self, day: str) -> bool:
         """Checks if the given day has already been recognized.
 
         Parameters:
