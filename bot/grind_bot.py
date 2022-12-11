@@ -950,6 +950,8 @@ class GrindBot(ArkBot):
         self.vault.open()
         self.player.inventory.transfer_all(self.vault, "Turret")
         self.vault.close()
+        self.sleep(1)
+        
         try:
             # clean up the remaining mats from exo mek
             self.turn_to(Stations.EXO_MEK)

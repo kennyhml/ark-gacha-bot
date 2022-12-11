@@ -246,11 +246,6 @@ class Inventory(ArkBot):
     def search_for(self, term: str) -> None:
         """Searches for a term in the target inventory using pyautogui typewrite"""
         self.check_status()
-
-        # double check to ensure the inventory is really open
-        # if not self.is_open():
-        #    self.open()
-
         if isinstance(term, Item):
             term = term.name
 
