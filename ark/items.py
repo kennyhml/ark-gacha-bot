@@ -157,3 +157,10 @@ miner_helmet = Item(
     added_icon=None,
     added_text=None,
 )
+
+mejoberry = Item(
+    name="Mejoberry",
+    inventory_icon="templates/mejoberries.png",
+    added_icon=None,
+    added_text=None,
+)

@@ -225,7 +225,7 @@ class GrindBot(ArkBot):
                     method = turn[0]
                     args = turn[1] * (-1 if direction == "backwards" else 1)
                     method(args)
-                    self.sleep(0.2)
+                    self.sleep(0.3)
                 continue
 
             # only one turn
@@ -234,7 +234,7 @@ class GrindBot(ArkBot):
                 -1 if direction == "backwards" else 1
             )
             method(args)
-            self.sleep(0.2)
+            self.sleep(0.3)
 
     def grind(self, grind: str | Item, take: list[Item | str]) -> None:
         """Turns to the grinder and grinds the item, then takes all requested
@@ -801,6 +801,24 @@ class GrindBot(ArkBot):
             username="Ling Ling",
         )
 
+    def post_final_result(self, result: int, start_time: time.time) -> None:
+
+        time_taken = round(time.time() - start_time)
+        embed = discord.Embed(
+            type="rich",
+            title="Finished crafting!",
+            color=0x133DE7,
+        )
+        embed.add_field(name=f"Time taken:ㅤ", value=f"{time_taken} seconds")
+        embed.add_field(name="Heavies crafted:", value=result)
+        embed.set_thumbnail(url=self.exomek_avatar)
+        embed.set_footer(text="Ling Ling on top!")
+
+        self.info_webhook.send(
+            embed=embed,
+            username="Ling Ling",
+        )
+
     def empty_grinder(self, turn_off: bool = False) -> None:
         """Empties the grinder by taking hide and 'popcorning' the rest.
         Leaves the grinder in a closed state. Leaves the grinder on by default,
@@ -832,9 +850,11 @@ class GrindBot(ArkBot):
         self.dedis.open()
         self.dedis.take_all()
         self.dedis.close()
+        self.sleep(1)
 
         # transfer the amount into the exo mek
         self.turn_to(Stations.EXO_MEK)
+        self.sleep(1)
         self.exo_mek.open()
         if self.exo_mek.has_item(gacha_crystal):
             self.move_to(1287, 289)
@@ -899,7 +919,7 @@ class GrindBot(ArkBot):
 
     def transfer_turret_resources(self) -> None:
         """Transfers all resources needed for turrets into the exo mek.
-        
+
         Handles:
         ----------
         `NoItemsDepositedError` up to 3 times when failing to deposit the
@@ -929,6 +949,8 @@ class GrindBot(ArkBot):
         """Crafts the turrets after all electronics have been crafted."""
         # spawn and get the resources
         self.spawn()
+        start = time.time()
+
         try:
             self.transfer_turret_resources()
 
@@ -942,19 +964,20 @@ class GrindBot(ArkBot):
             self.exo_mek.close()
 
             # deposit turrets and clear up the exo mek
-            self.clear_up_exo_mek()
-            
+            turrets_crafted = self.clear_up_exo_mek()
+            self.post_final_result(turrets_crafted, start)
         finally:
             self.session_reset()
 
-    def clear_up_exo_mek(self) -> None:
+    def clear_up_exo_mek(self) -> int:
         """Clears the exo mek after a crafting session."""
         self.turn_to(Stations.VAULT)
         self.vault.open()
         self.player.inventory.transfer_all(self.vault, "Turret")
+        turrets_crafted = self.player.inventory.count_item(heavy_auto_turret)
         self.vault.close()
         self.sleep(1)
-        
+
         try:
             # clean up the remaining mats from exo mek
             self.turn_to(Stations.EXO_MEK)
@@ -978,6 +1001,7 @@ class GrindBot(ArkBot):
         # deposit the lightweight mats
         for item in ["Pearls", "Paste", "Electronics"]:
             self.deposit(item)
+        return turrets_crafted
 
     def spawn(self) -> None:
         self.beds.travel_to(self.bed)

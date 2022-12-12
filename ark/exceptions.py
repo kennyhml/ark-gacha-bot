@@ -53,3 +53,6 @@ class ServerNotFoundError(Exception):
 
 class DediNotInRangeError(Exception):
     """Raised when the dedi deposit text could not be detected"""
+
+class NoBerriesLeftError(Exception):
+    """Raised when there is no berries left to deposit"""

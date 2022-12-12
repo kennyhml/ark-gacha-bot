@@ -144,7 +144,41 @@ class Player(ArkBot):
         self.press(self.keybinds.crouch)
 
     def do_precise_crop_plot_stack(self) -> None:
-        pass
+        crop_plot = CropPlot()
+        self.crouch()
+
+        turns = [-130, -20, -20, -17, -15, 35, -17, -20]
+        self.look_down_hard()
+        self.sleep(0.1)
+
+        for expected_index, turn in enumerate(turns, start=1):
+            if expected_index == 6:
+                self.crouch()
+
+            self.turn_y_by(turn)
+            self.sleep(0.5)
+            crop_plot.open()
+
+            # correct crop plot opened
+            index = crop_plot.get_stack_index()
+            while index != expected_index:
+                if not index:
+                    index = crop_plot.get_stack_index()
+                    continue
+                
+                crop_plot.close()
+                if index > expected_index:
+                    self.turn_y_by(5)
+                else:
+                    self.turn_y_by(-5)
+                
+                crop_plot.open()
+                index = crop_plot.get_stack_index()
+
+            crop_plot.take_all()
+            self.inventory.transfer_all(crop_plot)
+            print("Correct crop plot!")
+            crop_plot.close()
 
     def load_gacha(self, gacha: Gacha) -> None:
         """Fills the gacha after emptying crop plots.

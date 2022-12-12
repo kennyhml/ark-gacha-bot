@@ -512,7 +512,7 @@ class PlayerInventory(Inventory):
             is not None
         )
 
-    def transfer_some_pellets(self, inventory: Inventory) -> bool:
+    def transfer_some_pellets(self, inventory: Inventory, transfer_back: int = 8) -> bool:
         """Transfers some pellets into another inventory, likely a Gacha.
 
         Parameters:
@@ -542,7 +542,7 @@ class PlayerInventory(Inventory):
         print(f"Transferring Pellets to {inventory._name}...")
         self.click_at(167, 745)
         rows = 0
-        for _ in range(6):
+        for _ in range(transfer_back):
             for i in range(6):
                 self.move_to(167 + (i * 95), 745)
                 pg.press("t")

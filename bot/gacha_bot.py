@@ -23,6 +23,7 @@ from bot.crystal_collection import CrystalCollection
 from bot.grind_bot import GrindBot
 from bot.settings import DiscordSettings, TowerSettings
 from bot.unstucking import UnstuckHandler
+from bot.feed_station import BerryFeedStation
 
 
 class GachaBot(ArkBot):
@@ -39,10 +40,11 @@ class GachaBot(ArkBot):
         self.create_webhooks()
         self.seed_beds = self.create_seed_beds()
         self.crystal_bed = self.create_crystal_bed()
+        self.berry_beds = self.create_berry_beds()
         self.tek_pod = self.create_tek_pod()
         self.server = self.create_server()
         self.tribelogs = TribeLog(self.alert_webhook, self.logs_webhook)
-        self.grind_station = GrindBot(
+        self.grinding = GrindBot(
             self.create_grinder_bed(), self.info_webhook, self.server
         )
 
@@ -61,7 +63,7 @@ class GachaBot(ArkBot):
         self._least_healed = time.time()
         self.last_emptied = time.time()
         self.lap_started = time.time()
-
+        self.last_berry_harvest = time.time()
         self.player = Player()
         self.beds = BedMap()
         self.inform_started()
@@ -95,7 +97,15 @@ class GachaBot(ArkBot):
         if unstucking.reconnected:
             self.last_emptied = time.time()
 
-    def travel_to_station(self, station):
+    def travel_to_station(self, station: Bed) -> None:
+        """Wrapper for `BedMap` travel method. Travels to the given station
+        and checks tribelogs during spawn animation.
+        
+        Parameters:
+        -----------
+        station :class:`Bed`
+            The bed object to travel to
+        """
         self.check_status()
         self.beds.travel_to(station, self._at_pod)
         self.tribelogs.check_tribelogs()
@@ -157,51 +167,66 @@ class GachaBot(ArkBot):
         """
         return [
             Bed(
-                name=f"{self.tower_settings.seed_prefix}{i:02d}",
-                coords=(self.tower_settings.bed_x, self.tower_settings.bed_y),
+                f"{self.tower_settings.seed_prefix}{i:02d}",
+                self.tower_settings.bed_position,
             )
             for i in range(self.tower_settings.seed_beds)
         ]
 
     def create_crystal_bed(self) -> Bed:
-        """Creates the crystal bed names using the given prefix and the defined
+        """Creates the crystal bed using the given prefix, using leading nulls.
+
+        Returns a `Bed` object.
+        """
+        return Bed(
+            f"{self.tower_settings.crystal_prefix}00",
+            self.tower_settings.bed_position,
+        )
+
+    def create_tek_pod(self) -> TekPod:
+        """Creates a tek pod using the given prefix in the settings.
+
+        Returns a `TekPod` object.
+        """
+        return TekPod(
+            self.tower_settings.pod_name,
+            self.tower_settings.bed_position,
+        )
+
+    def create_grinder_bed(self) -> Bed:
+        """Creates the grinder bed using a fix prefix.
+
+        Returns a `Bed` object.
+        """
+        return Bed("grinding", (self.tower_settings.bed_position))
+
+    def create_berry_beds(self) -> list[Bed]:
+        """Creates the berry bed objects using the given prefix and the defined
         amount of beds, using leading nulls.
 
         Returns a list of `Bed` objects.
         """
-        return Bed(
-            name=f"{self.tower_settings.crystal_prefix}00",
-            coords=(self.tower_settings.bed_x, self.tower_settings.bed_y),
-        )
-
-    def create_tek_pod(self) -> TekPod:
-        """Creates a tek pod using the given prefix in the settings
-
-        Returns a `TekPod` object
-        """
-        return TekPod(
-            self.tower_settings.pod_name,
-            (self.tower_settings.bed_x, self.tower_settings.bed_y),
-        )
-
-    def create_grinder_bed(self) -> Bed:
-        return Bed("grinding", (self.tower_settings.bed_x, self.tower_settings.bed_y))
+        return [
+            Bed(
+                f"{self.tower_settings.berry_prefix}{i:02d}",
+                self.tower_settings.bed_position,
+            )
+            for i in range(self.tower_settings.berry_beds)
+        ]
 
     def create_server(self) -> Server:
+        """Creates the server given the information in the settings. Relevant
+        for reconnecting to the server during unstucking.
+
+        Returns a `Server` object.
+        """
         return Server(
-            self.tower_settings.server_name,
-            self.tower_settings.server_search,
-            "TheCenter",
+            self.tower_settings.server_name, self.tower_settings.server_search
         )
 
     def load_settings(self) -> None:
         """Loads the configuration for the selected tower.
         Uses dactite.from_dict to load the dictionary into corresponding dataclasses.
-
-        Parameters:
-        -----------
-        selected_tower :class:`int`:
-            The index of the selected tower in the configs
 
         Raises:
         -----------
@@ -311,6 +336,15 @@ class GachaBot(ArkBot):
                 self.sleep(0.5)
                 self.player.inventory.transfer_some_pellets(self.player.inventory)
             gacha.close()
+
+    def do_berry_station(self) -> None:
+        for bed in self.berry_beds:
+            try:
+                station = BerryFeedStation(bed)
+                station.run()
+                
+            finally:
+                self.last_berry_harvest = time.time()
 
     def do_gacha_station(self, bed: Bed) -> None:
         """Completes the gacha station of the given bed.
@@ -601,13 +635,16 @@ class GachaBot(ArkBot):
             self._ytraps_deposited > 2000 or self._laps_completed
         )
 
+    def berries_are_ready(self) -> bool:
+        return (time.time() - self.last_berry_harvest) > 18000
+
     def electronics_finished(self) -> bool:
         """Returns true if there is an ongoing grinding session and more than
         3 minutes have passed since the last electronics craft."""
         try:
             return (
-                self.grind_station.session_cost
-                and (time.time() - self.grind_station.last_crafted) > 180
+                self.grinding.session_cost
+                and (time.time() - self.grinding.last_crafted) > 180
             )
         except TypeError:
             return False
@@ -628,15 +665,19 @@ class GachaBot(ArkBot):
             # check if any electronics are crafting and if they need to be requeued
             if self.electronics_finished():
                 self.current_task = "Grinding Station"
-                if not self.grind_station.need_to_craft_electronics():
-                    self.grind_station.craft_turrets()
+                if not self.grinding.need_to_craft_electronics():
+                    self.grinding.craft_turrets()
                 return
 
             # check if its time to pick crystals
             if self.crystals_need_pickup():
                 # returns true if the vault is filled and we need to start grinding
                 if self.do_crystal_station(self.crystal_bed):
-                    self.grind_station.run()
+                    self.grinding.run()
+                return
+
+            if self.berries_are_ready():
+                self.do_berry_station()
                 return
 
             # do regular gacha seeding task

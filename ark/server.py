@@ -4,6 +4,6 @@ from dataclasses import dataclass
 class Server:
     name: str
     search_name: str
-    map: str
+    map: str = None
     ip: str = None
     

@@ -25,40 +25,27 @@ class Keybinds:
 
 @dataclass
 class TowerSettings:
-    tower_name: str
-    load_method: str
-    abberation_mode: bool
     account_name: str
-    afk_bed: str
-    bed_x: int
-    bed_y: int
+    bed_position: list
     crystal_prefix: str
     crystal_beds: int
-    crystal_interval: int
     seed_prefix: str
     seed_beds: int
-    drop_suits: bool
+    berry_prefix: str
+    berry_beds: int
+    crystal_interval: int
     drop_items: list
     keep_items: list
     game_launcher: str
-    log_interval: int
-    save_time: int
     server_name: str
     server_search: str
     pod_name: str
-    single_player: bool = False
 
 @dataclass
 class DiscordSettings:
     webhook_gacha: str
     webhook_alert: str
     webhook_logs: str
-    tag_level_0: str
-    tag_level_1: str
-    tag_level_2: str
-    tag_level_3: str
-    tag_level_4: str
-    tag_level_5: str
 
 
 
