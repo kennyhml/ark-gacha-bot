@@ -182,7 +182,7 @@ class Inventory(ArkBot):
                 is not None
             )
 
-    def open(self) -> None:
+    def open(self, default_key: bool = True) -> None:
         """Opens the inventory using the 'target inventory' keybind.
 
         If the inventory did not opened within 5 seconds, it will use the
@@ -199,7 +199,9 @@ class Inventory(ArkBot):
         while not self.is_open():
             c += 1
             # wait for 1s if the crop plot opens
-            self.press(self.keybinds.target_inventory)
+            self.press(
+                self.keybinds.target_inventory if default_key else self.keybinds.use
+            )
             if self.await_open():
                 break
 
@@ -512,7 +514,9 @@ class PlayerInventory(Inventory):
             is not None
         )
 
-    def transfer_some_pellets(self, inventory: Inventory, transfer_back: int = 8) -> bool:
+    def transfer_some_pellets(
+        self, inventory: Inventory, transfer_back: int = 8
+    ) -> bool:
         """Transfers some pellets into another inventory, likely a Gacha.
 
         Parameters:

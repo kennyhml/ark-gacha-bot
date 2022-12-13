@@ -583,7 +583,7 @@ class GrindBot(ArkBot):
         if material not in expected:
             return True
 
-        # ensure the OCRd amount is within a valid range
+        # ensure the OCRd amount is within a f
         expected_amount = expected[material]
         return expected_amount[1] >= amount >= expected_amount[0] - 300
 
@@ -965,6 +965,7 @@ class GrindBot(ArkBot):
             # take out the turrets
             self.exo_mek.open()
             self.exo_mek.take_all_items("Heavy Auto Turret")
+            self.sleep(1)
             turrets_crafted = self.player.inventory.count_item(heavy_auto_turret)
             self.exo_mek.close()
 

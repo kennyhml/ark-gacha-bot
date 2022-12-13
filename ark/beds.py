@@ -10,6 +10,7 @@ from bot.ark_bot import ArkBot
 from bot.unstucking import UnstuckHandler
 from ark.server import Server
 
+
 @dataclass
 class Bed:
     name: str
@@ -27,6 +28,14 @@ class BedMap(ArkBot):
     BEDS_REGION = (160, 70, 1050, 880)
     SEARCH_BAR = (306, 982)
     SPAWN_BUTTON = (731, 978)
+
+    def can_be_accessed(self) -> bool:
+        return (
+            self.locate_template(
+                "templates/fast_travel.png", region=(0, 0, 1920, 1080), confidence=0.7
+            )
+            is not None
+        )
 
     def is_open(self) -> bool:
         """Checks if the Bed menu is open"""
@@ -109,15 +118,16 @@ class BedMap(ArkBot):
                     self.running = False
                 print("Unable to travel! Trying again...")
                 self.sleep(20)
-        
+
     def lay_down(self) -> None:
         # lay into the bed to make sure we dont access bags
         player = Player()
 
         player.look_down_hard()
+        self.sleep(0.5)
         player.turn_y_by(-40)
         self.sleep(0.5)
-        
+
         input.keyDown(player.keybinds.use)
         player.sleep(1)
 
@@ -125,13 +135,12 @@ class BedMap(ArkBot):
         input.moveTo(1266, 541, duration=0.1)
         player.sleep(0.1)
         input.moveTo(1266, 540, duration=0.1)
-        player.sleep(0.3)
-        input.keyUp(player.keybinds.use)
-        player.click("left")
+        player.sleep(2)
 
         # 'use' only needs to be held if we hold for too long after clicking
         input.keyUp(player.keybinds.use)
         player.sleep(10)
+        self.press(self.keybinds.use)
 
 
 class TekPod(Bed):
@@ -162,12 +171,10 @@ class TekPod(Bed):
         input.moveTo(1266, 541, duration=0.1)
         self.player.sleep(0.1)
         input.moveTo(1266, 540, duration=0.1)
-        self.player.sleep(0.5)
-        self.player.click("left")
+        self.player.sleep(2)
 
         # 'use' only needs to be held if we hold for too long after clicking
-        self.player.sleep(0.2)
-        input.keyDown(self.player.keybinds.use)
+        input.keyUp(self.player.keybinds.use)
         self.player.sleep(2)
         return self.player.has_effect(pod_xp)
 

@@ -54,5 +54,9 @@ class ServerNotFoundError(Exception):
 class DediNotInRangeError(Exception):
     """Raised when the dedi deposit text could not be detected"""
 
-class NoBerriesLeftError(Exception):
+class NoItemsLeftError(Exception):
     """Raised when there is no berries left to deposit"""
+
+class DinoNotMountedError(Exception):
+    """Raised when a dino cannot be mounted, either because it does not
+    have a saddle, or because its not close enough."""

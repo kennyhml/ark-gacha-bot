@@ -164,3 +164,10 @@ mejoberry = Item(
     added_icon=None,
     added_text=None,
 )
+
+raw_meat = Item(
+    name="Raw Meat",
+    inventory_icon="templates/raw_meat.png",
+    added_icon=None,
+    added_text=None
+)

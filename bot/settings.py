@@ -33,6 +33,8 @@ class TowerSettings:
     seed_beds: int
     berry_prefix: str
     berry_beds: int
+    meat_prefix: str
+    meat_beds: int
     crystal_interval: int
     drop_items: list
     keep_items: list

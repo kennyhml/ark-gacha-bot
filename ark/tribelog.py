@@ -517,7 +517,7 @@ class TribeLog(ArkBot):
 
         if "killed" in filtered_res:
             event = "Something killed!"
-        else:
+        elif "destroyed" in filtered_res:
             event = "Something destroyed!"
 
         return event, filtered_res

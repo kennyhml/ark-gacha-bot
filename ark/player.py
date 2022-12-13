@@ -143,7 +143,7 @@ class Player(ArkBot):
         # back to crouching
         self.press(self.keybinds.crouch)
 
-    def do_precise_crop_plot_stack(self) -> None:
+    def do_precise_crop_plot_stack(self, take_all: bool=True, max_index: int=8) -> None:
         crop_plot = CropPlot()
         self.crouch()
 
@@ -152,6 +152,9 @@ class Player(ArkBot):
         self.sleep(0.1)
 
         for expected_index, turn in enumerate(turns, start=1):
+            if expected_index - 1 == max_index:
+                return
+
             if expected_index == 6:
                 self.crouch()
 
@@ -163,6 +166,8 @@ class Player(ArkBot):
             index = crop_plot.get_stack_index()
             while index != expected_index:
                 if not index:
+                    crop_plot.close()
+                    crop_plot.open()
                     index = crop_plot.get_stack_index()
                     continue
                 
@@ -175,7 +180,8 @@ class Player(ArkBot):
                 crop_plot.open()
                 index = crop_plot.get_stack_index()
 
-            crop_plot.take_all()
+            if take_all:
+                crop_plot.take_all()
             self.inventory.transfer_all(crop_plot)
             print("Correct crop plot!")
             crop_plot.close()
