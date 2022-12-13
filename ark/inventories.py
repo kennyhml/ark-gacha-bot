@@ -618,10 +618,9 @@ class CropPlot(Inventory):
 
             # check theres traps in the crop plot
             if self.has_traps():
-                self.take_all()
-                player_inv.transfer_all(self)
+                self.take_all_items("trap")
 
-            elif first_lap:
+            if first_lap:
                 # put pellets in and close
                 player_inv.transfer_all(self)
 

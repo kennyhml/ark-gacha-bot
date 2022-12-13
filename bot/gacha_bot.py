@@ -261,10 +261,10 @@ class GachaBot(ArkBot):
             return amount
 
         try:
-            average_amount = self._total_dust_made / self._total_pickups
+            average_amount = round(self._total_dust_made / self._total_pickups)
         except ZeroDivisionError:
             # assume 6000 dust / minute, or 100 / second
-            average_amount = 100 * self.tower_settings.crystal_interval
+            average_amount = round(100 * self.tower_settings.crystal_interval)
 
         if average_amount - 5000 < amount < average_amount + 10000:
             return amount

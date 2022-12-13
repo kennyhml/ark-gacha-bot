@@ -54,6 +54,7 @@ class BerryFeedStation(ArkBot):
         self.sleep(0.5)
         self.player.inventory.transfer_some_pellets(self.player.inventory, transfer_back=25)
         self.gacha.close()
+        self.sleep(1)
 
     def put_pellets_back(self) -> None:
         if int(self.bed.name[-2:]) % 2 == 0:
@@ -83,7 +84,6 @@ class BerryFeedStation(ArkBot):
             self.sleep(0.2)
 
             if self.bed.name[-2:] == "01":
-                self.player.turn_y_by(10)
                 self.sleep(0.3)
                 self.player.turn_x_by(80)
                 self.fill_trough()
@@ -109,7 +109,6 @@ class BerryFeedStation(ArkBot):
                 self.fill_trough()
 
             elif self.bed.name[-2:] in ["02", "00"]:
-                self.player.turn_y_by(10)
                 self.sleep(0.3)
                 self.player.turn_x_by(-80)
                 self.fill_trough()
@@ -133,7 +132,6 @@ class BerryFeedStation(ArkBot):
                 self.fill_trough()
 
             elif self.bed.name[-2:] == "03":
-                self.player.turn_y_by(10)
                 self.sleep(0.3)
                 self.player.turn_x_by(90)
                 self.fill_trough()

@@ -73,7 +73,7 @@ CONTENTS_MAPPING = {
     "Doaorframe": "Doorframe",
     "Doarframe": "Doorframe",
     "Ceilina": "Ceiling",
-    "Tek Ficor": "Tek Floor",
+    "Ficor": "Floor",
     "iTek Turret!": "(Tek Turret)",
     "iTek Turret": "(Tek Turret",
     " Tek Turreti": " (Tek Turret)",

@@ -574,7 +574,7 @@ class GrindBot(ArkBot):
 
     def amount_valid(self, material, amount) -> bool:
         expected = {
-            "Pearls": (7000, 60000),
+            "Pearls": (6000, 60000),
             "Paste": (7000, 160000),
             "Electronics": (800, 10000),
             "Ingot": (9000, 40000),
@@ -946,7 +946,11 @@ class GrindBot(ArkBot):
                     self.resync_to_bed()
 
     def craft_turrets(self) -> None:
-        """Crafts the turrets after all electronics have been crafted."""
+        """Crafts the turrets after all electronics have been crafted.
+        Posts the final result to discord as an embed displaying how
+        many Heavies ended up crafting (as the result may vary from the
+        excpected amount).
+        """
         # spawn and get the resources
         self.spawn()
         start = time.time()
@@ -961,6 +965,7 @@ class GrindBot(ArkBot):
             # take out the turrets
             self.exo_mek.open()
             self.exo_mek.take_all_items("Heavy Auto Turret")
+            turrets_crafted = self.player.inventory.count_item(heavy_auto_turret)
             self.exo_mek.close()
 
             # deposit turrets and clear up the exo mek
@@ -974,7 +979,6 @@ class GrindBot(ArkBot):
         self.turn_to(Stations.VAULT)
         self.vault.open()
         self.player.inventory.transfer_all(self.vault, "Turret")
-        turrets_crafted = self.player.inventory.count_item(heavy_auto_turret)
         self.vault.close()
         self.sleep(1)
 
@@ -1001,7 +1005,6 @@ class GrindBot(ArkBot):
         # deposit the lightweight mats
         for item in ["Pearls", "Paste", "Electronics"]:
             self.deposit(item)
-        return turrets_crafted
 
     def spawn(self) -> None:
         self.beds.travel_to(self.bed)
