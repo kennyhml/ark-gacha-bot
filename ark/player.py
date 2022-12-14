@@ -90,7 +90,7 @@ class Player(ArkBot):
         self.check_status()
         input.moveRel(amount, 0, 0, None, False, False, True)
 
-    def do_crop_plots(self, first_lap: bool = False) -> None:
+    def do_crop_plots(self, refill_pellets: bool = False) -> None:
         """Empties all stacks of crop plots
         Starts facing the gacha, ends facing the gacha
         """
@@ -99,20 +99,54 @@ class Player(ArkBot):
 
         for _ in range(3):
             self.turn_90_degrees()
-            self.do_crop_plot_stack(first_lap)
+            self.do_crop_plot_stack(refill_pellets)
         self.turn_90_degrees()
         self.sleep(0.2)
 
-    def do_crop_plot_stack(self, first_lap: bool = False) -> None:
+    def adjust_for_crop_plot(self, crop_plot: CropPlot, expected_index: int) -> None:
+        """Checks if the expected crop plot was opened, adjusts if it was not.
+        
+        Parameters:
+        -----------
+        crop_plot :class:`CropPlot`:
+            The crop plot we are trying to open
+
+        expected_index :class:`int`:
+            The expected index of the crop plot (in the stack)
+
+        TODO: Raise an error when the correct crop plot could not be opened whatsoever
+        """
+        index = crop_plot.get_stack_index()
+        while index != expected_index:
+            # no index at all was found, try to reopen the crop plot
+            if not index:
+                crop_plot.close()
+                crop_plot.open()
+                index = crop_plot.get_stack_index()
+                continue
+            crop_plot.close()
+
+            # check if we need to correct higher or lower
+            if index > expected_index:
+                self.turn_y_by(5)
+            else:
+                self.turn_y_by(-5)
+            
+            # recheck the index
+            crop_plot.open()
+            index = crop_plot.get_stack_index()
+
+    def do_crop_plot_stack(self, refill_pellets: bool = False) -> None:
         """Empties the current stack of crop plots.
 
         Takes all traps from the crop plots using the searchbar, then transfers
         all to put pellets in. If no traps are in the crop plot, taking traps
         will be skipped.
 
-        Transfer all from the inventory will always be pressed because pellets
-        can end up at the very bottom of the inventory depending on the amount
-        of traps.
+        Parameters:
+        -----------
+        refill_pellets :class:`bool`:
+            Whether pellets need to be refilled or not
         """
         crop_plot = CropPlot()
 
@@ -120,30 +154,45 @@ class Player(ArkBot):
         self.look_down_hard()
         self.sleep(0.1)
 
-        # take the bottom most crop plot
-        self.turn_y_by(-130)
-        self.sleep(0.5)
-        crop_plot.take_traps_put_pellets(self.inventory, first_lap)
-
-        # look up slightly emptying the next 5
-        for _ in range(5):
-            self.turn_y_by(-17)
-            crop_plot.take_traps_put_pellets(self.inventory, first_lap)
+        for val in [-130, *[-17] * 5]:
+            self.turn_y_by(val)
+            self.sleep(0.3)
+            crop_plot.take_traps_put_pellets(self.inventory, refill_pellets)
 
         # stand up and take the current one
         self.press(self.keybinds.crouch)
-        self.turn_y_by(50)
-        crop_plot.take_traps_put_pellets(self.inventory, first_lap)
-
-        # take next two
-        for _ in range(2):
-            self.turn_y_by(-17)
-            crop_plot.take_traps_put_pellets(self.inventory, first_lap)
+        for val in [50, -17, -17]:
+            self.turn_y_by(val)
+            crop_plot.take_traps_put_pellets(self.inventory, refill_pellets)
 
         # back to crouching
         self.press(self.keybinds.crouch)
 
-    def do_precise_crop_plot_stack(self, take_all: bool=True, max_index: int=8) -> None:
+    def do_precise_crop_plot_stack(
+        self,
+        item: Item = None,
+        refill_pellets: bool = False,
+        take_all: bool = False,
+        max_index: int = 8,
+    ) -> None:
+        """Empties the current stack of crop plot, but aims for a 100% access rate.
+
+        This is achieved by adding a folder to each crop plot from bottom to top,
+        AAA to HHH, so the bot can see the folder and know which crop plot
+        it accessed thus being able to adjust itself higher or lower.
+
+        Parameters:
+        -----------
+
+        item :class:`Item`:
+            The item to take out of the crop plot, as `Item` object.
+
+        take_all :class:`bool`:
+            Whether the bot should take all from the crop plot
+
+        max_index :class:`int`:
+            The highest crop plot to be accessed, default 8
+        """
         crop_plot = CropPlot()
         self.crouch()
 
@@ -151,6 +200,7 @@ class Player(ArkBot):
         self.look_down_hard()
         self.sleep(0.1)
 
+        # go through each turn attempting to access the respective
         for expected_index, turn in enumerate(turns, start=1):
             if expected_index - 1 == max_index:
                 return
@@ -159,31 +209,19 @@ class Player(ArkBot):
                 self.crouch()
 
             self.turn_y_by(turn)
-            self.sleep(0.5)
+            self.sleep(0.3)
             crop_plot.open()
 
-            # correct crop plot opened
-            index = crop_plot.get_stack_index()
-            while index != expected_index:
-                if not index:
-                    crop_plot.close()
-                    crop_plot.open()
-                    index = crop_plot.get_stack_index()
-                    continue
-                
-                crop_plot.close()
-                if index > expected_index:
-                    self.turn_y_by(5)
-                else:
-                    self.turn_y_by(-5)
-                
-                crop_plot.open()
-                index = crop_plot.get_stack_index()
+            # check for the correct crop plot
+            self.adjust_for_crop_plot()
 
             if take_all:
                 crop_plot.take_all()
-            self.inventory.transfer_all(crop_plot)
-            print("Correct crop plot!")
+            elif item:
+                crop_plot.take_all_items(item)
+
+            if refill_pellets:
+                self.inventory.transfer_all(crop_plot)
             crop_plot.close()
 
     def load_gacha(self, gacha: Gacha) -> None:

@@ -1,6 +1,6 @@
 from ark.beds import Bed, BedMap
 from ark.dinosaurs import Dinosaur
-from ark.exceptions import DinoNotMountedError, NoItemsLeftError
+from ark.exceptions import DinoNotMountedError, NoItemsLeftError, BedNotAccessibleError
 from ark.inventories import CropPlot, Gacha, Inventory
 from ark.items import Item, mejoberry, raw_meat, pellet
 from ark.player import Player
@@ -24,17 +24,13 @@ class FeedStation(ArkBot):
         self.bedmap = BedMap()
         self.trough = Inventory("Tek Trough", "tek_trough")
 
+    def gacha_is_right(self) -> bool:
+        return int(self.bed.name[-2:]) % 2 == 0
+
     def spawn(self) -> None:
         """Spawns and turns towards the gacha"""
         self.bedmap.travel_to(self.bed)
         self.player.await_spawned()
-        self.sleep(1)
-
-        # use the beds name to determine what direction to turn
-        if int(self.bed.name[-2:]) % 2 == 0:
-            self.player.turn_90_degrees("right")
-        else:
-            self.player.turn_90_degrees("left")
         self.sleep(1)
 
     def take_pellets(self, transfer_rows_back: int = 6) -> None:
@@ -47,7 +43,7 @@ class FeedStation(ArkBot):
             to avoid capping due to pellet overflow.
         """
 
-        if int(self.bed.name[-2:]) % 2 == 0:
+        if self.gacha_is_right():
             self.player.turn_90_degrees("right")
         else:
             self.player.turn_90_degrees("left")
@@ -196,14 +192,13 @@ class BerryFeedStation(FeedStation):
         The bed object of the station to travel to
     """
 
-
     def do_crop_plots(self) -> None:
         """Does the crop plot stack, finishes facing the last stack"""
-        direction = "left" if int(self.bed.name[-2:]) % 2 == 0 else "right"
+        direction = "left" if self.gacha_is_right() else "right"
 
         for _ in range(2):
             self.player.turn_90_degrees(direction)
-            self.player.do_precise_crop_plot_stack()
+            self.player.do_precise_crop_plot_stack(mejoberry, refill_pellets=True)
 
     def run(self) -> None:
         """Runs the feed station."""
@@ -212,19 +207,21 @@ class BerryFeedStation(FeedStation):
         self.do_crop_plots()
         self.fill_troughs(mejoberry)
 
+
 class MeatFeedStation(FeedStation):
     """Handles the auto meat station. The purpose of the station is to
     harvest meat plants using direbears to raise dinos in its area or let
     meat pile up for use elsewhere. The plants take 30 minutes to regenerate
     but should not be harvested every 30 minutes due to meat overflow.
-    
-    
+
+
     Parameters:
     -----------
     bed :class:`Bed`:
         The bed object of the station to travel to
-    
+
     """
+
     def __init__(self, bed: Bed) -> None:
         super().__init__(bed)
         self.dire_bear = Dinosaur("Dire Bear", "dire_bear")
@@ -243,7 +240,7 @@ class MeatFeedStation(FeedStation):
             counter += 1
             if counter > 8:
                 return
-        
+
     def get_meat(self) -> None:
         """Approaches the dire bear from the spawn point until it can ride it.
         Proceeds to hit the meatplants 20 times each second and then walks back to the bed"""
@@ -258,17 +255,16 @@ class MeatFeedStation(FeedStation):
 
         self.dire_bear.dismount()
         print("Finished getting meat!")
-        
+
     def walk_to_spawn(self) -> None:
         self.player.look_down_hard()
-        key = "a" if int(self.bed.name[-2:]) % 2 == 0 else "d"
+        key = "a" if self.gacha_is_right() else "d"
 
         while not self.bedmap.can_be_accessed():
             self.player.walk(key, 0.2)
 
     def travel_to_trough_beds(self) -> None:
         self.bed.name = self.bed.name[:-2] + "b" + self.bed.name[-2:]
-        print(self.bed.name)
         self.spawn()
 
     def crop_plots_need_pellets(self) -> bool:
@@ -281,35 +277,36 @@ class MeatFeedStation(FeedStation):
 
     def refill_crop_plots(self) -> None:
 
-        if int(self.bed.name[-2:]) % 2 == 0:
+        if self.gacha_is_right():
             self.player.turn_90_degrees("left")
         else:
             self.player.turn_90_degrees("right")
 
-        self.player.do_precise_crop_plot_stack(take_all=False, max_index=6)
+        self.player.do_precise_crop_plot_stack(refill_pellets=True, max_index=6)
         self.player.drop_all()
-        
+
     def take_meat_from_bear(self) -> None:
-        if int(self.bed.name[-2:]) % 2 == 0:
+        if self.gacha_is_right():
             self.player.walk("a", 0.5)
         else:
             self.player.walk("d", 0.5)
         self.player.look_up_hard()
 
-        if int(self.bed.name[-2:]) % 2 == 0:
+        if self.gacha_is_right():
             self.player.turn_90_degrees("right")
         else:
             self.player.turn_90_degrees("left")
         self.sleep(0.5)
-        
+
         self.dire_bear.inventory.open()
         self.dire_bear.inventory.take_all_items(raw_meat)
+        self.dire_bear.inventory.drop_all()
         self.dire_bear.inventory.close()
         self.sleep(1)
         self.player.look_down_hard()
         self.bedmap.lay_down()
 
-        if int(self.bed.name[-2:]) % 2 == 0:
+        if self.gacha_is_right():
             for _ in range(2):
                 self.sleep(0.5)
                 self.player.turn_90_degrees("left")
