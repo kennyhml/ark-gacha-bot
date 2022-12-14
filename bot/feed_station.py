@@ -2,7 +2,7 @@ from ark.beds import Bed, BedMap
 from ark.dinosaurs import Dinosaur
 from ark.exceptions import DinoNotMountedError, NoItemsLeftError
 from ark.inventories import CropPlot, Gacha, Inventory
-from ark.items import Item, mejoberry, raw_meat
+from ark.items import Item, mejoberry, raw_meat, pellet
 from ark.player import Player
 from bot.ark_bot import ArkBot
 
@@ -46,6 +46,14 @@ class FeedStation(ArkBot):
             The amount of pellet rows we want to transfer back into the gacha,
             to avoid capping due to pellet overflow.
         """
+
+        if int(self.bed.name[-2:]) % 2 == 0:
+            self.player.turn_90_degrees("right")
+        else:
+            self.player.turn_90_degrees("left")
+
+        self.sleep(1)
+
         # open gacha, take pellets and wait for them to be added
         self.sleep(0.5)
         self.gacha.open(default_key=False)
@@ -245,7 +253,7 @@ class MeatFeedStation(FeedStation):
 
         for _ in range(20):
             self.dire_bear.attack("left")
-            self.sleep(1)
+            self.sleep(0.7)
         self.sleep(5)
 
         self.dire_bear.dismount()
@@ -263,12 +271,13 @@ class MeatFeedStation(FeedStation):
         print(self.bed.name)
         self.spawn()
 
-        if int(self.bed.name[-2:]) % 2 == 0:
-            self.player.turn_90_degrees("right")
-        else:
-            self.player.turn_90_degrees("left")
+    def crop_plots_need_pellets(self) -> bool:
+        crop_plot = CropPlot()
+        crop_plot.open()
+        pellets_amount = crop_plot.count_item(pellet)
+        crop_plot.close()
 
-        self.sleep(1)
+        return pellets_amount <= 10
 
     def refill_crop_plots(self) -> None:
 
@@ -291,7 +300,8 @@ class MeatFeedStation(FeedStation):
             self.player.turn_90_degrees("right")
         else:
             self.player.turn_90_degrees("left")
-
+        self.sleep(0.5)
+        
         self.dire_bear.inventory.open()
         self.dire_bear.inventory.take_all_items(raw_meat)
         self.dire_bear.inventory.close()
@@ -311,7 +321,10 @@ class MeatFeedStation(FeedStation):
         self.get_meat()
         self.walk_to_spawn()
         self.travel_to_trough_beds()
-        self.take_pellets(10)
-        self.refill_crop_plots()
+
+        if self.crop_plots_need_pellets():
+            self.take_pellets(10)
+            self.refill_crop_plots()
+
         self.take_meat_from_bear()
         self.fill_troughs(raw_meat)

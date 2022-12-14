@@ -40,30 +40,14 @@ class ArkBot(ArkWindow):
     """
 
     __version__ = "1.3.3"
-    _paused = False
-    _running = True
+    paused = False
+    running = True
     default_avatar = "https://steamuserimages-a.akamaihd.net/ugc/883133594330098188/6F62B1436FB2C7F26F028ACCA931CB5AE7C3F4F3/?imw=512&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false"
 
     def __init__(self) -> None:
         super().__init__()
         with open("settings/keybinds.json") as f:
             self.keybinds: Keybinds = from_dict(Keybinds, json.load(f))
-
-    @property
-    def running(self):
-        return self._running
-
-    @running.setter
-    def running(self, state: bool):
-        self._running = state
-
-    @property
-    def paused(self):
-        return self._paused
-
-    @paused.setter
-    def paused(self, state: bool):
-        self._paused = state
 
     def check_status(self):
         """Bot runtime check, raises `TerminatedException` if the

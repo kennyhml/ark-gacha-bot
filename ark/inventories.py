@@ -62,6 +62,16 @@ class Inventory(ArkBot):
     def drop_all(self) -> None:
         self.click_at(self.DROP_ALL)
 
+    def count_item(self, item: Item | str) -> int:
+        """Returns the amount of stacks of the given item located within the inventory."""
+        if isinstance(item, Item):
+            item = item.inventory_icon
+
+        return len(
+            self.locate_all_template(item, region=self.ITEM_REGION, confidence=0.8)
+        )
+
+
     def receiving_remote_inventory(self) -> bool:
         """Checks if the 'Receiving Remote Inventory' text is visible."""
         return (
@@ -447,15 +457,6 @@ class PlayerInventory(Inventory):
             item = item.inventory_icon
 
         return self.locate_all_template(item, region=self.ITEM_REGION, confidence=0.8)
-
-    def count_item(self, item: Item | str) -> int:
-        """Returns the amount of stacks of the given item located within the inventory."""
-        if isinstance(item, Item):
-            item = item.inventory_icon
-
-        return len(
-            self.locate_all_template(item, region=self.ITEM_REGION, confidence=0.8)
-        )
 
     def has_pellets(self) -> bool:
         """Checks whether the player has pellets."""

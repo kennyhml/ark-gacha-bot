@@ -986,6 +986,7 @@ class GrindBot(ArkBot):
         try:
             # clean up the remaining mats from exo mek
             self.turn_to(Stations.EXO_MEK)
+            self.sleep(1)
             self.player.do_drop_script(metal_ingot, self.exo_mek, 1)
             self.player.turn_y_by(-163)
             self.deposit(metal_ingot)
@@ -997,11 +998,13 @@ class GrindBot(ArkBot):
 
         # get the non heavy mats, drop all on the rest (poly)
         self.turn_to(Stations.EXO_MEK)
+        self.sleep(1)
         self.exo_mek.open()
         for item in ["Pearls", "Paste", "Electronics"]:
             self.exo_mek.take_all_items(item)
         self.exo_mek.drop_all()
         self.exo_mek.close()
+        self.sleep(0.5)
 
         # deposit the lightweight mats
         for item in ["Pearls", "Paste", "Electronics"]:

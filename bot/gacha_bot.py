@@ -92,7 +92,7 @@ class GachaBot(ArkBot):
         unstucking = UnstuckHandler(self.server)
         if not unstucking.attempt_fix():
             print("Failed to unstuck...")
-            self.running = False
+            ArkBot.running = False
 
         if unstucking.reconnected:
             self.last_emptied = time.time()
@@ -242,7 +242,7 @@ class GachaBot(ArkBot):
 
         except Exception as e:
             print(f"CRITICAL! Error loading settings!\n{e}")
-            self._running = False
+            ArkBot.running = False
 
     def validate_dust_amount(self, amount: int) -> int:
         """Checks if the given amount of dust is valid compared to the usual average.
@@ -288,8 +288,6 @@ class GachaBot(ArkBot):
             # spawn at crystal bed and pick up the crystals
             crystals = CrystalCollection(self.player)
             self.travel_to_station(bed)
-            self.tribelogs.check_tribelogs()
-            self.player.await_spawned()
             crystals.pick_crystals()
 
             # open the crystals and deposit the items into dedis
@@ -380,7 +378,7 @@ class GachaBot(ArkBot):
         except (InventoryNotAccessibleError, InventoryNotAccessibleError) as e:
             self.inform_error(f"Seeding Gacha {self.current_bed + 1}", e)
             if not UnstuckHandler(self.server).attempt_fix():
-                self.running = False
+                ArkBot.running = False
 
         finally:
             self.increment_counter()
@@ -655,6 +653,7 @@ class GachaBot(ArkBot):
         Current tasks are: Healing, crafting electronics, picking crystals,
         gacha feeding and grinding gear where healing wont block the next task.
         """
+
         try:
             self.check_status()
             # check if we need to go heal
