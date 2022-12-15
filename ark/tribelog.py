@@ -514,6 +514,7 @@ class TribeLog(ArkBot):
         if EVENT_MAPPING[denoise_rgb] == "Tek Sensor triggered!":
             sensor_event = self.get_sensor_event(image)
             filtered_res = f"'{filtered_res.rstrip()}' triggered by {sensor_event}!"
+            event = "Tek Sensor Triggered!" 
 
         if "killed" in filtered_res:
             event = "Something killed!"

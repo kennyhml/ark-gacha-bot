@@ -7,22 +7,23 @@ The `PlayerInventory` class derives from the `Inventory` class, mainly checking 
 
 All sub-classes in this module derive from the `Inventory` class.
 """
+import math
+import os
+
 import pyautogui as pg
 import pydirectinput as input
-
 from pytesseract import pytesseract as tes
 
 from ark.exceptions import (
     InventoryNotAccessibleError,
     InventoryNotClosableError,
-    NoItemsDepositedError,
-    ReceivingRemoveInventoryTimeout,
     NoGasolineError,
     NoItemsAddedError,
+    NoItemsDepositedError,
+    ReceivingRemoveInventoryTimeout,
 )
 from ark.items import Item, pellet
 from bot.ark_bot import ArkBot
-import math
 
 
 class Inventory(ArkBot):
@@ -62,6 +63,18 @@ class Inventory(ArkBot):
     def drop_all(self) -> None:
         self.click_at(self.DROP_ALL)
 
+    def create_folder(self, name: str) -> None:
+        command = "echo | set /p nul=" + name.strip() + "| clip"
+        os.system(command)
+
+        self.click_at(1585, 187)
+        self.sleep(0.3)
+        pg.hotkey("ctrl", "v", interval=0.2)
+        self.sleep(0.3)
+        self.click_at(961, 677)
+        self.sleep(0.5)
+        self.click("left")
+
     def count_item(self, item: Item | str) -> int:
         """Returns the amount of stacks of the given item located within the inventory."""
         if isinstance(item, Item):
@@ -70,7 +83,6 @@ class Inventory(ArkBot):
         return len(
             self.locate_all_template(item, region=self.ITEM_REGION, confidence=0.8)
         )
-
 
     def receiving_remote_inventory(self) -> bool:
         """Checks if the 'Receiving Remote Inventory' text is visible."""
@@ -264,7 +276,7 @@ class Inventory(ArkBot):
             term = term.name
 
         # write the name into the search bar
-        self.click_search(delete_prior=term != "trap")
+        self.click_search(delete_prior=term not in ["trap", "Y Trap"])
         pg.typewrite(term.lower(), interval=0.001)
 
         # escape out of the searchbar so presing f closes the inventory

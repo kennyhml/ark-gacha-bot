@@ -103,6 +103,20 @@ class Player(ArkBot):
         self.turn_90_degrees()
         self.sleep(0.2)
 
+    def name_crop_plots(self) -> None:
+        self.sleep(0.5)
+        for _ in range(3):
+            self.turn_90_degrees()
+            self.name_crop_plot_stack()
+
+    def do_precise_crop_plots(self, item: Item, refill_pellets: bool = False) -> None:
+        self.sleep(0.5)
+        for _ in range(3):
+            self.turn_90_degrees()
+            self.do_precise_crop_plot_stack(item, refill_pellets)
+        self.turn_90_degrees()
+        self.sleep(0.2)
+
     def adjust_for_crop_plot(self, crop_plot: CropPlot, expected_index: int) -> None:
         """Checks if the expected crop plot was opened, adjusts if it was not.
         
@@ -130,12 +144,13 @@ class Player(ArkBot):
             if index > expected_index:
                 self.turn_y_by(5)
             else:
-                self.turn_y_by(-5)
+                self.turn_y_by(-4)
             
             # recheck the index
             crop_plot.open()
             index = crop_plot.get_stack_index()
-
+        print("Correct crop plot open!")
+        
     def do_crop_plot_stack(self, refill_pellets: bool = False) -> None:
         """Empties the current stack of crop plots.
 
@@ -168,6 +183,7 @@ class Player(ArkBot):
         # back to crouching
         self.press(self.keybinds.crouch)
 
+    
     def do_precise_crop_plot_stack(
         self,
         item: Item = None,
@@ -195,7 +211,6 @@ class Player(ArkBot):
         """
         crop_plot = CropPlot()
         self.crouch()
-
         turns = [-130, -20, -20, -17, -15, 35, -17, -20]
         self.look_down_hard()
         self.sleep(0.1)
@@ -213,7 +228,7 @@ class Player(ArkBot):
             crop_plot.open()
 
             # check for the correct crop plot
-            self.adjust_for_crop_plot()
+            self.adjust_for_crop_plot(crop_plot, expected_index)
 
             if take_all:
                 crop_plot.take_all()
@@ -223,6 +238,42 @@ class Player(ArkBot):
             if refill_pellets:
                 self.inventory.transfer_all(crop_plot)
             crop_plot.close()
+
+    def name_crop_plot_stack(self) -> None:
+
+        folders = ["AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG", "HHH"]
+
+        crop_plot = CropPlot()
+        self.crouch()
+
+        self.look_down_hard()
+        self.sleep(0.1)
+        self.turn_y_by(-130)
+        self.sleep(0.3)
+
+        crop_plot.open()
+        crop_plot.create_folder("AAA")
+        crop_plot.close()
+
+        index = 1
+        # go through each turn attempting to access the respective
+        while index != 8:
+            self.turn_y_by(-3)
+            crop_plot.open()
+            if crop_plot.get_stack_index():
+                print("Folder already made...")
+                crop_plot.close()
+                self.sleep(0.2)
+                continue
+
+            print("Empty crop plot found!")
+            crop_plot.create_folder(folders[index])
+            crop_plot.close()
+            index += 1
+            if index == 5:
+                self.crouch()
+                self.turn_y_by(60)
+                self.sleep(0.5)
 
     def load_gacha(self, gacha: Gacha) -> None:
         """Fills the gacha after emptying crop plots.

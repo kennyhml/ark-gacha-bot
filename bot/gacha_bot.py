@@ -14,7 +14,7 @@ from ark.exceptions import (
     InventoryNotClosableError,
 )
 from ark.inventories import Gacha, Inventory
-from ark.items import pellet
+from ark.items import pellet, y_trap
 from ark.player import Player
 from ark.server import Server
 from ark.tribelog import TribeLog
@@ -100,7 +100,7 @@ class GachaBot(ArkBot):
     def travel_to_station(self, station: Bed) -> None:
         """Wrapper for `BedMap` travel method. Travels to the given station
         and checks tribelogs during spawn animation.
-        
+
         Parameters:
         -----------
         station :class:`Bed`
@@ -321,26 +321,28 @@ class GachaBot(ArkBot):
 
     def take_pellets_from_gacha(self, gacha: Gacha) -> None:
         # check if we need to take pellets first
-        if not self._laps_completed:
-            if self.current_bed == 0:
-                Console().set_gamma()
+        if self._laps_completed:
+            return
 
-            gacha.open()
-            gacha.search_for("ll")
-            self.sleep(0.3)
-            if gacha.has_item(pellet):
-                gacha.take_all()
-                self.player.inventory.await_items_added()
-                self.sleep(0.5)
-                self.player.inventory.transfer_some_pellets(self.player.inventory)
-            gacha.close()
+        if self.current_bed == 0:
+            Console().set_gamma()
+
+        gacha.open()
+        gacha.search_for("ll")
+        self.sleep(0.3)
+        if gacha.has_item(pellet):
+            gacha.take_all()
+            self.player.inventory.await_items_added()
+            self.sleep(0.5)
+            self.player.inventory.transfer_some_pellets(self.player.inventory, transfer_back=15)
+        gacha.close()
 
     def do_berry_station(self) -> None:
         for bed in self.berry_beds:
             try:
                 station = BerryFeedStation(bed)
                 station.run()
-                
+
             finally:
                 self.last_berry_harvest = time.time()
 
@@ -369,7 +371,9 @@ class GachaBot(ArkBot):
         try:
             gacha = Gacha()
             self.take_pellets_from_gacha(gacha)
-            self.player.do_crop_plots(first_lap=self._current_lap == 1)
+            self.player.do_precise_crop_plots(
+                item=y_trap, refill_pellets=self._current_lap == 1
+            )
             added_traps = self.player.load_gacha(gacha)
             self._ytraps_deposited += added_traps * 10
             self.inform_station_finished(bed, round(time.time() - start), added_traps)

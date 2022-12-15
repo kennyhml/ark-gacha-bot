@@ -203,7 +203,7 @@ class BerryFeedStation(FeedStation):
     def run(self) -> None:
         """Runs the feed station."""
         self.spawn()
-        self.take_pellets()
+        self.take_pellets(25)
         self.do_crop_plots()
         self.fill_troughs(mejoberry)
 

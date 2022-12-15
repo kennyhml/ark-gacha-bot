@@ -59,7 +59,7 @@ class ArkBot(ArkWindow):
 
         while self.paused:
             time.sleep(0.1)
-            if not self._running:
+            if not self.running:
                 raise TerminatedException
 
     def sleep(self, duration: int | float):
