@@ -1,12 +1,11 @@
-import pydirectinput as input
 import pyautogui as pg
+import pydirectinput as input
 
-from ark.inventories import CropPlot, Gacha, PlayerInventory, Inventory
-from ark.buffs import Buff, thirsty, hungry, pod_xp, broken_bones
-from ark.items import y_trap, Item
+from ark.buffs import Buff, broken_bones, hungry, thirsty
+from ark.exceptions import PlayerDidntTravelError
+from ark.inventories import CropPlot, Gacha, Inventory, PlayerInventory
+from ark.items import Item, y_trap
 from bot.ark_bot import ArkBot
-
-from ark.exceptions import InventoryNotAccessibleError, PlayerDidntTravelError
 
 
 class Player(ArkBot):
@@ -119,7 +118,7 @@ class Player(ArkBot):
 
     def adjust_for_crop_plot(self, crop_plot: CropPlot, expected_index: int) -> None:
         """Checks if the expected crop plot was opened, adjusts if it was not.
-        
+
         Parameters:
         -----------
         crop_plot :class:`CropPlot`:
@@ -142,15 +141,15 @@ class Player(ArkBot):
 
             # check if we need to correct higher or lower
             if index > expected_index:
-                self.turn_y_by(5)
+                self.turn_y_by(7)
             else:
-                self.turn_y_by(-4)
-            
+                self.turn_y_by(-6)
+
             # recheck the index
             crop_plot.open()
             index = crop_plot.get_stack_index()
         print("Correct crop plot open!")
-        
+
     def do_crop_plot_stack(self, refill_pellets: bool = False) -> None:
         """Empties the current stack of crop plots.
 
@@ -183,13 +182,11 @@ class Player(ArkBot):
         # back to crouching
         self.press(self.keybinds.crouch)
 
-    
     def do_precise_crop_plot_stack(
         self,
         item: Item = None,
-        refill_pellets: bool = False,
-        take_all: bool = False,
-        max_index: int = 8,
+        refill_pellets=False,
+        max_index=8,
     ) -> None:
         """Empties the current stack of crop plot, but aims for a 100% access rate.
 
@@ -229,20 +226,22 @@ class Player(ArkBot):
 
             # check for the correct crop plot
             self.adjust_for_crop_plot(crop_plot, expected_index)
-
-            if take_all:
-                crop_plot.take_all()
-            elif item:
+            if item and crop_plot.has_item(item):
                 crop_plot.take_all_items(item)
 
             if refill_pellets:
                 self.inventory.transfer_all(crop_plot)
+
             crop_plot.close()
 
     def name_crop_plot_stack(self) -> None:
-
+        """Names the crop plot stack to prepare the tower for 100% access running.
+        Will not work properly if some crop plots already have folders, the most
+        bottom crop plot needs to be on a highered ceiling.
+        """
         folders = ["AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG", "HHH"]
 
+        # get the most bottom crop plot and create the inital folder
         crop_plot = CropPlot()
         self.crouch()
 
@@ -256,20 +255,23 @@ class Player(ArkBot):
         crop_plot.close()
 
         index = 1
-        # go through each turn attempting to access the respective
+        # go through each turn attempting to access the respective crop plot
         while index != 8:
             self.turn_y_by(-3)
             crop_plot.open()
+
+            # there already is a folder
             if crop_plot.get_stack_index():
-                print("Folder already made...")
                 crop_plot.close()
                 self.sleep(0.2)
                 continue
 
-            print("Empty crop plot found!")
+            # empty crop plot, create next folder in line
             crop_plot.create_folder(folders[index])
             crop_plot.close()
             index += 1
+
+            # stand back up after "EEE"
             if index == 5:
                 self.crouch()
                 self.turn_y_by(60)
@@ -307,20 +309,34 @@ class Player(ArkBot):
         return amount_of_traps
 
     def walk(self, key, duration):
+        """'Walks' the given direction for the given duration.
+
+        Parameters:
+        ----------
+        key :class:`str`:
+            The key to hold to walk
+
+        duration :class: `int`|`float`:
+            The duration to walk for
+        """
         input.keyDown(key)
         self.sleep(duration=duration)
         input.keyUp(key)
 
     def crouch(self) -> None:
+        """Crouches the player, or uncrouches if player is already crouched."""
         self.press(self.keybinds.crouch)
 
     def prone(self) -> None:
+        """Prones the player, or unprones if the player is already proned"""
         self.press(self.keybinds.prone)
 
     def disable_hud(self) -> None:
+        """Disables HUD"""
         self.press("backspace")
 
     def pick_up_bag(self):
+        """Picks up items from a drop script bag, deletes the bag after."""
         self.look_down_hard()
         self.press(self.keybinds.target_inventory)
         self.sleep(0.5)
@@ -331,7 +347,22 @@ class Player(ArkBot):
         self.sleep(1)
 
     def do_drop_script(self, item: Item, target_inventory: Inventory, slot=2):
+        """Does the item drop script for the given item in the given structure.
+        Used to empty heavy items out of structures that are not dedis. Player
+        has to be non crouching and will end up as not crouching.
 
+        Parameters:
+        -----------
+        item :class:`Item`:
+            The item to dropscript for
+
+        target_inventory :class:`Inventory`:
+            The inventory to take the item out of.
+
+        slot :class: `int`:
+            The slot to take the item from, required if the inventory has
+            an item folder in slot 1.
+        """
         self.crouch()
         self.sleep(0.5)
         target_inventory.open()

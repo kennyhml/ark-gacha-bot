@@ -23,7 +23,8 @@ from bot.crystal_collection import CrystalCollection
 from bot.grind_bot import GrindBot
 from bot.settings import DiscordSettings, TowerSettings
 from bot.unstucking import UnstuckHandler
-from bot.feed_station import BerryFeedStation
+from bot.feed_station import BerryFeedStation, MeatFeedStation
+import numpy as np
 
 
 class GachaBot(ArkBot):
@@ -41,6 +42,7 @@ class GachaBot(ArkBot):
         self.seed_beds = self.create_seed_beds()
         self.crystal_bed = self.create_crystal_bed()
         self.berry_beds = self.create_berry_beds()
+        self.meat_beds = self.create_meat_beds()
         self.tek_pod = self.create_tek_pod()
         self.server = self.create_server()
         self.tribelogs = TribeLog(self.alert_webhook, self.logs_webhook)
@@ -59,11 +61,9 @@ class GachaBot(ArkBot):
         self._session_start = time.time()
         self.current_task = None
         self._first_pickup = True
-        self._at_pod = False
         self._least_healed = time.time()
         self.last_emptied = time.time()
         self.lap_started = time.time()
-        self.last_berry_harvest = time.time()
         self.player = Player()
         self.beds = BedMap()
         self.inform_started()
@@ -94,6 +94,7 @@ class GachaBot(ArkBot):
             print("Failed to unstuck...")
             ArkBot.running = False
 
+        print("Unstucking successful!")
         if unstucking.reconnected:
             self.last_emptied = time.time()
 
@@ -107,7 +108,7 @@ class GachaBot(ArkBot):
             The bed object to travel to
         """
         self.check_status()
-        self.beds.travel_to(station, self._at_pod)
+        self.beds.travel_to(station)
         self.tribelogs.check_tribelogs()
         self.player.await_spawned()
 
@@ -212,6 +213,20 @@ class GachaBot(ArkBot):
                 self.tower_settings.bed_position,
             )
             for i in range(self.tower_settings.berry_beds)
+        ]
+
+    def create_meat_beds(self) -> list[Bed]:
+        """Creates the berry bed objects using the given prefix and the defined
+        amount of beds, using leading nulls.
+
+        Returns a list of `Bed` objects.
+        """
+        return [
+            Bed(
+                f"{self.tower_settings.meat_prefix}{i:02d}",
+                self.tower_settings.bed_position,
+            )
+            for i in range(self.tower_settings.meat_beds)
         ]
 
     def create_server(self) -> Server:
@@ -334,17 +349,36 @@ class GachaBot(ArkBot):
             gacha.take_all()
             self.player.inventory.await_items_added()
             self.sleep(0.5)
-            self.player.inventory.transfer_some_pellets(self.player.inventory, transfer_back=15)
+            self.player.inventory.transfer_some_pellets(
+                self.player.inventory, transfer_back=15
+            )
         gacha.close()
 
     def do_berry_station(self) -> None:
-        for bed in self.berry_beds:
-            try:
+        try:
+            for bed in self.berry_beds:
                 station = BerryFeedStation(bed)
                 station.run()
 
-            finally:
-                self.last_berry_harvest = time.time()
+        finally:
+            time = datetime.now()  # save this timestamp for later comparison
+            np_format = np.array(
+                [time.year, time.month, time.day, time.hour, time.minute]
+            )  # all numeric values
+            np.save("temp/last_berry_harvest.npy", np_format)
+
+    def do_meat_station(self) -> None:
+        try:
+            for bed in self.meat_beds:
+                station = MeatFeedStation(bed)
+                station.run()
+
+        finally:
+            time = datetime.now()  # save this timestamp for later comparison
+            np_format = np.array(
+                [time.year, time.month, time.day, time.hour, time.minute]
+            )  # all numeric values
+            np.save("temp/last_meat_harvest.npy", np_format)
 
     def do_gacha_station(self, bed: Bed) -> None:
         """Completes the gacha station of the given bed.
@@ -380,9 +414,7 @@ class GachaBot(ArkBot):
             self._station_times.append(round(time.time() - start))
 
         except (InventoryNotAccessibleError, InventoryNotAccessibleError) as e:
-            self.inform_error(f"Seeding Gacha {self.current_bed + 1}", e)
-            if not UnstuckHandler(self.server).attempt_fix():
-                ArkBot.running = False
+            self.unstuck(f"Seeding Gacha {self.current_bed + 1}", e)
 
         finally:
             self.increment_counter()
@@ -638,7 +670,34 @@ class GachaBot(ArkBot):
         )
 
     def berries_are_ready(self) -> bool:
-        return (time.time() - self.last_berry_harvest) > 18000
+        """Checks if berries are ready for harvest by checking
+        wether more than 5 hours have passed since the last harvest.
+        
+        The last harvest is stored as datetime object.
+        """
+        saved = np.load("temp/last_berry_harvest.npy")
+        loaded_time = datetime(*saved)
+        now = datetime.now()
+
+        # comparison in minutes
+        diff = (now - loaded_time).total_seconds()/3600.
+        print(f"{diff} hours passed since last berry session")
+        return diff >= 5
+
+    def meat_is_ready(self) -> bool:
+        """Checks if berries are ready for harvest by checking
+        wether more than 5 hours have passed since the last harvest.
+        
+        The last harvest is stored as datetime object.
+        """
+        saved = np.load("temp/last_meat_harvest.npy")
+        loaded_time = datetime(*saved)
+        now = datetime.now()
+
+        # comparison in minutes
+        diff = (now - loaded_time).total_seconds()/3600.
+        print(f"{diff} hours passed since last meat session")
+        return diff >= 1
 
     def electronics_finished(self) -> bool:
         """Returns true if there is an ongoing grinding session and more than
@@ -661,31 +720,31 @@ class GachaBot(ArkBot):
         try:
             self.check_status()
             # check if we need to go heal
-            if healed := self.player.needs_recovery():
+            if self.player.needs_recovery():
                 self.go_heal()
-            self._at_pod = healed
 
             # check if any electronics are crafting and if they need to be requeued
             if self.electronics_finished():
                 self.current_task = "Grinding Station"
                 if not self.grinding.need_to_craft_electronics():
                     self.grinding.craft_turrets()
-                return
-
+                
             # check if its time to pick crystals
-            if self.crystals_need_pickup():
+            elif self.crystals_need_pickup():
                 # returns true if the vault is filled and we need to start grinding
                 if self.do_crystal_station(self.crystal_bed):
                     self.grinding.run()
                 return
 
-            if self.berries_are_ready():
+            elif self.berries_are_ready():
                 self.do_berry_station()
-                return
 
-            # do regular gacha seeding task
-            # increment bed counter
-            self.do_gacha_station(self.seed_beds[self.current_bed])
+            elif self.meat_is_ready():
+                self.do_meat_station()
+
+            else:
+                # do regular gacha seeding task
+                self.do_gacha_station(self.seed_beds[self.current_bed])
 
         except TerminatedException:
             pass

@@ -23,6 +23,11 @@ class UnstuckHandler(ArkBot):
     def attempt_fix(self) -> bool:
         """Runs an analysis through different possible problems and attempts
         to fix them upon detection."""
+
+        self.set_foreground()
+        if self._ingame_menu.check_reponding():
+            return True
+
         if self.game_crashed():
             print("Analysis: Game is crashed! Restarting...")
             self.press("esc")

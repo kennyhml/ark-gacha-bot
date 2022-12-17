@@ -186,6 +186,18 @@ class CrystalCollection(ArkBot):
 
         # return to original position
         self.player.turn_x_by(40)
+
+        turns = {
+            120: self.player.turn_x_by,
+            -40: self.player.turn_y_by,
+            60: self.player.turn_x_by,
+            40: self.player.turn_y_by,
+        }
+        for amount in turns:
+            turns[amount](amount)
+            dedi.attempt_deposit(["Flint", "Stone", "Fungal Wood"], check_amount=False)
+
+        self.player.turn_x_by(-180)
         return gains, round(time.time() - self.started)
 
     def deposit_items(self, drop_items: list) -> None:

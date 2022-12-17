@@ -30,6 +30,16 @@ class Dinosaur(ArkBot):
             is not None
         )
 
+    def can_access(self) -> bool:
+        return (
+            self.locate_template(
+                "templates/can_access.png",
+                region=(0, 0, 1920, 1080),
+                confidence=0.7,
+            )
+            is not None
+        )
+
     def await_mounted(self) -> bool:
         counter = 0
         while not self.is_mounted():

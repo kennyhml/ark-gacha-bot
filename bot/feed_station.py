@@ -6,6 +6,7 @@ from ark.items import Item, mejoberry, raw_meat, pellet
 from ark.player import Player
 from bot.ark_bot import ArkBot
 
+from copy import deepcopy
 
 class FeedStation(ArkBot):
     """A class representing the generic feedstation.
@@ -232,6 +233,13 @@ class MeatFeedStation(FeedStation):
         self.bedmap.travel_to(self.bed)
         self.player.await_spawned()
         self.sleep(1)
+ 
+    def travel_to_trough_bed(self) -> None:
+        new_bed = deepcopy(self.bed)
+        new_bed.name = new_bed.name[:-2] + "b" + new_bed.name[-2:]
+        self.bedmap.travel_to(new_bed)
+        self.player.await_spawned()
+        self.sleep(1)
 
     def approach_dire_bear(self) -> None:
         counter = 0
@@ -263,10 +271,6 @@ class MeatFeedStation(FeedStation):
         while not self.bedmap.can_be_accessed():
             self.player.walk(key, 0.2)
 
-    def travel_to_trough_beds(self) -> None:
-        self.bed.name = self.bed.name[:-2] + "b" + self.bed.name[-2:]
-        self.spawn()
-
     def crop_plots_need_pellets(self) -> bool:
         crop_plot = CropPlot()
         crop_plot.open()
@@ -290,7 +294,11 @@ class MeatFeedStation(FeedStation):
             self.player.walk("a", 0.5)
         else:
             self.player.walk("d", 0.5)
+
         self.player.look_up_hard()
+        while not self.dire_bear.can_access():
+            self.player.turn_y_by(10)
+            self.sleep(0.5)
 
         if self.gacha_is_right():
             self.player.turn_90_degrees("right")
@@ -317,7 +325,7 @@ class MeatFeedStation(FeedStation):
         self.spawn()
         self.get_meat()
         self.walk_to_spawn()
-        self.travel_to_trough_beds()
+        self.travel_to_trough_bed()
 
         if self.crop_plots_need_pellets():
             self.take_pellets(10)

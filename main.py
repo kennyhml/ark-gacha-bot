@@ -7,7 +7,6 @@ from bot.gacha_bot import GachaBot
 from bot.ark_bot import ArkBot
 
 def main():
-    
     bot = GachaBot()
     while bot.running:
         bot.do_next_task()
@@ -17,7 +16,6 @@ def on__key_press(key):
     """Connets inputs from listener thread to their corresponding function"""
 
     if key == keyboard.Key.f1:
-        print(ArkBot.paused, ArkBot.running)
         # make sure bot is not already active
         if not (ArkBot.paused or ArkBot.running):
             print("Started!")

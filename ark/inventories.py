@@ -256,7 +256,7 @@ class Inventory(ArkBot):
 
             if c >= 6:
                 raise InventoryNotClosableError(f"Failed to close {self._name}!")
-        self.sleep(0.2)
+        self.sleep(0.3)
 
     def click_search(self, delete_prior: bool = True) -> None:
         """Clicks into the searchbar"""

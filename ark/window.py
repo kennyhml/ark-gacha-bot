@@ -9,16 +9,20 @@ in.
 Note that the ark window class expects points and templates to be taken on 1920x1080
 resolution.
 """
+import re
+
 import cv2 as cv
 import numpy as np
 import PIL
 import pyautogui as pg
 import pygetwindow
+import win32gui
 from mss import mss, tools
 from PIL import Image, ImageOps
 from pytesseract import pytesseract as tes
 from screeninfo import get_monitors
 
+# set tesseract path
 tes.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 
@@ -174,13 +178,6 @@ class ArkWindow:
             ]
         )
 
-    def print_boundaries(self):
-        print(
-            f"Ark Window: {self._window}\n"
-            f"Monitor boundaries: {self._monitor}\n"
-            f"Fullscreen: {self._fullscreen}"
-        )
-
     def need_boundary_scaling(self):
         """Checks if we need to scale width and height on regions or images"""
         return not (
@@ -196,12 +193,14 @@ class ArkWindow:
         self._fullscreen = self.check_fullscreen()
 
     def convert_width(self, width) -> int:
+        """Converts the width if it needs to be scaled."""
         if not self.need_boundary_scaling():
             return width
 
         return self.convert_point(width, 0)[0]
 
     def convert_height(self, height) -> int:
+        """Converts the width if it needs to be scaled."""
         if not self.need_boundary_scaling():
             return height
 
@@ -258,11 +257,13 @@ class ArkWindow:
     def locate_in_image(
         self, template: str, image, confidence: float, grayscale: bool = False
     ):
+        """Finds the location of the given image in the given template."""
         return pg.locate(template, image, confidence=confidence, grayscale=grayscale)
 
     def locate_all_in_image(
         self, template: str, image, confidence: float, grayscale: bool = False
     ):
+        """Finds all locations of the given image in the given template"""
         return self.filter_points(
             set(
                 pg.locateAll(
@@ -280,6 +281,7 @@ class ArkWindow:
         convert: bool = True,
         grayscale: bool = False,
     ):
+        """Finds the given template on the screen."""
 
         return pg.locateOnScreen(
             self.convert_image(template),
@@ -291,6 +293,7 @@ class ArkWindow:
     def locate_all_template(
         self, template: str, region: tuple, confidence: float, convert: bool = True
     ):
+        """Finds all locations of the given template on the screen."""
         return self.filter_points(
             set(
                 pg.locateAllOnScreen(
@@ -391,3 +394,22 @@ class ArkWindow:
             return len(cv.findNonZero(masked_img))
         except TypeError:
             return None
+
+    def find_window(self, class_name, window_name=None):
+        """find a window by its class_name"""
+        self._handle = win32gui.FindWindow(class_name, window_name)
+
+    def _window_enum_callback(self, hwnd, wildcard):
+        """Pass to win32gui.EnumWindows() to check all the opened windows"""
+        if re.match(wildcard, str(win32gui.GetWindowText(hwnd))) is not None:
+            self._handle = hwnd
+
+    def find_window_wildcard(self, wildcard):
+        """find a window whose title matches the wildcard regex"""
+        self._handle = None
+        win32gui.EnumWindows(self._window_enum_callback, wildcard)
+
+    def set_foreground(self):
+        """put the window in the foreground"""
+        self.find_window_wildcard(".*ARK: Survival Evolved.*")
+        win32gui.SetForegroundWindow(self._handle)

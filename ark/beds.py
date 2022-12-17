@@ -89,15 +89,14 @@ class BedMap(ArkBot):
         pg.typewrite(bed.name.lower(), interval=0.001)
         self.sleep(0.3)
 
-    def travel_to(self, bed: Bed, from_pod: bool = False) -> None:
+    def travel_to(self, bed: Bed) -> None:
         """Travels to the given beds name"""
 
         print(f"Travelling to {bed.name}")
 
         # lay into the bed to make sure we dont access bags
         player = Player()
-        if not from_pod:
-            player.prone()
+        player.prone()
         player.look_down_hard()
 
         # open the bed map and travel to the bed
@@ -109,8 +108,9 @@ class BedMap(ArkBot):
                 self.click_at(bed.coords)
                 self.click_spawn_button()
 
-                # wait for flash screen, then the HP bar
+                # wait for flash screen
                 self.await_travelling()
+                self.sleep(2)
                 return
 
             except PlayerDidntTravelError:
@@ -119,17 +119,29 @@ class BedMap(ArkBot):
                 print("Unable to travel! Trying again...")
                 self.sleep(20)
 
+    def can_enter(self) -> bool:
+        return (
+            self.locate_template(
+                f"templates/bed.png",
+                region=(840, 425, 240, 230),
+                confidence=0.7,
+            )
+            is not None
+        )
+
     def lay_down(self) -> None:
         # lay into the bed to make sure we dont access bags
         player = Player()
 
-        player.look_down_hard()
-        self.sleep(0.5)
-        player.turn_y_by(-40)
-        self.sleep(0.5)
+        while not self.can_enter():
+            input.keyUp(player.keybinds.use)
+            player.look_down_hard()
+            self.sleep(0.5)
+            player.turn_y_by(-40)
+            self.sleep(0.5)
 
-        input.keyDown(player.keybinds.use)
-        player.sleep(1)
+            input.keyDown(player.keybinds.use)
+            player.sleep(1)
 
         # move to the lay option, pyautogui doesnt work for this
         input.moveTo(1266, 541, duration=0.1)

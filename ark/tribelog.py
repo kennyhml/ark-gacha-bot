@@ -1,5 +1,5 @@
 """
-Ark API module representing the tribelog in ark. 
+Ark API module representing the tribelog in ark.
 Using tesseract OCR and discord webhooks to inform the user when getting raided.
 
 As tesseract tends to be fairly inaccurate, `CONTENTS_MAPPING` hashmap contains common
@@ -250,7 +250,8 @@ class TribeLog(ArkBot):
         """Closes the tribelogs."""
         while self.is_open():
             self.press("esc")
-            self.await_closed()
+            if self.await_closed():
+                return
 
     def await_open(self) -> bool:
         """Awaits for the logs to be open to be time efficient.
@@ -356,7 +357,8 @@ class TribeLog(ArkBot):
             if self.day_is_known(day) or self.content_is_irrelevant(content[1]):
                 continue
 
-            # new message with relevant contents, create message Object and add it to the new messages
+            # new message with relevant contents, create message Object and add it 
+            # to the new messages
             message = TribeLogMessage(day, *content)
             messages.append(message)
 
@@ -514,7 +516,7 @@ class TribeLog(ArkBot):
         if EVENT_MAPPING[denoise_rgb] == "Tek Sensor triggered!":
             sensor_event = self.get_sensor_event(image)
             filtered_res = f"'{filtered_res.rstrip()}' triggered by {sensor_event}!"
-            event = "Tek Sensor Triggered!" 
+            event = "Tek Sensor triggered!"
 
         if "killed" in filtered_res:
             event = "Something killed!"
