@@ -22,11 +22,11 @@ from ark.exceptions import LogsNotOpenedError
 from bot.ark_bot import ArkBot
 
 # configure logging file, helps debugging why certain stuff didnt get posted
-now = datetime.now()
-now = now.strftime("%d-%m")
+time = datetime.now()
+now_time = time.strftime("%d-%m")
 logging.basicConfig(
     level=logging.INFO,
-    filename=f"logs/tribelogs {now}.log",
+    filename=f"logs/tribelogs {now_time}.log",
     filemode="w",
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
@@ -68,6 +68,8 @@ CONTENTS_MAPPING = {
     "‘": "'",
     "’": "'",
     "''": "'",
+    "hiled": "killed",
+    "hilied": "killed",
     "Dcorframe": "Doorframe",
     "Ccorframe": "Doorframe",
     "Doaorframe": "Doorframe",
@@ -130,7 +132,7 @@ CONTENTS_MAPPING = {
 }
 
 # RGB to denoise with if the templates are located in the tribelog message
-DENOISE_MAPPING = {
+DENOISE_MAPPING: dict[tuple[int, int, int], str | list] = {
     (255, 0, 0): [
         "templates/tribelog_red_your.png",
         "templates/tribelog_enemy_destroyed.png",
@@ -340,16 +342,19 @@ class TribeLog(ArkBot):
             except IndexError:
                 print("Reached the last message!")
                 break
+            try:
+                # OCR the day and validate it, continue if the day is invalid
+                day = self.get_daytime(log_img.crop(day_region))
+                if not day:
+                    continue
 
-            # OCR the day and validate it, continue if the day is invalid
-            day = self.get_daytime(log_img.crop(day_region))
-            if not day:
+                # OCR the contents, None if its irrelevant
+                content = self.get_message_contents(log_img.crop(message_region))
+                if not content:
+                    continue
+            except:
                 continue
-
-            # OCR the contents, None if its irrelevant
-            content = self.get_message_contents(log_img.crop(message_region))
-            if not content:
-                continue
+            
             logging.log(logging.INFO, f"Found {day} with contents {content}")
             print(f"Found {day} with contents {content}")
 
@@ -357,7 +362,7 @@ class TribeLog(ArkBot):
             if self.day_is_known(day) or self.content_is_irrelevant(content[1]):
                 continue
 
-            # new message with relevant contents, create message Object and add it 
+            # new message with relevant contents, create message Object and add it
             # to the new messages
             message = TribeLogMessage(day, *content)
             messages.append(message)
@@ -475,7 +480,7 @@ class TribeLog(ArkBot):
 
     def get_message_contents(
         self, image: str | Image.Image | ScreenShot
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str] | None:
         """Gets the contents of the given tribelog message image.
 
         Parameters:
@@ -522,10 +527,12 @@ class TribeLog(ArkBot):
             event = "Something killed!"
         elif "destroyed" in filtered_res:
             event = "Something destroyed!"
-
+    
         return event, filtered_res
 
-    def get_denoise_rgb(self, image: str | Image.Image | ScreenShot) -> tuple:
+    def get_denoise_rgb(
+        self, image: str | Image.Image | ScreenShot
+    ) -> tuple[int, int, int] | None:
         """Gets the RGB to denoise for in the given image.
 
         Parameters:
@@ -556,7 +563,7 @@ class TribeLog(ArkBot):
             if self.locate_in_image(
                 "templates/tribelog_auto_decay.png", image, confidence=0.8
             ):
-                return
+                return None
 
             # find the RGB we need to denoise
             for rgb in DENOISE_MAPPING:
@@ -577,10 +584,11 @@ class TribeLog(ArkBot):
                     for template in DENOISE_MAPPING[rgb]
                 ):
                     return rgb
+            return None
 
         except Exception as e:
             print(f"Something went wrong!\n{e}")
-            return
+            return None
 
     def get_sensor_event(self, image: Image.Image | str) -> str:
         """Matches for different terms that could have triggered a tek sensor,
@@ -635,6 +643,7 @@ class TribeLog(ArkBot):
         for message in self._tribe_log:
             if day.strip() == message.day.strip():
                 return True
+        return False
 
     def delete_old_logs(self) -> None:
         """Deletes all but the past 30 messages in the tribelogs."""

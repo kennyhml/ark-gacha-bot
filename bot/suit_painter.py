@@ -2,7 +2,7 @@ import random
 
 from bot.ark_bot import ArkBot
 from ark.player import Player
-from ark.inventories import Vault
+from ark.inventories.inventory import Vault
 import pyautogui as pg
 import time
 

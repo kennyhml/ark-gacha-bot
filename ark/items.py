@@ -8,6 +8,7 @@ Items objects can be created here if they are needed in multiple modules,
 or in their needed module directly.
 """
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -15,159 +16,276 @@ class Item:
     """Represents an ark item"""
 
     name: str
+    search_name: str
+    stack_size: int
     inventory_icon: str
-    added_icon: str
-    added_text: str
-    min_len_deposits: int = None
+    added_icon: Optional[str] = None
+    added_text: Optional[str] = None
+    min_len_deposits: Optional[int] = None
+
+    def __hash__(self):
+        return hash(self.name)
 
 
-dust = Item(
+DUST = Item(
     name="Element Dust",
-    inventory_icon=None,
+    search_name="dust",
+    stack_size=1000,
+    inventory_icon="templates/inventory_dust.png",
     added_icon="templates/dust_deposited.png",
     added_text="templates/dust_text.png",
     min_len_deposits=4,
 )
 
 
-black_pearl = Item(
+BLACK_PEARL = Item(
     name="Black Pearl",
-    inventory_icon=None,
+    search_name="black",
+    stack_size=200,
+    inventory_icon="templates/inventory_black_pearl.png",
     added_icon="templates/black_pearl_deposited.png",
     added_text="templates/black_pearl_text.png",
     min_len_deposits=2,
 )
 
 
-y_trap = Item(
+Y_TRAP = Item(
     name="Y Trap",
-    inventory_icon="templates/ytrap.png",
-    added_icon=None,
-    added_text=None,
+    search_name="trap",
+    stack_size=10,
+    inventory_icon="templates/inventory_ytrap.png",
 )
 
-pellet = Item(
+PELLET = Item(
     name="Snow Owl Pellet",
-    inventory_icon="templates/pellet.png",
-    added_icon=None,
-    added_text=None,
+    search_name="pellet",
+    stack_size=1,
+    inventory_icon="templates/inventory_pellet.png",
 )
 
-gacha_crystal = Item(
+GACHA_CRYSTAL = Item(
     name="Gacha Crystal",
-    inventory_icon="templates/gacha_crystal.png",
-    added_icon=None,
-    added_text=None,
+    search_name="gacha",
+    stack_size=1,
+    inventory_icon="templates/inventory_gacha_crystal.png",
 )
 
-riot_helmet = Item(
-    name="Helmet",
-    inventory_icon="templates/riot_helmet.png",
-    added_icon=None,
-    added_text=None,
+RIOT_HELMET = Item(
+    name="Riot Helmet",
+    search_name="helmet",
+    stack_size=1,
+    inventory_icon="templates/inventory_riot_helmet.png",
 )
 
-riot_chest = Item(
-    name="Chest",
-    inventory_icon="templates/riot_chest.png",
-    added_icon=None,
-    added_text=None,
+RIOT_CHEST = Item(
+    name="Riot Chest",
+    search_name="chest",
+    stack_size=1,
+    inventory_icon="templates/inventory_riot_chest.png",
 )
 
-riot_leggs = Item(
-    name="Leggings",
-    inventory_icon="templates/riot_leggs.png",
-    added_icon=None,
-    added_text=None,
+RIOT_LEGGS = Item(
+    name="Riot Leggings",
+    search_name="legg",
+    stack_size=1,
+    inventory_icon="templates/inventory_riot_leggs.png",
 )
 
-riot_gauntlets = Item(
-    name="Gauntlets",
-    inventory_icon="templates/riot_gauntlets.png",
-    added_icon=None,
-    added_text=None,
+RIOT_GAUNTLETS = Item(
+    name="Riot Gauntlets",
+    search_name="gaunt",
+    stack_size=1,
+    inventory_icon="templates/inventory_riot_gauntlets.png",
 )
 
-riot_boots = Item(
-    name="Boots",
-    inventory_icon="templates/riot_boots.png",
-    added_icon=None,
-    added_text=None,
+RIOT_BOOTS = Item(
+    name="Riot Boots",
+    search_name="boots",
+    stack_size=1,
+    inventory_icon="templates/inventory_riot_boots.png",
 )
 
-crystal = Item(
+CRYSTAL = Item(
     name="Crystal",
-    inventory_icon="templates/crystal.png",
-    added_icon=None,
-    added_text=None,
+    search_name="crystal",
+    stack_size=100,
+    inventory_icon="templates/inventory_crystal.png",
 )
 
-assault_rifle = Item(
-    name="Assault",
-    inventory_icon="templates/assault_rifle.png",
-    added_icon=None,
-    added_text=None,
+ASSAULT_RIFLE = Item(
+    name="Assault Rifle",
+    search_name="ass",
+    stack_size=1,
+    inventory_icon="templates/inventory_assault_rifle.png",
 )
 
-pumpgun = Item(
-    name="Pump",
-    inventory_icon="templates/pumpgun.png",
-    added_icon=None,
-    added_text=None,
+PUMPGUN = Item(
+    name="Pump-Action Shotgun",
+    search_name="pump",
+    stack_size=1,
+    inventory_icon="templates/inventory_pumpgun.png",
 )
 
-metal_ingot = Item(
+METAL_INGOT = Item(
     name="Ingot",
-    inventory_icon="templates/metal_ingot.png",
-    added_icon=None,
-    added_text=None,
+    search_name="ingot",
+    stack_size=300,
+    inventory_icon="templates/inventory_metal_ingot.png",
 )
 
-fabricated_sniper = Item(
-    name="Sniper",
-    inventory_icon="templates/fabricated_sniper.png",
-    added_icon=None,
-    added_text=None,
+FABRICATED_SNIPER = Item(
+    name="Fabricated Sniper Rifle",
+    search_name="sniper",
+    stack_size=1,
+    inventory_icon="templates/inventory_fabricated_sniper.png",
 )
 
-fabricated_pistol = Item(
-    name="Pistol",
-    inventory_icon="templates/fabricated_pistol.png",
-    added_icon=None,
-    added_text=None,
+FABRICATED_PISTOL = Item(
+    name="Fabricated Pistol",
+    search_name="pistol",
+    stack_size=1,
+    inventory_icon="templates/inventory_fabricated_pistol.png",
 )
 
-auto_turret = Item(
+AUTO_TURRET = Item(
     name="Auto Turret",
+    search_name="auto turret",
+    stack_size=1,
     inventory_icon="templates/auto_turret.png",
-    added_icon=None,
-    added_text=None,
 )
 
-heavy_auto_turret = Item(
+HEAVY_AUTO_TURRET = Item(
     name="Heavy Auto Turret",
+    search_name="heavy",
+    stack_size=1,
     inventory_icon="templates/heavy_auto_turret.png",
-    added_icon=None,
-    added_text=None,
 )
 
-miner_helmet = Item(
+MINER_HELMET = Item(
     name="Miner Helmet",
+    search_name="miner helmet",
+    stack_size=1,
     inventory_icon="templates/miner_helmet.png",
-    added_icon=None,
-    added_text=None,
 )
 
-mejoberry = Item(
+MEJOBERRY = Item(
     name="Mejoberry",
+    search_name="mejoberry",
+    stack_size=100,
     inventory_icon="templates/mejoberries.png",
-    added_icon=None,
-    added_text=None,
 )
 
-raw_meat = Item(
+RAW_MEAT = Item(
     name="Raw Meat",
+    search_name="meat",
+    stack_size=1,
     inventory_icon="templates/raw_meat.png",
-    added_icon=None,
-    added_text=None
+)
+
+
+FLINT = Item(
+    name="Flint",
+    search_name="flint",
+    stack_size=100,
+    inventory_icon="templates/inventory_flint.png",
+)
+
+STONE = Item(
+    name="Stone",
+    search_name="stone",
+    stack_size=100,
+    inventory_icon="templates/inventory_stone.png",
+)
+
+FUNGAL_WOOD = Item(
+    name="Fungal wood",
+    search_name="fungal",
+    stack_size=100,
+    inventory_icon="templates/inventory_fungal_wood.png",
+)
+
+PASTE = Item(
+    name="Paste",
+    search_name="paste",
+    stack_size=100,
+    inventory_icon="templates/inventory_paste.png",
+)
+
+SILICA_PEARL = Item(
+    name="Silica Pearl",
+    search_name="pearls",
+    stack_size=100,
+    inventory_icon="templates/inventory_silica_pearl.png",
+)
+
+ELECTRONICS = Item(
+    name="Electronics",
+    search_name="electronics",
+    stack_size=100,
+    inventory_icon="templates/inventory_electronics.png",
+)
+
+HIDE = Item(
+    name="Hide",
+    search_name="hide",
+    stack_size=100,
+    inventory_icon="templates/inventory_hide.png",
+)
+
+POLYMER = Item(
+    name="Polymer",
+    search_name="poly",
+    stack_size=100,
+    inventory_icon="templates/inventory_poly.png",
+)
+
+
+RIOT = Item(
+    name="Riot",
+    search_name="riot",
+    stack_size=1,
+    inventory_icon="templates/inventory_riot_chest.png",
+)
+
+FAB = Item(
+    name="Fab",
+    search_name="fab",
+    stack_size=1,
+    inventory_icon="templates/inventory_fabricated_sniper.png",
+)
+
+BEHEMOTH_GATEWAY = Item(
+    name="Behemoth Gateway",
+    search_name="behemoth",
+    stack_size=100,
+    inventory_icon="templates/behemoth_gateway.png",
+)
+
+BEHEMOTH_GATE = Item(
+    name="Behemoth Gate",
+    search_name="behemoth",
+    stack_size=100,
+    inventory_icon="templates/behemoth_gate.png",
+)
+
+
+TREE_PLATFORM = Item(
+    name="Tree Platform",
+    search_name="tree",
+    stack_size=100,
+    inventory_icon="templates/tree_platform.png",
+)
+
+METAL_GATEWAY = Item(
+    name="Metal Gateway",
+    search_name="gateway",
+    stack_size=100,
+    inventory_icon="templates/metal_gateway.png",
+)
+
+METAL_GATE = Item(
+    name="Metal Gate",
+    search_name="gate",
+    stack_size=100,
+    inventory_icon="templates/metal_gate.png",
 )

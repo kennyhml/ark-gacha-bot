@@ -5,7 +5,7 @@ API for ark bot related functions such as input emulation and template matching 
 import json
 import os
 import time
-
+from typing import Optional
 import discord
 import pyautogui as pg
 import pydirectinput as input
@@ -17,6 +17,7 @@ from ark.window import ArkWindow
 from bot.settings import DiscordSettings, Keybinds
 
 pg.FAILSAFE = False
+
 
 class TerminatedException(Exception):
     """Raised when the script is terminated by keypress"""
@@ -73,7 +74,9 @@ class ArkBot(ArkWindow):
         self.check_status()
         time.sleep(duration)
 
-    def move_to(self, x: None, y=None, convert=True):
+    def move_to(
+        self, x: Optional[int] = None, y: Optional[int] = None, convert: bool = True
+    ) -> None:
         """Moves to the given position, scales passed coordinates by default.
 
         Parameters
@@ -152,7 +155,7 @@ class ArkBot(ArkWindow):
         self,
         webhook: discord.Webhook,
         message: str,
-        file: str = None,
+        file: str = "",
         name: str = "Ark Bot",
         avatar: str = default_avatar,
     ) -> None:

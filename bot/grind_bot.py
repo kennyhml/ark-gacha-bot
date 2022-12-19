@@ -4,21 +4,18 @@ from math import floor
 
 import discord
 import pydirectinput as input
+from discord import Embed
 from PIL import Image
 from pytesseract import pytesseract as tes
 from strenum import StrEnum
 
 from ark.beds import Bed, BedMap
-from ark.exceptions import (
-    DedisNotDetermined,
-    InvalidStationError,
-    NoItemsAddedError,
-    NoItemsDepositedError,
-)
-from ark.inventories import DedicatedStorage, Grinder, Inventory, Vault
+from ark.entities import Player
+from ark.exceptions import (DedisNotDetermined, InvalidStationError,
+                            NoItemsAddedError, NoItemsDepositedError)
 from ark.items import *
-from ark.player import Player
 from ark.server import Server
+from ark.structures import Grinder, TekDedicatedStorage
 from bot.ark_bot import ArkBot
 from bot.unstucking import UnstuckHandler
 
@@ -100,10 +97,10 @@ class GrindBot(ArkBot):
         self.electronics_to_craft = 0
         self.electronics_crafted = 0
         self.session_turrets = 0
-        self.session_cost = {}
+        self.session_cost: dict[str, int] = {}
         self.last_crafted = None
 
-        self.STATION_MAPPING = {
+        self.STATION_MAPPING: dict[str, tuple | list] = {
             "Grinder": (self.player.turn_x_by, -50),
             "Exo Mek": (self.player.turn_x_by, -110),
             "Vault": (self.player.turn_x_by, -95),
@@ -131,7 +128,7 @@ class GrindBot(ArkBot):
         self.session_cost = {}
         self.last_crafted = None
 
-    def find_quickest_way_to(self, target_station: Stations) -> list[str]:
+    def find_quickest_way_to(self, target_station: Stations) -> tuple[list[str], str]:
         """Finds the quickest way to the passed target station, forwards
         and backwards possibilities are considered, the shortest is returned.
 
@@ -196,7 +193,7 @@ class GrindBot(ArkBot):
             return forward_path, "forward"
         return backward_path, "backwards"
 
-    def turn_to(self, target_station: Stations) -> None:
+    def turn_to(self, target_station: str) -> None:
         """Turns to the given station using the fastest way around possible.
 
         If we are going backwards, the turn amount is multiplies by -1 to
@@ -801,9 +798,8 @@ class GrindBot(ArkBot):
             username="Ling Ling",
         )
 
-    def post_final_result(self, result: int, start_time: time.time) -> None:
+    def post_final_result(self, result: int, time_taken: int) -> Embed:
 
-        time_taken = round(time.time() - start_time)
         embed = discord.Embed(
             type="rich",
             title="Finished crafting!",
@@ -1016,36 +1012,38 @@ class GrindBot(ArkBot):
         self.current_station = Stations.GEAR_VAULT
         self.sleep(1)
 
-    def run(self):
-        print("A grinding session has been created!")
-        self.spawn()
-
-        # get all resources from grinding, turn off grinder when finished
-        self.grind_all_gear()
-        self.empty_grinder(turn_off=True)
-
-        try:
-            available_mats = self.get_dedi_materials()
-
-        except DedisNotDetermined:
-            self.post_dedis_not_determined()
-            available_mats = {
-                "Pearls": 5211,
-                "Paste": 2600,
-                "Ingot": 8757,
-                "Electronics": 1773,
-                "Crystal": 10000,
-                "Hide": 20000,
-            }
-
-        self.get_crafting_method(available_mats)
-        # craft the first batch of electronics, should we for whatever reason
-        # not have to craft any, craft turrets straight away to avoid breaking
-        if not self.need_to_craft_electronics():
-            self.craft_turrets()
-            return True
-
     def grind_all_gear(self) -> None:
         """Grinds armor, then gear"""
         self.grind_armor()
         self.grind_weapons()
+
+
+    def craft_turrets(self) -> None:
+        """Crafts the turrets after all electronics have been crafted.
+        Posts the final result to discord as an embed displaying how
+        many Heavies ended up crafting (as the result may vary from the
+        excpected amount).
+        """
+        # spawn and get the resources
+        self.spawn()
+        start = time.time()
+
+        try:
+            self.transfer_turret_resources()
+
+            # craft the turrets
+            self.craft(AUTO_TURRET, self.session_turrets)
+            self.craft(HEAVY_AUTO_TURRET, self.session_turrets + 3)
+
+            # take out the turrets
+            self.exo_mek.open()
+            self.exo_mek.take_all_items(HEAVY_AUTO_TURRET)
+            self.sleep(1)
+            turrets_crafted = self.player.inventory.count_item(HEAVY_AUTO_TURRET)
+            self.exo_mek.close()
+
+            # deposit turrets and clear up the exo mek
+            turrets_crafted = self.clear_up_exo_mek()
+            self.post_final_result(turrets_crafted, start)
+        finally:
+            self.session_reset()

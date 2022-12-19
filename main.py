@@ -1,10 +1,11 @@
 import time
-from threading import Thread
+from threading import Thread, Event
 
 from pynput import keyboard
 
 from bot.gacha_bot import GachaBot
 from bot.ark_bot import ArkBot
+
 
 def main():
     bot = GachaBot()
@@ -23,7 +24,8 @@ def on__key_press(key):
 
             bot = Thread(target=main, daemon=True, name="Main bot Thread")
             bot.start()
-
+            bot.run
+            
     elif key == keyboard.Key.f3:
         if ArkBot.running:
             print("Terminated!")
@@ -43,7 +45,6 @@ def on__key_press(key):
 if __name__ == "__main__":
     ArkBot.running = False
     ArkBot.paused = False
-
     listener = keyboard.Listener(on_press=on__key_press)
     listener.start()  # start listener thread
 

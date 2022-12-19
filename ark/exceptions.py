@@ -60,3 +60,9 @@ class NoItemsLeftError(Exception):
 class DinoNotMountedError(Exception):
     """Raised when a dino cannot be mounted, either because it does not
     have a saddle, or because its not close enough."""
+
+class NoBedPassedError(Exception):
+    """Raised when no bed was passed"""
+
+class InvalidGrindingStatusError(Exception):
+    """Raised when no status case matched."""

@@ -1,5 +1,5 @@
 from bot.ark_bot import ArkBot
-from ark.inventories import Inventory
+from ark.inventories.inventory import Inventory
 
 from ark.exceptions import DinoNotMountedError
 
@@ -33,7 +33,7 @@ class Dinosaur(ArkBot):
     def can_access(self) -> bool:
         return (
             self.locate_template(
-                "templates/can_access.png",
+                "templates/access_inventory.png",
                 region=(0, 0, 1920, 1080),
                 confidence=0.7,
             )

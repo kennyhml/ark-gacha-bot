@@ -5,14 +5,15 @@ import pydirectinput as input
 
 from ark.buffs import pod_xp
 from ark.exceptions import BedNotAccessibleError, PlayerDidntTravelError
-from ark.player import Player
+from ark.entities.player import Player
+from ark.server import Server
 from bot.ark_bot import ArkBot
 from bot.unstucking import UnstuckHandler
-from ark.server import Server
 
 
 @dataclass
 class Bed:
+    """Represents a bed"""
     name: str
     coords: tuple
 

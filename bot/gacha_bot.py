@@ -13,13 +13,12 @@ from ark.exceptions import (
     TekPodNotAccessibleError,
     InventoryNotClosableError,
 )
-from ark.inventories import Gacha, Inventory
-from ark.items import pellet, y_trap
-from ark.player import Player
+from ark.inventories import Inventory
+from ark.entities import Player
 from ark.server import Server
 from ark.tribelog import TribeLog
 from bot.ark_bot import ArkBot, TerminatedException
-from bot.crystal_collection import CrystalCollection
+from bot.stations.crystal_collection import CrystalCollection
 from bot.grind_bot import GrindBot
 from bot.settings import DiscordSettings, TowerSettings
 from bot.unstucking import UnstuckHandler
@@ -27,18 +26,18 @@ from bot.feed_station import BerryFeedStation, MeatFeedStation
 import numpy as np
 
 
-class GachaBot(ArkBot):
+class GachaBot:
 
     discord_avatar = "https://i.kym-cdn.com/entries/icons/facebook/000/022/293/Bloodyshadow_rolled_user_shutupandsleepwith_i_m_bisexual_let_s_work_from__a48265eae6a474904cdc2cae9f184aad.jpg"
-    y_trap_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/cb/Plant_Species_Y_Trap_%28Scorched_Earth%29.png/revision/latest?cb=20160901233007"
-    crystal_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/c3/Gacha_Crystal_%28Extinction%29.png/revision/latest?cb=20181108100408"
-    dust_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b1/Element_Dust.png/revision/latest/scale-to-width-down/228?cb=20181107161643"
+
     whip_avatar = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b9/Whip_%28Scorched_Earth%29.png/revision/latest/scale-to-width-down/228?cb=20160901213011"
 
     def __init__(self) -> None:
         super().__init__()
         self.load_settings()
         self.create_webhooks()
+        return
+
         self.seed_beds = self.create_seed_beds()
         self.crystal_bed = self.create_crystal_bed()
         self.berry_beds = self.create_berry_beds()
@@ -333,26 +332,6 @@ class GachaBot(ArkBot):
 
         finally:
             self.last_emptied = time.time()
-
-    def take_pellets_from_gacha(self, gacha: Gacha) -> None:
-        # check if we need to take pellets first
-        if self._laps_completed:
-            return
-
-        if self.current_bed == 0:
-            Console().set_gamma()
-
-        gacha.open()
-        gacha.search_for("ll")
-        self.sleep(0.3)
-        if gacha.has_item(pellet):
-            gacha.take_all()
-            self.player.inventory.await_items_added()
-            self.sleep(0.5)
-            self.player.inventory.transfer_some_pellets(
-                self.player.inventory, transfer_back=15
-            )
-        gacha.close()
 
     def do_berry_station(self) -> None:
         try:

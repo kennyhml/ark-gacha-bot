@@ -68,7 +68,7 @@ class ArkWindow:
     def fullscreen(self):
         return self._fullscreen
 
-    def grab_screen(self, region, path: str = None, convert: bool = True) -> str:
+    def grab_screen(self, region, path: str = "", convert: bool = True) -> str:
         """Grabs a screenshot of the given region using mss and saves it
         at the specified path.
 
@@ -377,23 +377,23 @@ class ArkWindow:
             return image
 
         if upscale:
-            image = Image.fromarray(image)
-            image = image.resize(
-                (image.size[0] * upscale_by, image.size[1] * upscale_by), 1
+            img = Image.fromarray(image)
+            img = img.resize(
+                (img.size[0] * upscale_by, img.size[1] * upscale_by), 1
             )
 
         matrix_size = 2 if not upscale else 3
 
         # Taking a matrix of size 5 as the kernel
         kernel = np.ones((matrix_size, matrix_size), np.uint8)
-        return cv.dilate(np.asarray(image), kernel, iterations=1)
+        return cv.dilate(np.asarray(img), kernel, iterations=1)
 
     def count_pixels(self, masked_img) -> int:
         """Counts all non zero pixels in the given mask"""
         try:
             return len(cv.findNonZero(masked_img))
         except TypeError:
-            return None
+            return 0
 
     def find_window(self, class_name, window_name=None):
         """find a window by its class_name"""

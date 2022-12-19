@@ -1,10 +1,14 @@
+from typing import Optional
+from hypothesis import target
 import pyautogui as pg
 import pydirectinput as input
+from ark import inventories
 
 from ark.buffs import Buff, broken_bones, hungry, thirsty
 from ark.exceptions import PlayerDidntTravelError
-from ark.inventories import CropPlot, Gacha, Inventory, PlayerInventory
-from ark.items import Item, y_trap
+from ark.inventories import Inventory, PlayerInventory
+from ark.items import Y_TRAP, Item
+from ark.structures.structure import Structure
 from bot.ark_bot import ArkBot
 
 
@@ -16,16 +20,53 @@ class Player(ArkBot):
     def __init__(self) -> None:
         super().__init__()
         self.inventory = PlayerInventory()
+        self.HOTBAR = [
+            self.keybinds.hotbar_2,
+            self.keybinds.hotbar_3,
+            self.keybinds.hotbar_4,
+            self.keybinds.hotbar_5,
+            self.keybinds.hotbar_6,
+            self.keybinds.hotbar_7,
+            self.keybinds.hotbar_8,
+            self.keybinds.hotbar_9,
+            self.keybinds.hotbar_0,
+        ]
 
-    def drop_all(self) -> None:
+    def pick_up(self) -> None:
+        self.press(self.keybinds.use)
+
+    def pick_all(self) -> None:
+        self.press(self.keybinds.target_inventory)
+
+    def empty_inventory(self) -> None:
         self.inventory.open()
-        self.inventory.drop_all()
+        self.inventory.click_drop_all()
         self.inventory.close()
 
-    def drop_all_items(self, item) -> None:
-        self.inventory.open()
+    def drop_all_items(self, item: Item) -> None:
         self.inventory.drop_all_items(item)
-        self.inventory.close()
+
+    def hide_hands(self) -> None:
+        self.look_up_hard()
+        self.sleep(0.2)
+        self.look_down_hard()
+        self.disable_hud()
+        self.sleep(0.5)
+        self.turn_y_by(-160)
+        self.sleep(0.3)
+
+    def spam_hotbar(self):
+        """Typewrites all the hotbar keys with crystals on them to open crystals fast."""
+        self.check_status()
+        pg.typewrite("".join(c for c in self.HOTBAR), interval=0.01)
+
+    def set_hotbar(self) -> None:
+        input.keyDown("shift")
+        for _ in range(4):
+            for slot in self.HOTBAR:
+                self.press(slot)
+                self.sleep(0.5)
+        input.keyUp("shift")
 
     def is_spawned(self) -> bool:
         """Checks if the player is spawned"""
@@ -59,6 +100,7 @@ class Player(ArkBot):
             if counter > 100:
                 raise PlayerDidntTravelError("Failed to spawn in!")
         print("Now spawned!")
+        self.sleep(1)
 
     def turn_90_degrees(self, direction: str = "right") -> None:
         """Turns by 90 degrees in given direction"""
@@ -116,12 +158,12 @@ class Player(ArkBot):
         self.turn_90_degrees()
         self.sleep(0.2)
 
-    def adjust_for_crop_plot(self, crop_plot: CropPlot, expected_index: int) -> None:
+    def adjust_for_crop_plot(self, crop_plot: Structure, expected_index: int) -> None:
         """Checks if the expected crop plot was opened, adjusts if it was not.
 
         Parameters:
         -----------
-        crop_plot :class:`CropPlot`:
+        crop_plot :class:`Structure`:
             The crop plot we are trying to open
 
         expected_index :class:`int`:
@@ -129,15 +171,15 @@ class Player(ArkBot):
 
         TODO: Raise an error when the correct crop plot could not be opened whatsoever
         """
-        index = crop_plot.get_stack_index()
+        index = crop_plot.inventory.get_stack_index()
         while index != expected_index:
             # no index at all was found, try to reopen the crop plot
             if not index:
-                crop_plot.close()
-                crop_plot.open()
-                index = crop_plot.get_stack_index()
+                crop_plot.inventory.close()
+                crop_plot.inventory.open()
+                index = crop_plot.inventory.get_stack_index()
                 continue
-            crop_plot.close()
+            crop_plot.inventory.close()
 
             # check if we need to correct higher or lower
             if index > expected_index:
@@ -146,9 +188,21 @@ class Player(ArkBot):
                 self.turn_y_by(-6)
 
             # recheck the index
-            crop_plot.open()
-            index = crop_plot.get_stack_index()
-        print("Correct crop plot open!")
+            crop_plot.inventory.open()
+            index = crop_plot.inventory.get_stack_index()
+
+    def take_traps_put_pellets(
+        self, crop_plot: Structure, refill_pellets: bool
+    ) -> None:
+        crop_plot.inventory.open()
+
+        if crop_plot.inventory.has_item(Y_TRAP):
+            crop_plot.inventory.take_all_items(Y_TRAP)
+
+        if refill_pellets:
+            self.inventory.transfer_all(crop_plot.inventory)
+
+        crop_plot.inventory.close()
 
     def do_crop_plot_stack(self, refill_pellets: bool = False) -> None:
         """Empties the current stack of crop plots.
@@ -162,7 +216,7 @@ class Player(ArkBot):
         refill_pellets :class:`bool`:
             Whether pellets need to be refilled or not
         """
-        crop_plot = CropPlot()
+        crop_plot = Structure("Tek Crop Plot", "tek_crop_plot")
 
         # look down to sync
         self.look_down_hard()
@@ -171,22 +225,22 @@ class Player(ArkBot):
         for val in [-130, *[-17] * 5]:
             self.turn_y_by(val)
             self.sleep(0.3)
-            crop_plot.take_traps_put_pellets(self.inventory, refill_pellets)
+            self.take_traps_put_pellets(crop_plot, refill_pellets)
 
         # stand up and take the current one
         self.press(self.keybinds.crouch)
         for val in [50, -17, -17]:
             self.turn_y_by(val)
-            crop_plot.take_traps_put_pellets(self.inventory, refill_pellets)
+            self.take_traps_put_pellets(crop_plot, refill_pellets)
 
         # back to crouching
         self.press(self.keybinds.crouch)
 
     def do_precise_crop_plot_stack(
         self,
-        item: Item = None,
+        item: Optional[Item] = None,
         refill_pellets=False,
-        max_index=8,
+        max_index: int = 8,
     ) -> None:
         """Empties the current stack of crop plot, but aims for a 100% access rate.
 
@@ -206,7 +260,7 @@ class Player(ArkBot):
         max_index :class:`int`:
             The highest crop plot to be accessed, default 8
         """
-        crop_plot = CropPlot()
+        crop_plot = Structure("Tek Crop Plot", "tek_crop_plot")
         self.crouch()
         turns = [-130, -20, -20, -17, -15, 35, -17, -20]
         self.look_down_hard()
@@ -222,17 +276,13 @@ class Player(ArkBot):
 
             self.turn_y_by(turn)
             self.sleep(0.3)
-            crop_plot.open()
 
             # check for the correct crop plot
+            crop_plot.inventory.open()
             self.adjust_for_crop_plot(crop_plot, expected_index)
-            if item and crop_plot.has_item(item):
-                crop_plot.take_all_items(item)
 
-            if refill_pellets:
-                self.inventory.transfer_all(crop_plot)
-
-            crop_plot.close()
+            # empty it
+            self.take_traps_put_pellets(crop_plot, refill_pellets)
 
     def name_crop_plot_stack(self) -> None:
         """Names the crop plot stack to prepare the tower for 100% access running.
@@ -242,7 +292,7 @@ class Player(ArkBot):
         folders = ["AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG", "HHH"]
 
         # get the most bottom crop plot and create the inital folder
-        crop_plot = CropPlot()
+        crop_plot = Structure("Tek Crop Plot", "tek_crop_plot")
         self.crouch()
 
         self.look_down_hard()
@@ -250,25 +300,25 @@ class Player(ArkBot):
         self.turn_y_by(-130)
         self.sleep(0.3)
 
-        crop_plot.open()
-        crop_plot.create_folder("AAA")
-        crop_plot.close()
+        crop_plot.inventory.open()
+        crop_plot.inventory.create_folder("AAA")
+        crop_plot.inventory.close()
 
         index = 1
         # go through each turn attempting to access the respective crop plot
         while index != 8:
             self.turn_y_by(-3)
-            crop_plot.open()
+            crop_plot.inventory.open()
 
             # there already is a folder
-            if crop_plot.get_stack_index():
-                crop_plot.close()
+            if crop_plot.inventory.get_stack_index():
+                crop_plot.inventory.close()
                 self.sleep(0.2)
                 continue
 
             # empty crop plot, create next folder in line
-            crop_plot.create_folder(folders[index])
-            crop_plot.close()
+            crop_plot.inventory.create_folder(folders[index])
+            crop_plot.inventory.close()
             index += 1
 
             # stand back up after "EEE"
@@ -276,37 +326,6 @@ class Player(ArkBot):
                 self.crouch()
                 self.turn_y_by(60)
                 self.sleep(0.5)
-
-    def load_gacha(self, gacha: Gacha) -> None:
-        """Fills the gacha after emptying crop plots.
-
-        Will first attempt to look at the gacha using vertical
-        and horizontal movements, then takes all the pellets,
-        puts traps in and then fills with remaining pellets.
-
-        Parameters:
-        -----------
-        gacha :class:`Gacha`:
-            The gacha instance of the gacha to transfer items to
-
-        Raises:
-        -----------
-        `InventoryNotAccessible` if the gacha cant be accessed
-        """
-
-        # open the gacha and take all pellets
-        gacha.open()
-        amount_of_traps = self.inventory.count_item(y_trap)
-        gacha.take_all_items("ll")
-
-        # put traps back in then remaining pellets
-        self.inventory.transfer_all(gacha, "trap")
-        self.sleep(0.5)
-        self.inventory.transfer_all(gacha)
-        self.sleep(0.5)
-        self.inventory.drop_all()
-        self.inventory.close()
-        return amount_of_traps
 
     def walk(self, key, duration):
         """'Walks' the given direction for the given duration.
@@ -335,16 +354,19 @@ class Player(ArkBot):
         """Disables HUD"""
         self.press("backspace")
 
+    def popcorn_bag(self) -> None:
+        bag = Inventory("Bag", "bag")
+        self.move_to(1287, 289)
+        while bag.is_open():
+            self.press("o")
+            self.sleep(0.3)
+
     def pick_up_bag(self):
         """Picks up items from a drop script bag, deletes the bag after."""
         self.look_down_hard()
         self.press(self.keybinds.target_inventory)
         self.sleep(0.5)
-        bag = Inventory("Bag", "bag")
-        bag.open()
-        self.move_to(1287, 289)
-        self.press("o")
-        self.sleep(1)
+        self.popcorn_bag()
 
     def do_drop_script(self, item: Item, target_inventory: Inventory, slot=2):
         """Does the item drop script for the given item in the given structure.
@@ -367,20 +389,20 @@ class Player(ArkBot):
         self.sleep(0.5)
         target_inventory.open()
 
-        self.inventory.take_one_item(item, slot=slot, inventory=target_inventory)
+        target_inventory.take_one_item(item, slot=slot)
         self.inventory.await_items_added()
         self.sleep(0.3)
-        self.inventory.drop_all_items(item.name)
+        self.inventory.drop_all_items(item)
 
-        self.inventory.search_for(item.name)
+        self.inventory.search_for(item)
 
         while True:
-            target_inventory.search_for(item.name)
+            target_inventory.search_for(item)
             self.sleep(0.5)
             if not target_inventory.has_item(item):
                 break
 
-            target_inventory.take_all()
+            target_inventory.click_transfer_all()
             self.sleep(0.3)
             for _ in range(3):
                 for slot in [(168, 280), (258, 280), (348, 277)]:
@@ -400,7 +422,7 @@ class Player(ArkBot):
             is not None
         )
 
-    def await_item_added(self) -> None:
+    def await_item_added(self) -> bool:
         c = 0
         while not self.item_added():
             self.sleep(0.1)

@@ -2,9 +2,9 @@ import pyautogui as pg
 import pydirectinput as inp
 
 from ark.exceptions import DediNotInRangeError
-from ark.inventories import DedicatedStorage, Vault
-from ark.items import black_pearl, dust, gacha_crystal
-from ark.player import Player
+from ark.structures import TekDedicatedStorage
+from ark.items import BLACK_PEARL, DUST, GACHA_CRYSTAL
+from ark.entities import Player
 from bot.ark_bot import ArkBot
 import time
 
@@ -116,7 +116,7 @@ class CrystalCollection(ArkBot):
         self.check_status()
         pg.typewrite("".join(c for c in self.hotbar), interval=0.01)
 
-    def open_crystals(self, first_time: bool) -> None:
+    def open_crystals(self, first_time: bool) -> int:
         """Opens the crystals at the dedis, counting each iteration of the hotbar
         until there are no more crystals in our player inventory.
 
@@ -200,7 +200,7 @@ class CrystalCollection(ArkBot):
         self.player.turn_x_by(-180)
         return gains, round(time.time() - self.started)
 
-    def deposit_items(self, drop_items: list) -> None:
+    def deposit_items(self, drop_items: list) -> bool:
         vault = Vault()
         vault_full = False
 

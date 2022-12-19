@@ -1,6 +1,6 @@
 import pyautogui as pg
 
-from ark.player import Player
+from ark.entities.player import Player
 from ark.server import Server
 from bot.ark_bot import ArkBot
 from ark.exceptions import ServerNotFoundError
