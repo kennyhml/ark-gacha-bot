@@ -1,4 +1,4 @@
-from pytesseract import pytesseract as tes
+from pytesseract import pytesseract as tes # type: ignore[import]
 
 from ark.exceptions import NoItemsDepositedError
 from ark.inventories.dedi_inventory import DedicatedStorageInventory
@@ -13,7 +13,7 @@ class TekDedicatedStorage(Structure):
     """
     def __init__(self) -> None:
         super().__init__("Tek Dedicated Storage", "dedi")
-        self.inventory = DedicatedStorageInventory()
+        self.inventory: DedicatedStorageInventory = DedicatedStorageInventory()
         
     def can_deposit(self) -> bool:
         return (
@@ -43,7 +43,7 @@ class TekDedicatedStorage(Structure):
         )
 
     def attempt_deposit(
-        self, items: list[Item], determine_amount: bool = True
+        self, items: list[Item] | Item, determine_amount: bool = True
     ) -> tuple[Item, int] | None:
         """Attempts to deposit into a dedi until the 'x items deposited.'
         green message appears up top where x can be any number.
@@ -83,6 +83,8 @@ class TekDedicatedStorage(Structure):
 
         if not determine_amount:
             return None
+        if not isinstance(items, list):
+            items = [items]
 
         # check for each item
         for item in items:

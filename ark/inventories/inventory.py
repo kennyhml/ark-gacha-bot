@@ -11,9 +11,9 @@ import math
 import os
 from typing import Optional
 
-import pyautogui as pg
-import pydirectinput as input
-from pytesseract import pytesseract as tes
+import pyautogui as pg  # type: ignore[import]
+import pydirectinput as input  # type: ignore[import]
+from pytesseract import pytesseract as tes  # type: ignore[import]
 
 from ark.exceptions import (
     InventoryNotAccessibleError,
@@ -46,6 +46,7 @@ class Inventory(ArkBot):
     ITEM_REGION = (1230, 220, 580, 720)
     DROP_ALL = (1477, 187)
     CREATE_FOLDER = (1584, 187)
+    FIRST_SLOT = (1292, 294)
 
     def __init__(
         self, entity_name: str, action_wheel_img: str, max_slots: Optional[str] = None
@@ -94,9 +95,15 @@ class Inventory(ArkBot):
         """Opens the inventory tab assuming the inventory is already open"""
         self.click_at(self.INVENTORY_TAB, delay=0.3)
 
-    def drop_all_items(self, item: Item) -> None:
+    def drop_all_items(self, item: Item | str) -> None:
         self.search_for(item)
         self.click_drop_all()
+
+    def popcorn(self, item: Item) -> None:
+        self.search_for(item)
+        self.move_to(*self.FIRST_SLOT)
+        while self.has_item(item):
+            self.press("o")
 
     def create_folder(self, name: str) -> None:
         """Creates a folder in the inventory at the classes folder button"""
@@ -168,13 +175,19 @@ class Inventory(ArkBot):
             is not None
         )
 
-    def get_amount_transferred(self) -> int:
+    def get_amount_transferred(self, to_player: bool = False) -> int:
         """OCRs the amount transferred into the inventory by checking for the
         amount on the lefthand side of the screen."""
         # prepare the image
-        img = self.grab_screen((168, 1036, 217, 33), convert=False)
-        img = self.denoise_text(img, denoise_rgb=(255, 255, 255), variance=5)
+        if not to_player:
+            roi = (168, 1036, 217, 33)
+        else:
+            roi = (120, 1036, 200, 33)
 
+        img = self.grab_screen(roi, convert=False)
+        img = self.denoise_text(
+            img, denoise_rgb=(255, 255, 255), variance=5, upscale=True, upscale_by=3
+        )
         # get the raw tesseract result
         raw_result = tes.image_to_string(
             img,
@@ -344,13 +357,17 @@ class Inventory(ArkBot):
         input.press("a")
         input.keyUp("ctrl")
 
-    def search_for(self, item: Item) -> None:
+    def search_for(self, item: Item | str) -> None:
         """Searches for a term in the target inventory using pyautogui typewrite"""
         self.check_status()
 
         # write the name into the search bar
-        self.click_search(delete_prior=item.search_name != "trap")
-        pg.typewrite(item.search_name.lower(), interval=0.001)
+        if isinstance(item, str):
+            self.click_search()
+            pg.typewrite(item, interval=0.001)
+        else:
+            self.click_search(delete_prior=item.search_name != "trap")
+            pg.typewrite(item.search_name.lower(), interval=0.001)
 
         # escape out of the searchbar so presing f closes the inventory
         self.press("esc")
@@ -411,6 +428,6 @@ class Inventory(ArkBot):
                 self.sleep(0.3)
             return
 
-        for _ in range(math.ceil(amount / 10)):
+        for _ in range(math.ceil(amount / 100)):
             self.press("a")
             self.sleep(0.5)

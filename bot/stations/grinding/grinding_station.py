@@ -4,9 +4,9 @@ from itertools import cycle
 from math import floor
 from typing import Iterable
 
-from discord import Embed
-from PIL import Image
-from pytesseract import pytesseract as tes
+from discord import Embed # type: ignore[import]
+from PIL import Image # type: ignore[import] 
+from pytesseract import pytesseract as tes # type: ignore[import]
 
 from ark import TribeLog
 from ark.beds import BedMap
@@ -19,6 +19,7 @@ from ark.window import ArkWindow
 from bot.stations import Station, StationData
 from bot.stations.grinding.stations import Stations
 from bot.stations.grinding.status import Status
+from bot.stations.station import StationStatistics
 
 
 GRINDER_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/f/fe/Industrial_Grinder.png/revision/latest/scale-to-width-down/228?cb=20160728174054"
@@ -67,6 +68,7 @@ class GrindingStation(Station):
         self.station_data = station_data
         self.player = player
         self.tribelog = tribelog
+        self.current_bed = 0
         self.ready = False
         self.status = Status.WAITING_FOR_ITEMS
         self.current_station = "Gear Vault"
@@ -107,7 +109,7 @@ class GrindingStation(Station):
     def spawn(self) -> None:
         """Override spawn method to set current station"""
         bed_map = BedMap()
-        bed_map.travel_to(self.station_data.bed)
+        bed_map.travel_to(self.station_data.beds[self.current_bed])
         self.tribelog.update_tribelogs()
         self.player.await_spawned()
         self.player.sleep(1)
@@ -136,7 +138,7 @@ class GrindingStation(Station):
             f"Grinding Station failed to match current status '{self.status}'!"
         )
 
-    def create_embed(self) -> Embed:
+    def create_embed(self, statistics: StationStatistics) -> Embed:
         return Embed
 
     def complete(self) -> tuple[Embed, GrindingStatistics]:
@@ -654,7 +656,7 @@ class GrindingStation(Station):
             return True
 
         # ensure the OCRd amount is within a f
-        upper_range, lower_range = expected[item]
+        lower_range, upper_range = expected[item]
         return upper_range >= amount >= lower_range - 300
 
     def get_dedi_material_regions(self, spawn: bool) -> dict[Item, Image.Image] | None:
@@ -933,7 +935,11 @@ class GrindingStation(Station):
         """Checks if more than 2 minutes passed since the last electronic
         queue up."""
         try:
-            return round(time.time() - self.last_crafted) > 120
+            time_diff = round(time.time() - self.last_crafted)
+            if time_diff > 120:
+                return True
+            print(f"{120 - time_diff} seconds left for electronics to finish...")
+            return False
         except AttributeError:
             return True
 
@@ -1034,6 +1040,7 @@ class GrindingStation(Station):
 
         finally:
             self.status = Status.WAITING_FOR_ITEMS
+            self.ready = False
 
     def craft_electronics(self) -> tuple[Embed, GrindingStatistics]:
         """Checks if we need to queue another 1000 electronics to reach the
@@ -1064,9 +1071,9 @@ class GrindingStation(Station):
         self.last_crafted = time.time()
 
         if self.electronics_crafted >= self.electronics_to_craft:
-            self.status == Status.AWAITING_CRAFT
-
-        self.player.inventory.click_drop_all()
+            self.status = Status.AWAITING_CRAFT
+        self.player.empty_inventory()
+        
         time_taken = round(time.time() - start)
         stats = GrindingStatistics(time_taken, False, {ELECTRONICS: to_craft})
 

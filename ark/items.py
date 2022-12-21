@@ -8,6 +8,7 @@ Items objects can be created here if they are needed in multiple modules,
 or in their needed module directly.
 """
 from dataclasses import dataclass
+from pickletools import stackslice
 from typing import Optional
 
 
@@ -258,14 +259,14 @@ BEHEMOTH_GATEWAY = Item(
     name="Behemoth Gateway",
     search_name="behemoth",
     stack_size=100,
-    inventory_icon="templates/behemoth_gateway.png",
+    inventory_icon="templates/inventory_behemoth_gateway.png",
 )
 
 BEHEMOTH_GATE = Item(
     name="Behemoth Gate",
     search_name="behemoth",
     stack_size=100,
-    inventory_icon="templates/behemoth_gate.png",
+    inventory_icon="templates/inventory_behemoth_gate.png",
 )
 
 
@@ -273,19 +274,26 @@ TREE_PLATFORM = Item(
     name="Tree Platform",
     search_name="tree",
     stack_size=100,
-    inventory_icon="templates/tree_platform.png",
+    inventory_icon="templates/inventory_tree_platform.png",
 )
 
 METAL_GATEWAY = Item(
     name="Metal Gateway",
     search_name="gateway",
     stack_size=100,
-    inventory_icon="templates/metal_gateway.png",
+    inventory_icon="templates/inventory_metal_gateway.png",
 )
 
 METAL_GATE = Item(
     name="Metal Gate",
     search_name="gate",
     stack_size=100,
-    inventory_icon="templates/metal_gate.png",
+    inventory_icon="templates/inventory_metal_gate.png",
+)
+
+SPOILED_MEAT = Item(
+    name="Spoiled Meat",
+    search_name="spoiled",
+    stack_size=100,
+    inventory_icon="templates/inventory_spoiled_meat.png",
 )

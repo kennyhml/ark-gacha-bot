@@ -1,4 +1,4 @@
-import pyautogui as pg
+import pyautogui as pg # type: ignore[import]
 
 from ark.entities.player import Player
 from ark.server import Server
@@ -90,7 +90,7 @@ class SessionList(ArkBot):
             self.search_server(server)
         except ServerNotFoundError:
             print("Failed to find the server after 15min!")
-            return
+            return False
 
         # click join, wait to load in
         self.click_at(990, 943, delay=0.5)

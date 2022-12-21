@@ -11,12 +11,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from threading import Thread
 
-import cv2 as cv
-import discord
+import cv2 as cv    # type: ignore[import]
+import discord  # type: ignore[import]
 import numpy as np
-from mss.screenshot import ScreenShot
-from PIL import Image
-from pytesseract import pytesseract as tes
+from mss.screenshot import ScreenShot#   type: ignore[import]
+from PIL import Image   # type: ignore[import]
+from pytesseract import pytesseract as tes  # type: ignore[import]
 
 from ark.exceptions import LogsNotOpenedError
 from bot.ark_bot import ArkBot

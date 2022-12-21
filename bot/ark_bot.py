@@ -6,11 +6,11 @@ import json
 import os
 import time
 from typing import Optional
-import discord
-import pyautogui as pg
-import pydirectinput as input
+import discord # type: ignore[import]
+import pyautogui as pg # type: ignore[import]
+import pydirectinput as input # type: ignore[import]
 from dacite import from_dict
-from pynput.mouse import Button, Controller
+from pynput.mouse import Button, Controller # type: ignore[import]
 
 mouse = Controller()
 from ark.window import ArkWindow

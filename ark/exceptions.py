@@ -66,3 +66,6 @@ class NoBedPassedError(Exception):
 
 class InvalidGrindingStatusError(Exception):
     """Raised when no status case matched."""
+
+class InvalidNpyPathError(Exception):
+    """Raised when an invalid npy path was passed"""

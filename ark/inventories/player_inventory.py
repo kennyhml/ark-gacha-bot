@@ -1,7 +1,7 @@
 import math
 from typing import Optional
 
-import pyautogui as pg
+import pyautogui as pg  # type: ignore[import]
 
 from ark.exceptions import InventoryNotAccessibleError, NoItemsAddedError
 from ark.inventories.inventory import Inventory
@@ -24,6 +24,7 @@ class PlayerInventory(Inventory):
     ADDED_REGION = (10, 1000, 220, 80)
     ITEM_REGION = (110, 30, 580, 1000)
     CREATE_FOLDER = (513, 189)
+    FIRST_SLOT = (166, 280)
 
     def __init__(self):
         super().__init__("Player", None)
@@ -39,7 +40,9 @@ class PlayerInventory(Inventory):
 
     def find_item(self, item: Item) -> tuple | None:
         """Returns the position of the given item within the inventory."""
-        return self.locate_template(item.inventory_icon, region=self.ITEM_REGION, confidence=0.8)
+        return self.locate_template(
+            item.inventory_icon, region=self.ITEM_REGION, confidence=0.8
+        )
 
     def item_added(self) -> bool:
         """Checks if an item was added by matching for the added template"""
@@ -56,7 +59,7 @@ class PlayerInventory(Inventory):
             if c > 300:
                 raise NoItemsAddedError("No Items added after 30 seconds!")
 
-    def open(self) -> None: #type: ignore[override]
+    def open(self) -> None:  # type: ignore[override]
         """Opens the inventory using the specified keybind.
         Times out after 30 seconds of unsuccessful attempts raising
         a `TimeoutError`.
@@ -108,7 +111,7 @@ class PlayerInventory(Inventory):
                 if amount <= transferred <= amount + 3000:
                     return
 
-    def transfer_all(self, inventory: Inventory, item: Optional[Item] = None):
+    def transfer_all(self, inventory: Inventory, item: Optional[Item | str] = None):
         """Transfers all of the given item into the target inventory
 
         Parameters:
@@ -134,14 +137,15 @@ class PlayerInventory(Inventory):
         we wouldnt wanna waste time clicking empty slots RIGHT @SLEEPY!!?"""
         return (
             self.locate_template(
-                "templates/inventory_pellet.png", region=(116, 700, 95, 90), confidence=0.8
+                "templates/inventory_pellet.png",
+                region=(116, 700, 95, 90),
+                confidence=0.8,
             )
             is not None
         )
 
     def take_pellets(self, transfer_back: int = 8) -> bool:
-        """Transfers some pellets into another inventory, likely a Gacha.
-        """
+        """Transfers some pellets into another inventory, likely a Gacha."""
         # ensure we even have pellets to transfer
         if not self.pellets_left_to_tranfer():
             return False

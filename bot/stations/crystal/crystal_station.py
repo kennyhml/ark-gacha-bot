@@ -1,9 +1,8 @@
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from PyInstaller import PLATFORM
 
-from discord import Embed
+from discord import Embed  # type: ignore[import]
 
 from ark.exceptions import DediNotInRangeError
 from ark.structures import TekDedicatedStorage
@@ -32,6 +31,7 @@ from ark.structures.structure import Structure
 from ark.tribelog import TribeLog
 from bot.stations.grinding.grinding_station import GrindingStation
 from bot.stations.station import Station, StationData, StationStatistics
+from bot.stations.ytrap.ytrap_station import YTrapStation
 
 CRYSTAL_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/c3/Gacha_Crystal_%28Extinction%29.png/revision/latest?cb=20181108100408"
 DUST_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b1/Element_Dust.png/revision/latest/scale-to-width-down/228?cb=20181107161643"
@@ -77,19 +77,30 @@ class CrystalStation(Station):
         player: Player,
         tribelog: TribeLog,
         grinding_station: GrindingStation,
+        ytrap_station: YTrapStation
     ) -> None:
 
         self.station_data = station_data
         self.tribelog = tribelog
         self.player = player
         self.grinding_station = grinding_station
+        self.ytrap_station = ytrap_station
+        self.current_bed = 0
         self._first_pickup = True
         self._total_pickups = 0
         self._total_dust_made = 0
         self._total_pearls_made = 0
         self.dedi = TekDedicatedStorage()
 
-    def complete(self, refill_pellets: bool = False) -> tuple[Embed, CrystalStatistics]:
+    def is_ready(self) -> bool:
+        if self.ytrap_station.total_ytraps_deposited < 2000:
+            return False
+
+        time_diff = datetime.now() - self.station_data.last_completed
+        return time_diff.total_seconds() > self.station_data.interval
+
+
+    def complete(self) -> tuple[Embed, CrystalStatistics]:
         """Completes the crystal collection station of the given bed.
 
         Travels to the crystal station, picks, opens and deposits crystals and
@@ -121,7 +132,7 @@ class CrystalStation(Station):
 
             stats = CrystalStatistics(
                 time_taken=round(time.time() - start),
-                refill_lap=refill_pellets,
+                refill_lap=False,
                 profit=resources_deposited,
             )
 
@@ -229,7 +240,7 @@ class CrystalStation(Station):
 
         # go over the hotbar 5 more times to ensure no crystals left behind
         for _ in range(5):
-            self.player.spam_hotbar()()
+            self.player.spam_hotbar()
         self.player.inventory.close()
         self.player.sleep(3)
 
@@ -252,9 +263,11 @@ class CrystalStation(Station):
         for val, func in turns.items():
             func(val)
 
-            item, amount = self.dedi.attempt_deposit([DUST, BLACK_PEARL])
-            if amount:
-                gains[item] += amount
+            item_deposited = self.dedi.attempt_deposit([DUST, BLACK_PEARL])
+            if not item_deposited:
+                continue
+            item, amount = item_deposited
+            gains[item] += amount
 
         # return to original position
         self.player.turn_x_by(40)
@@ -303,13 +316,13 @@ class CrystalStation(Station):
 
         if not vault.inventory.is_full():
             # drop the shitty quality ones
-            for item in DROP_ITEMS:
-                self.player.inventory.drop_all_items(item)
+            for drop_item in DROP_ITEMS:
+                self.player.inventory.drop_all_items(drop_item)
                 self.player.sleep(0.3)
 
             # transfer all the grinding items
-            for item in [RIOT, ASSAULT_RIFLE, FAB, MINER_HELMET, PUMPGUN]:
-                self.player.inventory.transfer_all(vault, item)
+            for keep_item in ["riot", "ass", "fab", "miner", "pump"]:
+                self.player.inventory.transfer_all(vault.inventory, keep_item)
                 self.player.sleep(0.2)
             vault_full = vault.inventory.is_full()
 
@@ -332,8 +345,8 @@ class CrystalStation(Station):
             return vault_full
 
         # put structure stuff in it
-        for item in [METAL_GATE, PLATFORM]:
-            self.player.inventory.transfer_all(vault, item)
+        for item in [METAL_GATE, TREE_PLATFORM]:
+            self.player.inventory.transfer_all(vault.inventory, item)
             self.player.sleep(0.2)
         self.player.inventory.click_drop_all()
         vault.inventory.close()

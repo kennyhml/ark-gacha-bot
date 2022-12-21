@@ -1,7 +1,7 @@
 from typing import Optional
 from hypothesis import target
-import pyautogui as pg
-import pydirectinput as input
+import pyautogui as pg  # type: ignore[import]
+import pydirectinput as input  # type: ignore[import]
 from ark import inventories
 
 from ark.buffs import Buff, broken_bones, hungry, thirsty
@@ -39,12 +39,15 @@ class Player(ArkBot):
         self.press(self.keybinds.target_inventory)
 
     def empty_inventory(self) -> None:
+        self.spam_hotbar()
         self.inventory.open()
         self.inventory.click_drop_all()
         self.inventory.close()
 
     def drop_all_items(self, item: Item) -> None:
+        self.inventory.open()
         self.inventory.drop_all_items(item)
+        self.inventory.close()
 
     def hide_hands(self) -> None:
         self.look_up_hard()
@@ -102,10 +105,11 @@ class Player(ArkBot):
         print("Now spawned!")
         self.sleep(1)
 
-    def turn_90_degrees(self, direction: str = "right") -> None:
+    def turn_90_degrees(self, direction: str = "right", delay: int | float = 0) -> None:
         """Turns by 90 degrees in given direction"""
         val = 130 if direction == "right" else -130
         self.turn_x_by(val)
+        self.sleep(delay)
 
     def look_down_hard(self) -> None:
         """Looks down all the way to the ground"""
@@ -191,13 +195,18 @@ class Player(ArkBot):
             crop_plot.inventory.open()
             index = crop_plot.inventory.get_stack_index()
 
-    def take_traps_put_pellets(
-        self, crop_plot: Structure, refill_pellets: bool
+    def take_item_put_pellets(
+        self, crop_plot: Structure, refill_pellets: bool, item: Optional[Item] = None
     ) -> None:
+        """Opens the crop plot and takes either the specified item, or takes all.
+        Refills the pellets if passed.
+        """
         crop_plot.inventory.open()
+        if item and crop_plot.inventory.has_item(item):
+            crop_plot.inventory.take_all_items(item)
 
-        if crop_plot.inventory.has_item(Y_TRAP):
-            crop_plot.inventory.take_all_items(Y_TRAP)
+        elif not item:
+            crop_plot.inventory.click_transfer_all()
 
         if refill_pellets:
             self.inventory.transfer_all(crop_plot.inventory)
@@ -225,13 +234,13 @@ class Player(ArkBot):
         for val in [-130, *[-17] * 5]:
             self.turn_y_by(val)
             self.sleep(0.3)
-            self.take_traps_put_pellets(crop_plot, refill_pellets)
+            self.take_item_put_pellets(crop_plot, refill_pellets)
 
         # stand up and take the current one
         self.press(self.keybinds.crouch)
         for val in [50, -17, -17]:
             self.turn_y_by(val)
-            self.take_traps_put_pellets(crop_plot, refill_pellets)
+            self.take_item_put_pellets(crop_plot, refill_pellets)
 
         # back to crouching
         self.press(self.keybinds.crouch)
@@ -239,7 +248,7 @@ class Player(ArkBot):
     def do_precise_crop_plot_stack(
         self,
         item: Optional[Item] = None,
-        refill_pellets=False,
+        refill_pellets: bool = False,
         max_index: int = 8,
     ) -> None:
         """Empties the current stack of crop plot, but aims for a 100% access rate.
@@ -282,7 +291,7 @@ class Player(ArkBot):
             self.adjust_for_crop_plot(crop_plot, expected_index)
 
             # empty it
-            self.take_traps_put_pellets(crop_plot, refill_pellets)
+            self.take_item_put_pellets(crop_plot, refill_pellets, item)
 
     def name_crop_plot_stack(self) -> None:
         """Names the crop plot stack to prepare the tower for 100% access running.
@@ -356,6 +365,7 @@ class Player(ArkBot):
 
     def popcorn_bag(self) -> None:
         bag = Inventory("Bag", "bag")
+        bag.open()
         self.move_to(1287, 289)
         while bag.is_open():
             self.press("o")

@@ -2,19 +2,34 @@
 Abstract base class example that all ling ling stations *need* to follow.
 """
 
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Protocol
 
 import numpy as np
-from discord import Embed
+from discord import Embed  # type: ignore[import]
 
 from ark.beds import Bed, BedMap
 from ark.entities.player import Player
 from ark.exceptions import NoBedPassedError
 from ark.items import Item
 from ark.tribelog import TribeLog
+
+
+def format_time_taken(time_taken: float) -> str:
+    """Returns the given time.time float in a formatted string"""
+    # get time diff
+    time_diff = time.time() - time_taken
+
+    # get hours and minutes, round for clean number
+    h = round(time_diff // 3600)
+    m, s = divmod(time_diff % 3600, 60)
+    m, s = round(m), round(s)
+
+    # format
+    return f"{h} hour{'s' if h > 1 or not h else ''} {m} minutes"
 
 
 @dataclass
@@ -73,7 +88,7 @@ class Station(ABC):
     station_data: StationData
     player: Player
     tribelog: TribeLog
-    current_bed: int = 0
+    current_bed: int
 
     def is_ready(self) -> bool:
         """Checks whether the station is ready by comparing the station
@@ -88,9 +103,7 @@ class Station(ABC):
         in by checking for the stamina bar.
         """
         if not self.station_data.beds:
-            raise NoBedPassedError(
-                "You did not define a 'Bed' for the station in 'StationData'."
-            )
+            raise NoBedPassedError("Invalid 'Bed' in 'StationData`.")
 
         bed_map = BedMap()
         bed_map.travel_to(self.station_data.beds[self.current_bed])

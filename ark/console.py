@@ -1,4 +1,4 @@
-import pyautogui as pg
+import pyautogui as pg  # type: ignore[import]
 
 from bot.ark_bot import ArkBot
 

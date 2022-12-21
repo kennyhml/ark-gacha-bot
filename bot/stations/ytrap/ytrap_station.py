@@ -2,12 +2,11 @@
 Contains all classes relevant to run ytrap stations on the gacha tower.
 """
 
-from re import L
 import time
 from dataclasses import dataclass
 
-from discord import Embed
-
+from discord import Embed   # type: ignore[import]
+from ark import Console
 from ark import PELLET, Y_TRAP, Item, TribeLog
 from ark.entities import Dinosaur, Player
 from bot.stations import Station, StationData, StationStatistics
@@ -44,7 +43,6 @@ class YTrapStation(Station):
     """
 
     current_lap: int = 0
-    current_bed: int = 0
     refill_lap: bool = True
 
     def __init__(
@@ -53,6 +51,9 @@ class YTrapStation(Station):
         self.station_data = station_data
         self.player = player
         self.tribelog = tribelog
+        self.current_bed = 0
+        self.total_ytraps_deposited = 0
+
         self.gacha = Dinosaur("Gacha", "gacha")
 
     def complete(self) -> tuple[Embed, YTrapStatistics]:
@@ -92,18 +93,27 @@ class YTrapStation(Station):
             refill_lap=self.refill_lap,
             profit={Y_TRAP: added_traps * 10},
         )
-
+        self.total_ytraps_deposited += added_traps * 10
+        
         self.check_lap_finished()
         return self.create_embed(stats), stats
 
-    def check_refill_lap(self) -> bool:
+    def set_gamma(self)-> None:
+        """Sets gamma to 5"""
+        console = Console()
+        console.set_gamma("5")
+
+    def check_refill_lap(self) -> None:
+        """Check if we need to initiate a refill lap. True if a new lap has just 
+        started and more than 8 hours have passed since the last refill lap.
+        """
         if not self.current_bed and (time.time() - self.last_refilled_pellets) > 28800:
             self.refill_lap = True
 
-    def check_lap_finished(self) -> bool:
+    def check_lap_finished(self) -> None:
         if self.current_bed < len(self.station_data.beds) - 1:
             self.current_bed += 1
-            return False
+            return
 
         # lap completed
         self.current_bed = 0

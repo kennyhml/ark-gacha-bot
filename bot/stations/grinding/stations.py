@@ -1,6 +1,6 @@
-from enum import Enum
-from typing import Literal
+from __future__ import annotations
 
+from enum import Enum
 from ark.items import (CRYSTAL, ELECTRONICS, HIDE, METAL_INGOT, PASTE,
                        SILICA_PEARL, Item)
 
@@ -19,13 +19,14 @@ class Stations(str, Enum):
     PEARLS = "Pearls"
     PASTE = "Paste"
     GEAR_VAULT = "Gear Vault"
-    
+
     @staticmethod
-    def from_item(item: Item) -> str:
+    def from_item(item: Item) -> Stations:
         """Returns the station corresponding to the item"""
         if item not in ITEM_TO_STATION:
             raise
         return ITEM_TO_STATION[item]
+    
 
 ITEM_TO_STATION: dict[Item, Stations] = {
     PASTE: Stations.PASTE,

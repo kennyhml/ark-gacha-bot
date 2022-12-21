@@ -1,7 +1,7 @@
 import webbrowser
 
-import psutil
-import pygetwindow
+import psutil  # type: ignore[import]
+import pygetwindow  # type: ignore[import]
 
 from ark.console import Console
 from ark.menus import IngameMenu, MainMenu, SessionList
@@ -72,7 +72,8 @@ class UnstuckHandler(ArkBot):
 
             if process.name() == "ShooterGame.exe":
                 return True
-
+        return False
+        
     def game_crashed(self) -> bool:
         """Checks if ark has crashed by grabbing the fatal error window."""
         try:

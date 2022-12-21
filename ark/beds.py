@@ -1,7 +1,11 @@
+
+from __future__ import annotations
+from copy import deepcopy
+
 from dataclasses import dataclass
 
-import pyautogui as pg
-import pydirectinput as input
+import pyautogui as pg # type: ignore[import]
+import pydirectinput as input # type: ignore[import]
 
 from ark.buffs import pod_xp
 from ark.exceptions import BedNotAccessibleError, PlayerDidntTravelError
@@ -17,6 +21,19 @@ class Bed:
     name: str
     coords: tuple
 
+    def create_secondary(self, prefix: str) -> Bed:
+        """Creates a deepcopy of the bed with a special character in front
+        of the numeric suffix.
+        
+        Example:
+        ```py
+        'automeat00' > 'automeatb00'
+        ```
+        Returns a deepcopy of the `Bed` with the new `name` attribute.
+        """
+        new_bed = deepcopy(self)
+        new_bed.name = new_bed.name[:-2] + prefix + new_bed.name[-2:]
+        return new_bed
 
 class BedMap(ArkBot):
     """Main Bed Travelling Handler
@@ -47,7 +64,7 @@ class BedMap(ArkBot):
             is not None
         )
 
-    def open(self) -> bool:
+    def open(self) -> None:
         """Opens the bed menu. Times out after 30 unsuccessful
         attempts raising a `TimeoutError`"""
         c = 0
@@ -145,9 +162,9 @@ class BedMap(ArkBot):
             player.sleep(1)
 
         # move to the lay option, pyautogui doesnt work for this
-        input.moveTo(1266, 541, duration=0.1)
+        input.moveTo(1255, 541, duration=0.1)
         player.sleep(0.1)
-        input.moveTo(1266, 540, duration=0.1)
+        input.moveTo(1255, 540, duration=0.1)
         player.sleep(2)
 
         # 'use' only needs to be held if we hold for too long after clicking
