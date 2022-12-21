@@ -55,6 +55,8 @@ Y_TRAP = Item(
     search_name="trap",
     stack_size=10,
     inventory_icon="templates/inventory_ytrap.png",
+    added_text="templates/y_trap_added.png",
+    added_icon="templates/plant_species_y_trap.png"
 )
 
 PELLET = Item(

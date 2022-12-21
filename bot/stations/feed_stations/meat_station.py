@@ -147,7 +147,7 @@ class MeatFeedStation(FeedStation):
         self.dire_bear.inventory.take_all_items(RAW_MEAT)
         self.player.inventory.await_items_added()
         self.player.sleep(0.5)
-        meat = self.player.inventory.get_amount_transferred(True)
+        meat = self.player.inventory.get_amount_transferred(RAW_MEAT, "add")
 
         self.dire_bear.inventory.click_drop_all()
         self.dire_bear.inventory.close()

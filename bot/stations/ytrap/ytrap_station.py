@@ -91,10 +91,10 @@ class YTrapStation(Station):
         stats = YTrapStatistics(
             time_taken=round(time.time() - start),
             refill_lap=self.refill_lap,
-            profit={Y_TRAP: added_traps * 10},
+            profit={Y_TRAP: added_traps},
         )
-        self.total_ytraps_deposited += added_traps * 10
-        
+        self.total_ytraps_deposited += added_traps
+
         self.check_lap_finished()
         return self.create_embed(stats), stats
 
@@ -158,11 +158,14 @@ class YTrapStation(Station):
 
         # take all the pellets (to avoid losing out on traps because of cap)
         self.gacha.inventory.open()
-        amount_of_traps = self.player.inventory.count_item(Y_TRAP)
+        amount_of_traps = self.player.inventory.count_item(Y_TRAP) * 10
+        ocr_amount = amount_of_traps > 400
         self.gacha.inventory.take_all_items(PELLET)
 
         # put traps back in, then add the remaining pellets
         self.player.inventory.transfer_all(self.gacha.inventory, Y_TRAP)
+        if ocr_amount:
+            amount_of_traps = self.player.inventory.get_amount_transferred(Y_TRAP, "rm")
         self.player.sleep(0.5)
         self.player.inventory.transfer_all(self.gacha.inventory)
         self.player.sleep(0.5)
@@ -171,7 +174,10 @@ class YTrapStation(Station):
         # deposited into the gacha
         self.player.inventory.click_drop_all()
         self.player.inventory.close()
-        return amount_of_traps
+
+        if 400 < amount_of_traps < 800:
+            return amount_of_traps
+        return 600
 
     def validate_stats(self, statistics: StationStatistics) -> str:
         """Checks on the amount of traps deposited given the current runtime.

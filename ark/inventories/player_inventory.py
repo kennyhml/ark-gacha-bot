@@ -58,6 +58,7 @@ class PlayerInventory(Inventory):
             self.sleep(0.1)
             if c > 300:
                 raise NoItemsAddedError("No Items added after 30 seconds!")
+        self.sleep(0.3)
 
     def open(self) -> None:  # type: ignore[override]
         """Opens the inventory using the specified keybind.
@@ -103,7 +104,7 @@ class PlayerInventory(Inventory):
                 pg.press("t")
 
                 # OCR the total amount transferred, None if undetermined
-                transferred = self.get_amount_transferred()
+                transferred = self.get_amount_transferred(item, "rm")
                 if not transferred:
                     continue
 

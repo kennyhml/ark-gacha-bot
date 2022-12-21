@@ -9,7 +9,7 @@ All sub-classes in this module derive from the `Inventory` class.
 """
 import math
 import os
-from typing import Optional
+from typing import Literal, Optional
 
 import pyautogui as pg  # type: ignore[import]
 import pydirectinput as input  # type: ignore[import]
@@ -175,24 +175,66 @@ class Inventory(ArkBot):
             is not None
         )
 
-    def get_amount_transferred(self, to_player: bool = False) -> int:
+    def get_transferred_frame(self, item: Item, mode: Literal["rm", "add"] = "rm") -> tuple | None:
+        if not item.added_icon:
+            raise Exception
+
+        ytrap_position = self.locate_template(
+            item.added_icon, region=(0, 970, 160, 350), confidence=0.7
+        )
+
+        if not ytrap_position:
+            return None
+
+        # get our region of interest
+        text_start_x = ytrap_position[0] + ytrap_position[2]
+        if mode == "rm":
+            text_end = text_start_x + self.convert_width(130), ytrap_position[1]
+        else:
+            text_end = text_start_x + self.convert_width(95), ytrap_position[1]
+
+        roi = (*text_end, self.convert_width(290), self.convert_height(25))
+
+        if not item.added_text:
+            raise Exception(f"You did not define an 'added_text' for {item}!")
+
+        # find the items name to crop out the numbers
+        name_text = self.locate_template(
+            item.added_text, region=roi, confidence=0.7, convert=False
+        )
+        if not name_text:
+            return None
+
+        # get our region of interest (from end of "Removed:" to start of "Element")
+        roi = (
+            *text_end,
+            self.convert_width(int(name_text[0] - text_end[0])),
+            self.convert_height(25),
+        )
+        return roi
+
+    def get_amount_transferred(self, item: Item, mode: Literal["rm", "add"] = "rm") -> int:
         """OCRs the amount transferred into the inventory by checking for the
         amount on the lefthand side of the screen."""
         # prepare the image
-        if not to_player:
-            roi = (168, 1036, 217, 33)
-        else:
-            roi = (120, 1036, 200, 33)
+        for _ in range(30):
+            roi = self.get_transferred_frame(item, mode)
+            if roi: break
+            self.sleep(0.1)
+            
+        if not roi:
+            return 0
 
         img = self.grab_screen(roi, convert=False)
         img = self.denoise_text(
-            img, denoise_rgb=(255, 255, 255), variance=5, upscale=True, upscale_by=3
+            img, denoise_rgb=(255, 255, 255), variance=10, upscale=True, upscale_by=3
         )
         # get the raw tesseract result
         raw_result = tes.image_to_string(
             img,
             config="-c tessedit_char_whitelist='0123456789liIxObL ' --psm 7 -l eng",
         )
+
         try:
             # replace all the mistaken "1"s
             for char in ["I", "l", "i", "b", "L"]:
