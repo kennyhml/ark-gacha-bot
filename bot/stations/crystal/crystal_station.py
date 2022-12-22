@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from discord import Embed  # type: ignore[import]
+from ark.entities.stryder import Stryder  # type: ignore[import]
 
 from ark.exceptions import DediNotInRangeError
 from ark.structures import TekDedicatedStorage
@@ -77,7 +78,8 @@ class CrystalStation(Station):
         player: Player,
         tribelog: TribeLog,
         grinding_station: GrindingStation,
-        ytrap_station: YTrapStation
+        ytrap_station: YTrapStation,
+        stryder_depositing: bool,
     ) -> None:
 
         self.station_data = station_data
@@ -86,11 +88,16 @@ class CrystalStation(Station):
         self.grinding_station = grinding_station
         self.ytrap_station = ytrap_station
         self.current_bed = 0
+        self._stryder_depositing = stryder_depositing
         self._first_pickup = True
         self._total_pickups = 0
         self._total_dust_made = 0
         self._total_pearls_made = 0
+        self._total_flint_made = 0
+        self._total_stone_made = 0
+        self._total_wood_made = 0
         self.dedi = TekDedicatedStorage()
+        self.stryder = Stryder()
 
     def is_ready(self) -> bool:
         if self.ytrap_station.total_ytraps_deposited < 2000:
@@ -98,7 +105,6 @@ class CrystalStation(Station):
 
         time_diff = datetime.now() - self.station_data.last_completed
         return time_diff.total_seconds() > self.station_data.interval
-
 
     def complete(self) -> tuple[Embed, CrystalStatistics]:
         """Completes the crystal collection station of the given bed.
@@ -120,10 +126,14 @@ class CrystalStation(Station):
             # open the crystals and deposit the items into dedis
             self.pick_crystals()
             self.open_crystals()
-            resources_deposited = self.deposit_dedis()
-            resources_deposited[DUST] = self.validate_dust_amount(
-                resources_deposited[DUST]
-            )
+
+            if not self._stryder_depositing:
+                resources_deposited = self.deposit_dedis()
+                resources_deposited[DUST] = self.validate_dust_amount(
+                    resources_deposited[DUST]
+                )
+            else:
+                resources_deposited = self.deposit_into_stryder()
 
             # put items into vault
             vault_full = self.deposit_items()
@@ -140,11 +150,36 @@ class CrystalStation(Station):
             self._total_pickups += 1
             self._total_dust_made += resources_deposited[DUST]
             self._total_pearls_made += resources_deposited[BLACK_PEARL]
+            self._total_flint_made += resources_deposited[FLINT]
+            self._total_stone_made += resources_deposited[STONE]
+            self._total_wood_made += resources_deposited[FUNGAL_WOOD]
 
             return self.create_embed(stats), stats
 
         finally:
             self.station_data.last_completed = datetime.now()
+
+    def deposit_into_stryder(self) -> dict[Item, int]:
+        self.player.turn_y_by(-50)
+        self.player.sleep(0.5)
+        profits: dict[Item, int] = {}
+        self.stryder.inventory.open()
+
+        for item in [DUST, FLINT, STONE, FUNGAL_WOOD, BLACK_PEARL]:
+            self.player.inventory.search_for(item)
+            self.player.sleep(0.3)
+            stacks = self.player.inventory.count_item(item)
+            profits[item] = stacks * item.stack_size
+            self.player.inventory.click_transfer_all()
+        self.stryder.inventory.close()
+
+        self.stryder.sort_items_to_nearby_dedis()
+        self.stryder.sleep(1)
+
+        self.stryder.inventory.open()
+        self.stryder.inventory.click_drop_all()
+        self.stryder.inventory.close()
+        return profits
 
     def walk_into_back(self) -> None:
         """Walks into the back of the collection point, attempts to pick
@@ -329,7 +364,7 @@ class CrystalStation(Station):
         else:
             vault_full = True
 
-        if not self.need_to_access_top_vault():
+        if not self.need_to_access_top_vault() or self._stryder_depositing:
             vault.inventory.close()
             return vault_full
 

@@ -6,11 +6,12 @@ import json
 import os
 import time
 from typing import Optional
-import discord # type: ignore[import]
-import pyautogui as pg # type: ignore[import]
-import pydirectinput as input # type: ignore[import]
+
+import discord  # type: ignore[import]
+import pyautogui as pg  # type: ignore[import]
+import pydirectinput as input  # type: ignore[import]
 from dacite import from_dict
-from pynput.mouse import Button, Controller # type: ignore[import]
+from pynput.mouse import Button, Controller  # type: ignore[import]
 
 mouse = Controller()
 from ark.window import ArkWindow
@@ -94,7 +95,7 @@ class ArkBot(ArkWindow):
         if convert:
             x, y = self.convert_point(x, y)
 
-        pg.moveTo(x, y)
+        input.moveTo(x, y)
 
     def click(self, button):
         """Sends a click event for the given button.

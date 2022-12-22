@@ -74,29 +74,30 @@ class YTrapStation(Station):
         # set times and tasks, travel to station
         self.spawn()
         start = time.time()
+        try:
+            # check if we need to initiate a refill lap
+            if not self.refill_lap:
+                self.check_refill_lap()
 
-        # check if we need to initiate a refill lap
-        if not self.refill_lap:
-            self.check_refill_lap()
+            # check if we need to refill the crop plots with pellets
+            if self.refill_lap:
+                self.take_pellets_from_gacha()
 
-        # check if we need to refill the crop plots with pellets
-        if self.refill_lap:
-            self.take_pellets_from_gacha()
+            # empty all the crop plots, load the gacha with the ytraps
+            self.player.do_precise_crop_plots(Y_TRAP, self.refill_lap)
+            added_traps = self.load_gacha()
 
-        # empty all the crop plots, load the gacha with the ytraps
-        self.player.do_precise_crop_plots(Y_TRAP, self.refill_lap)
-        added_traps = self.load_gacha()
-
-        # create the statistics for better data management
-        stats = YTrapStatistics(
-            time_taken=round(time.time() - start),
-            refill_lap=self.refill_lap,
-            profit={Y_TRAP: added_traps},
-        )
-        self.total_ytraps_deposited += added_traps
-
-        self.check_lap_finished()
-        return self.create_embed(stats), stats
+            # create the statistics for better data management
+            stats = YTrapStatistics(
+                time_taken=round(time.time() - start),
+                refill_lap=self.refill_lap,
+                profit={Y_TRAP: added_traps},
+            )
+            self.total_ytraps_deposited += added_traps
+            return self.create_embed(stats), stats
+            
+        finally:
+            self.check_lap_finished()
 
     def set_gamma(self)-> None:
         """Sets gamma to 5"""
@@ -117,7 +118,7 @@ class YTrapStation(Station):
 
         # lap completed
         self.current_bed = 0
-        if not self.current_lap:
+        if self.refill_lap:
             self.refill_lap = False
             self.last_refilled_pellets = time.time()
         self.current_lap += 1

@@ -42,6 +42,7 @@ class TowerSettings:
     server_name: str
     server_search: str
     pod_name: str
+    stryder_depositing: bool
 
 @dataclass
 class DiscordSettings:

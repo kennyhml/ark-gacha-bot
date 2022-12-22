@@ -867,7 +867,7 @@ class GrindingStation(Station):
         # add each resource to the embed, heavies and electronics on the
         # righthand side
         for resource, amount in formatted.items():
-            embed.add_field(name=f"{resource}:ㅤ", value=amount)
+            embed.add_field(name=f"{resource.name}:ㅤ", value=amount)
             if resource == PASTE:
                 embed.add_field(
                     name="Expected Result:",
@@ -987,6 +987,7 @@ class GrindingStation(Station):
             self.player.do_drop_script(METAL_INGOT, self.exo_mek.inventory)
             self.player.turn_y_by(-163)
             self.deposit(METAL_INGOT)
+            
         except NoItemsAddedError:
             print("Failed to take metal from the exo mek!")
             self.exo_mek.inventory.close()

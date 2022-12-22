@@ -52,6 +52,8 @@ class MeatFeedStation(FeedStation):
         """Checks whether the station is ready by comparing the station
         datas' interval to the last emptied datetime.
         """
+        return False
+        
         time_diff = datetime.now() - self.station_data.last_completed
         print(f"Time passed since last meat completion: {time_diff}")
 
@@ -69,8 +71,8 @@ class MeatFeedStation(FeedStation):
         new_bed = self.station_data.beds[self.current_bed].create_secondary("b")
 
         self.bed_map.travel_to(new_bed)
-        self.player.await_spawned()
         self.tribelog.check_tribelogs()
+        self.player.await_spawned()
         self.player.sleep(1)
 
     def approach_dire_bear(self) -> None:

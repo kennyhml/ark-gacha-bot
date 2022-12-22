@@ -1,5 +1,5 @@
 from typing import Optional
-from hypothesis import target
+
 import pyautogui as pg  # type: ignore[import]
 import pydirectinput as input  # type: ignore[import]
 from ark import inventories
@@ -271,7 +271,7 @@ class Player(ArkBot):
         """
         crop_plot = Structure("Tek Crop Plot", "tek_crop_plot")
         self.crouch()
-        turns = [-130, -20, -20, -17, -15, 35, -17, -20]
+        turns = [-130, -20, -20, -17, -15, 35, -17, -17, -15, -10, -20]
         self.look_down_hard()
         self.sleep(0.1)
 

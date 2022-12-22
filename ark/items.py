@@ -134,6 +134,8 @@ METAL_INGOT = Item(
     search_name="ingot",
     stack_size=300,
     inventory_icon="templates/inventory_metal_ingot.png",
+    added_icon="templates/ingot_icon.png",
+    added_text="templates/ingot_text.png"
 )
 
 FABRICATED_SNIPER = Item(
@@ -161,7 +163,7 @@ HEAVY_AUTO_TURRET = Item(
     name="Heavy Auto Turret",
     search_name="heavy",
     stack_size=1,
-    inventory_icon="templates/heavy_auto_turret.png",
+    inventory_icon="templates/inventory_heavy_auto_turret.png",
 )
 
 MINER_HELMET = Item(
@@ -185,7 +187,6 @@ RAW_MEAT = Item(
     inventory_icon="templates/raw_meat.png",
 )
 
-
 FLINT = Item(
     name="Flint",
     search_name="flint",
@@ -198,11 +199,13 @@ STONE = Item(
     search_name="stone",
     stack_size=100,
     inventory_icon="templates/inventory_stone.png",
+    added_icon="templates/stone_icon.png",
+    added_text="templates/stone_text.png"
 )
 
 FUNGAL_WOOD = Item(
     name="Fungal wood",
-    search_name="fungal",
+    search_name="wood",
     stack_size=100,
     inventory_icon="templates/inventory_fungal_wood.png",
 )
@@ -212,6 +215,8 @@ PASTE = Item(
     search_name="paste",
     stack_size=100,
     inventory_icon="templates/inventory_paste.png",
+    added_icon="templates/paste_icon.png",
+    added_text="templates/paste_text.png"
 )
 
 SILICA_PEARL = Item(
@@ -219,6 +224,9 @@ SILICA_PEARL = Item(
     search_name="pearls",
     stack_size=100,
     inventory_icon="templates/inventory_silica_pearl.png",
+    added_icon="templates/pearls_icon.png",
+    added_text="templates/pearls_text.png"
+
 )
 
 ELECTRONICS = Item(
@@ -226,6 +234,8 @@ ELECTRONICS = Item(
     search_name="electronics",
     stack_size=100,
     inventory_icon="templates/inventory_electronics.png",
+    added_icon="templates/electronics_icon.png",
+    added_text="templates/electronics_text.png"
 )
 
 HIDE = Item(

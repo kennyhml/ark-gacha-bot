@@ -145,14 +145,15 @@ class Inventory(ArkBot):
         the folder name from AAA to HHH, being 1 to 9."""
 
         options = ["AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG", "HHH"]
-
-        for index, option in enumerate(options, start=1):
-            if self.locate_template(
-                f"templates/folder_{option}.png",
-                region=(1240, 290, 55, 34),
-                confidence=0.9,
-            ):
-                return index
+        for _ in range(3):
+            for index, option in enumerate(options, start=1):
+                if self.locate_template(
+                    f"templates/folder_{option}.png",
+                    region=(1240, 290, 55, 34),
+                    confidence=0.9,
+                ):
+                    return index
+            self.sleep(0.5)
 
         raise Exception("Index not determined")
 
@@ -175,7 +176,9 @@ class Inventory(ArkBot):
             is not None
         )
 
-    def get_transferred_frame(self, item: Item, mode: Literal["rm", "add"] = "rm") -> tuple | None:
+    def get_transferred_frame(
+        self, item: Item, mode: Literal["rm", "add"] = "rm"
+    ) -> tuple | None:
         if not item.added_icon:
             raise Exception
 
@@ -213,15 +216,18 @@ class Inventory(ArkBot):
         )
         return roi
 
-    def get_amount_transferred(self, item: Item, mode: Literal["rm", "add"] = "rm") -> int:
+    def get_amount_transferred(
+        self, item: Item, mode: Literal["rm", "add"] = "rm"
+    ) -> int:
         """OCRs the amount transferred into the inventory by checking for the
         amount on the lefthand side of the screen."""
         # prepare the image
         for _ in range(30):
             roi = self.get_transferred_frame(item, mode)
-            if roi: break
+            if roi:
+                break
             self.sleep(0.1)
-            
+
         if not roi:
             return 0
 

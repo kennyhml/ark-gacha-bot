@@ -4,19 +4,25 @@ from datetime import datetime
 from threading import Thread
 
 from dacite import from_dict
-from discord import (Embed, File,  # type: ignore[import]
-                     RequestsWebhookAdapter, Webhook)
+from discord import Embed, File, RequestsWebhookAdapter, Webhook  # type: ignore[import]
 
 from ark.beds import Bed, TekPod
-from ark.entities import Player
+from ark.entities import Player, stryder
 from ark.server import Server
 from ark.tribelog import TribeLog
 from ark.window import ArkWindow
 from bot.ark_bot import ArkBot, TerminatedException
 from bot.settings import DiscordSettings, TowerSettings
-from bot.stations import (BerryFeedStation, CrystalStation, GrindingStation,
-                          HealingStation, MeatFeedStation, Station,
-                          StationData, YTrapStation)
+from bot.stations import (
+    BerryFeedStation,
+    CrystalStation,
+    GrindingStation,
+    HealingStation,
+    MeatFeedStation,
+    Station,
+    StationData,
+    YTrapStation,
+)
 from bot.unstucking import UnstuckHandler
 
 DISCORD_AVATAR = "https://i.kym-cdn.com/entries/icons/facebook/000/022/293/Bloodyshadow_rolled_user_shutupandsleepwith_i_m_bisexual_let_s_work_from__a48265eae6a474904cdc2cae9f184aad.jpg"
@@ -75,7 +81,14 @@ class GachaBot:
         # create the list of stations in desired priority order
         return [
             HealingStation(healing_data, self.player, self.tribelogs),
-            CrystalStation(crystal_data, self.player, self.tribelogs, grinding_station, ytrap_station),
+            CrystalStation(
+                crystal_data,
+                self.player,
+                self.tribelogs,
+                grinding_station,
+                ytrap_station,
+                self.tower_settings.stryder_depositing,
+            ),
             grinding_station,
             MeatFeedStation(meat_data, self.player, self.tribelogs),
             BerryFeedStation(berry_data, self.player, self.tribelogs),
@@ -104,7 +117,6 @@ class GachaBot:
         if unstucking.reconnected:
             self.last_emptied = time.time()
 
-
     def inform_started(self) -> None:
         """Sends a message to discord that the bot has been started"""
         now = datetime.now()
@@ -130,19 +142,19 @@ class GachaBot:
     def create_webhooks(self) -> None:
         """Creates the webhooks from the discord settings, `None` if no webhook was passed."""
         try:
-            self.info_webhook:  Webhook =  Webhook.from_url(
+            self.info_webhook: Webhook = Webhook.from_url(
                 self.discord_settings.webhook_gacha,
-                adapter= RequestsWebhookAdapter(),
+                adapter=RequestsWebhookAdapter(),
             )
 
-            self.alert_webhook:  Webhook =  Webhook.from_url(
+            self.alert_webhook: Webhook = Webhook.from_url(
                 self.discord_settings.webhook_alert,
-                adapter= RequestsWebhookAdapter(),
+                adapter=RequestsWebhookAdapter(),
             )
 
-            self.logs_webhook:  Webhook =  Webhook.from_url(
+            self.logs_webhook: Webhook = Webhook.from_url(
                 self.discord_settings.webhook_logs,
-                adapter= RequestsWebhookAdapter(),
+                adapter=RequestsWebhookAdapter(),
             )
         except Exception as e:
             print(f"Failed to create one or more webhooks!\n{e}")
@@ -169,7 +181,7 @@ class GachaBot:
         """
         return [
             Bed(
-                f"{self.tower_settings.crystal_prefix}00",
+                f"{self.tower_settings.crystal_prefix}",
                 tuple(self.tower_settings.bed_position),
             )
         ]
@@ -179,10 +191,12 @@ class GachaBot:
 
         Returns a `TekPod` object.
         """
-        return [Bed(
-            self.tower_settings.pod_name,
-            tuple(self.tower_settings.bed_position),
-        )]
+        return [
+            Bed(
+                self.tower_settings.pod_name,
+                tuple(self.tower_settings.bed_position),
+            )
+        ]
 
     def create_grinder_bed(self) -> list[Bed]:
         """Creates the grinder bed using a fix prefix.
@@ -295,51 +309,51 @@ class GachaBot:
             },
         ).start()
 
-#    def inform_lap_finished(self) -> None:
-#
-#        station_avg = round(sum(self._station_times) / len(self._station_times))
-#
-#        dust = f"{self._total_dust_made:_}".replace("_", " ")
-#        pearls = f"{self._total_bps_made:_}".replace("_", " ")
-#
-#        embed = discord.Embed(
-#            type="rich",
-#            title=f"Finished Lap {self._current_lap}!",
-#            color=0x4285D7,
-#        )
-#        embed.add_field(
-#            name="Time taken:ㅤㅤㅤ", value=self.format_time_taken(self.lap_started)
-#        )
-#
-#        embed.add_field(
-#            name="Total runtime:ㅤㅤㅤ",
-#            value=self.format_time_taken(self._session_start),
-#        )
-#        embed.add_field(name="\u200b", value="\u200b")
-#
-#        embed.add_field(
-#            name="Average station time:ㅤㅤㅤ",
-#            value=f"{station_avg} seconds",
-#        )
-#
-#        embed.add_field(
-#            name="Dust per hour:ㅤㅤㅤ",
-#            value=f"{self.get_dust_per_hour()}",
-#        )
-#        embed.add_field(name="\u200b", value="\u200b")
-#
-#        embed.add_field(name="Total Element Dust:", value=f"{dust}")
-#        embed.add_field(name="Total Black Pearls:", value=f"{pearls}")
-#        embed.add_field(name="\u200b", value="\u200b")
-#
-#        embed.set_thumbnail(url=self.dust_avatar)
-#        embed.set_footer(text="Ling Ling on top!")
-#
-#        self.info_webhook.send(
-#            avatar_url=self.discord_avatar,
-#            embed=embed,
-#            username="Ling Ling",
-#        )
+    #    def inform_lap_finished(self) -> None:
+    #
+    #        station_avg = round(sum(self._station_times) / len(self._station_times))
+    #
+    #        dust = f"{self._total_dust_made:_}".replace("_", " ")
+    #        pearls = f"{self._total_bps_made:_}".replace("_", " ")
+    #
+    #        embed = discord.Embed(
+    #            type="rich",
+    #            title=f"Finished Lap {self._current_lap}!",
+    #            color=0x4285D7,
+    #        )
+    #        embed.add_field(
+    #            name="Time taken:ㅤㅤㅤ", value=self.format_time_taken(self.lap_started)
+    #        )
+    #
+    #        embed.add_field(
+    #            name="Total runtime:ㅤㅤㅤ",
+    #            value=self.format_time_taken(self._session_start),
+    #        )
+    #        embed.add_field(name="\u200b", value="\u200b")
+    #
+    #        embed.add_field(
+    #            name="Average station time:ㅤㅤㅤ",
+    #            value=f"{station_avg} seconds",
+    #        )
+    #
+    #        embed.add_field(
+    #            name="Dust per hour:ㅤㅤㅤ",
+    #            value=f"{self.get_dust_per_hour()}",
+    #        )
+    #        embed.add_field(name="\u200b", value="\u200b")
+    #
+    #        embed.add_field(name="Total Element Dust:", value=f"{dust}")
+    #        embed.add_field(name="Total Black Pearls:", value=f"{pearls}")
+    #        embed.add_field(name="\u200b", value="\u200b")
+    #
+    #        embed.set_thumbnail(url=self.dust_avatar)
+    #        embed.set_footer(text="Ling Ling on top!")
+    #
+    #        self.info_webhook.send(
+    #            avatar_url=self.discord_avatar,
+    #            embed=embed,
+    #            username="Ling Ling",
+    #        )
 
     def do_next_task(self) -> None:
         """Gacha bot main call method, runs the next task in line.
@@ -361,4 +375,3 @@ class GachaBot:
 
         except Exception as e:
             self.unstuck(station, e)
-
