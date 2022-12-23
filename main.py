@@ -1,10 +1,10 @@
 import time
-from threading import Thread, Event
+from threading import Thread
 
-from pynput import keyboard #type: ignore[import]
+from pynput import keyboard  # type: ignore[import]
 
-from bot.gacha_bot import GachaBot
 from bot.ark_bot import ArkBot
+from bot.gacha_bot import GachaBot
 
 
 def main():

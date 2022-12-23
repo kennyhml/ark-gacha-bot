@@ -99,9 +99,12 @@ class Inventory(ArkBot):
         self.search_for(item)
         self.click_drop_all()
 
+    def select_first_slot(self) -> None:
+        self.move_to(*self.FIRST_SLOT)
+
     def popcorn(self, item: Item) -> None:
         self.search_for(item)
-        self.move_to(*self.FIRST_SLOT)
+        self.select_first_slot()
         while self.has_item(item):
             self.press("o")
 
@@ -418,6 +421,11 @@ class Inventory(ArkBot):
             pg.typewrite(item.search_name.lower(), interval=0.001)
 
         # escape out of the searchbar so presing f closes the inventory
+        self.press("esc")
+
+    def delete_search(self) -> None:
+        self.click_search(delete_prior=True)
+        self.press("backspace")
         self.press("esc")
 
     def take_all_items(self, item: Item) -> None:

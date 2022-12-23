@@ -309,3 +309,45 @@ SPOILED_MEAT = Item(
     stack_size=100,
     inventory_icon="templates/inventory_spoiled_meat.png",
 )
+
+GASOLINE = Item(
+    name="Gasoline",
+    search_name="gasoline",
+    stack_size=100,
+    inventory_icon="templates/inventory_gasoline.png"
+
+
+)
+
+CHARCOAL = Item(
+    name="Charcoal",
+    search_name="coal",
+    stack_size=100,
+    inventory_icon="templates/inventory_charcoal.png"
+
+)
+
+SPARKPOWDER = Item(
+    name="Sparkpowder",
+    search_name="spark",
+    stack_size=100,
+    inventory_icon="templates/inventory_sparkpowder.png"
+)
+
+
+
+GUNPOWDER = Item(
+    name="Gunpowder",
+    search_name="gunpowder",
+    stack_size=100,
+    inventory_icon="templates/inventory_gunpowder.png"
+)
+
+ARB = Item(
+    name="Advanced Rifle Bullet",
+    search_name="advanced",
+    stack_size=100,
+    inventory_icon="templates/inventory_arb.png",
+    added_icon="templates/arb_icon.png",
+    added_text="templates/arb_text.png"
+)

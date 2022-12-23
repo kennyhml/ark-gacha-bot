@@ -1,4 +1,5 @@
-from pytesseract import pytesseract as tes # type: ignore[import]
+
+from pytesseract import pytesseract as tes  # type: ignore[import]
 
 from ark.exceptions import NoItemsDepositedError
 from ark.inventories.dedi_inventory import DedicatedStorageInventory
@@ -83,6 +84,7 @@ class TekDedicatedStorage(Structure):
 
         if not determine_amount:
             return None
+
         if not isinstance(items, list):
             items = [items]
 
@@ -95,6 +97,8 @@ class TekDedicatedStorage(Structure):
             for _ in range(5):
                 # get the amount of deposited items of the items we are depositing
                 amount = self.get_amount_deposited(item)
+                if amount:
+                    break
             break
         else:
             # never got to an item that was deposited, no amount can be determined

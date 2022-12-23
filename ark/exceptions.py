@@ -64,7 +64,7 @@ class DinoNotMountedError(Exception):
 class NoBedPassedError(Exception):
     """Raised when no bed was passed"""
 
-class InvalidGrindingStatusError(Exception):
+class InvalidStatusError(Exception):
     """Raised when no status case matched."""
 
 class InvalidNpyPathError(Exception):

@@ -1,5 +1,6 @@
 import math
 from typing import Optional
+from hypothesis import target
 
 import pyautogui as pg  # type: ignore[import]
 
@@ -74,7 +75,9 @@ class PlayerInventory(Inventory):
             if c > 20:
                 raise InventoryNotAccessibleError(f"Failed to open {self._name}!")
 
-    def transfer_amount(self, item: Item, amount: int) -> None:
+    def transfer_amount(
+        self, item: Item, amount: int, target_inventory: Optional[Inventory] = None
+    ) -> None:
         """Transfers the amount of the given item into the target inventory.
         After each transfer, a check on the amount is made that may cancel the transfers if
         the OCR'd amount is in a valid range.
@@ -97,16 +100,26 @@ class PlayerInventory(Inventory):
             (int(math.ceil(amount / 100.0)) * 100 / item.stack_size) / 6 * 2
         )
 
+        count_by_stacks = (amount / item.stack_size) < 40
+        if count_by_stacks and target_inventory:
+            target_inventory.search_for(item)
+
+        transferred = 0
         # transfer the items
         for _ in range(total_transfers):
             for pos in [(167 + (i * 95), 282) for i in range(6)]:
                 pg.moveTo(pos)
                 pg.press("t")
+                self.sleep(0.2)
 
-                # OCR the total amount transferred, None if undetermined
-                transferred = self.get_amount_transferred(item, "rm")
-                if not transferred:
-                    continue
+                if count_by_stacks and target_inventory:
+                    transferred = target_inventory.count_item(item) * item.stack_size
+
+                else:
+                    # OCR the total amount transferred, None if undetermined
+                    transferred = self.get_amount_transferred(item, "rm")
+                    if not transferred:
+                        continue
 
                 # if the amount of items we transferred makes sense we can cancel
                 if amount <= transferred <= amount + 3000:

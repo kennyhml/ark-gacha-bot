@@ -378,6 +378,12 @@ class Player(ArkBot):
         self.sleep(0.5)
         self.popcorn_bag()
 
+    def popcorn_items(self, iterations: int) -> None:
+        for _ in range(iterations):
+            for slot in [(168, 280), (258, 280), (348, 277)]:
+                pg.moveTo(slot)
+                pg.press(self.keybinds.drop)
+
     def do_drop_script(self, item: Item, target_inventory: Inventory, slot=2):
         """Does the item drop script for the given item in the given structure.
         Used to empty heavy items out of structures that are not dedis. Player
@@ -414,10 +420,7 @@ class Player(ArkBot):
 
             target_inventory.click_transfer_all()
             self.sleep(0.3)
-            for _ in range(3):
-                for slot in [(168, 280), (258, 280), (348, 277)]:
-                    pg.moveTo(slot)
-                    pg.press(self.keybinds.drop)
+            self.popcorn_items(3)
 
         self.inventory.close()
         self.pick_up_bag()

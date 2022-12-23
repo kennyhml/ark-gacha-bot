@@ -6,8 +6,9 @@ import time
 from dataclasses import dataclass
 
 from discord import Embed   # type: ignore[import]
-from ark import Console
-from ark import PELLET, Y_TRAP, Item, TribeLog
+from ark.console import Console
+from ark import PELLET, Y_TRAP, Item
+from ark.tribelog import TribeLog
 from ark.entities import Dinosaur, Player
 from bot.stations import Station, StationData, StationStatistics
 

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from discord import Embed  # type: ignore[import]
 
-from ark import TribeLog
+from ark.tribelog import TribeLog
 from ark.beds import BedMap
 from ark.entities import Player
 from ark.items import MEJOBERRY, Item
@@ -39,6 +39,10 @@ class BerryFeedStation(FeedStation):
         super().__init__(station_data, player, tribelog)
         self.bed_map = BedMap()
         self.crop_plot = Structure("Tek Crop Plot", "tek_crop_plot")
+
+    def is_ready(self) -> bool:
+        return False
+
 
     def do_crop_plots(self) -> None:
         """Does the crop plot stack, finishes facing the last stack"""

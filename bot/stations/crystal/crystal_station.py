@@ -30,6 +30,7 @@ from ark.entities.player import Player
 from ark.structures import structure
 from ark.structures.structure import Structure
 from ark.tribelog import TribeLog
+from bot.stations.arb.arb_station import ARBStation
 from bot.stations.grinding.grinding_station import GrindingStation
 from bot.stations.station import Station, StationData, StationStatistics
 from bot.stations.ytrap.ytrap_station import YTrapStation
@@ -79,6 +80,7 @@ class CrystalStation(Station):
         tribelog: TribeLog,
         grinding_station: GrindingStation,
         ytrap_station: YTrapStation,
+        arb_station: ARBStation,
         stryder_depositing: bool,
     ) -> None:
 
@@ -87,6 +89,8 @@ class CrystalStation(Station):
         self.player = player
         self.grinding_station = grinding_station
         self.ytrap_station = ytrap_station
+        self.arb_station = arb_station
+
         self.current_bed = 0
         self._stryder_depositing = stryder_depositing
         self._first_pickup = True
@@ -134,6 +138,7 @@ class CrystalStation(Station):
                 )
             else:
                 resources_deposited = self.deposit_into_stryder()
+                self.arb_station.add_wood(resources_deposited[FUNGAL_WOOD])
 
             # put items into vault
             vault_full = self.deposit_items()
@@ -169,7 +174,7 @@ class CrystalStation(Station):
             self.player.inventory.search_for(item)
             self.player.sleep(0.3)
             stacks = self.player.inventory.count_item(item)
-            profits[item] = stacks * item.stack_size
+            profits[item] = int((stacks * item.stack_size) - (0.5 * item.stack_size))
             self.player.inventory.click_transfer_all()
         self.stryder.inventory.close()
 

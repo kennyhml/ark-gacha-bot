@@ -5,7 +5,7 @@ from datetime import datetime
 import numpy as np
 from discord import Embed  # type: ignore[import]
 
-from ark import TribeLog
+from ark.tribelog import TribeLog
 from ark.beds import BedMap
 from ark.entities import Dinosaur, Player
 from ark.exceptions import InventoryNotAccessibleError

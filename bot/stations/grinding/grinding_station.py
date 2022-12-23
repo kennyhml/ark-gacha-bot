@@ -4,23 +4,22 @@ from itertools import cycle
 from math import floor
 from typing import Iterable
 
-from discord import Embed # type: ignore[import]
-from PIL import Image # type: ignore[import] 
-from pytesseract import pytesseract as tes # type: ignore[import]
+from discord import Embed  # type: ignore[import]
+from PIL import Image  # type: ignore[import]
+from pytesseract import pytesseract as tes  # type: ignore[import]
 
-from ark import TribeLog
 from ark.beds import BedMap
 from ark.entities import Dinosaur, Player
 from ark.exceptions import (DedisNotDetermined, InvalidStationError,
                             NoItemsAddedError)
 from ark.items import *
 from ark.structures import Grinder, Structure, TekDedicatedStorage
+from ark.tribelog import TribeLog
 from ark.window import ArkWindow
 from bot.stations import Station, StationData
 from bot.stations.grinding.stations import Stations
 from bot.stations.grinding.status import Status
 from bot.stations.station import StationStatistics
-
 
 GRINDER_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/f/fe/Industrial_Grinder.png/revision/latest/scale-to-width-down/228?cb=20160728174054"
 EXOMEK_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/6/6d/Unassembled_Exo-Mek_%28Genesis_Part_2%29.png/revision/latest/scale-to-width-down/228?cb=20210603184626"
@@ -534,6 +533,13 @@ class GrindingStation(Station):
         self.turn_to(Stations.from_item(item))
         self.dedi.inventory.open()
         self.dedi.inventory.click_transfer_all()
+
+        if item in [PASTE, SILICA_PEARL]:
+            self.player.inventory.select_first_slot()
+            for _ in range(3):
+                self.player.press("t")
+                self.player.sleep(0.5)
+
         self.dedi.inventory.close()
         self.player.sleep(1)
 

@@ -23,6 +23,7 @@ from bot.stations import (
     StationData,
     YTrapStation,
 )
+from bot.stations.arb.arb_station import ARBStation
 from bot.unstucking import UnstuckHandler
 
 DISCORD_AVATAR = "https://i.kym-cdn.com/entries/icons/facebook/000/022/293/Bloodyshadow_rolled_user_shutupandsleepwith_i_m_bisexual_let_s_work_from__a48265eae6a474904cdc2cae9f184aad.jpg"
@@ -69,6 +70,11 @@ class GachaBot:
             npy_path="temp/last_berry_harvest.npy",
         )
 
+        arb_data = StationData(
+            interval=0,
+            beds=self.create_arb_bed(),
+        )
+
         # create grinding station first so we can pass it to YTrapStation,
         # so it can set it to ready when the vaults are full.
         grinding_station = GrindingStation(
@@ -77,6 +83,7 @@ class GachaBot:
             self.tribelogs,
         )
         ytrap_station = YTrapStation(ytrap_data, self.player, self.tribelogs)
+        arb_station = ARBStation(arb_data, self.player, self.tribelogs)
 
         # create the list of stations in desired priority order
         return [
@@ -87,6 +94,7 @@ class GachaBot:
                 self.tribelogs,
                 grinding_station,
                 ytrap_station,
+                arb_station,
                 self.tower_settings.stryder_depositing,
             ),
             grinding_station,
@@ -204,6 +212,19 @@ class GachaBot:
         Returns a `Bed` object.
         """
         return [Bed("grinding", tuple(self.tower_settings.bed_position))]
+
+    def create_arb_bed(self) -> list[Bed]:
+        """Creates the arb bed objects using the given prefix and the defined
+        amount of beds, using leading nulls.
+
+        Returns a list of `Bed` objects.
+        """
+        return [
+            Bed(
+                f"arb_craft",
+                tuple(self.tower_settings.bed_position),
+            )
+        ]
 
     def create_berry_beds(self) -> list[Bed]:
         """Creates the berry bed objects using the given prefix and the defined

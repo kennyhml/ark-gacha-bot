@@ -3,7 +3,7 @@ dedi inventory
 """
 
 
-from pytesseract import pytesseract as tes # type: ignore[import]
+from pytesseract import pytesseract as tes  # type: ignore[import]
 from ark.exceptions import NoItemsDepositedError
 from ark.inventories.inventory import Inventory
 from ark.items import Item
@@ -41,3 +41,11 @@ class DedicatedStorageInventory(Inventory):
             if c > max_time:
                 return False
         return True
+
+    def withdraw_stacks(self, stacks: int) -> None:
+        for _ in range(stacks):
+            self.click_at(966, 660)
+
+    def withdraw_one(self, amount: int) -> None:
+        for _ in range(amount):
+            self.click_at(962, 766)
