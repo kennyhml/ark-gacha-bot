@@ -97,6 +97,13 @@ class ARBStation(Station):
     def status(self, status: Status) -> None:
         self._status = status
 
+    def spawn(self) -> None:
+        bed_map = BedMap()
+        bed_map.travel_to(self.station_data.beds[0])
+        self.tribelog.check_tribelogs()
+        self.player.await_spawned()
+        self.player.sleep(10)
+
     def add_wood(self, wood: int) -> None:
         """Called when wood is added to the dedi via the stryder on the
         crystal station. Once more than 29700 wood has been added the
