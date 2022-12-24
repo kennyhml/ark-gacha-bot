@@ -1,6 +1,5 @@
 import math
 from typing import Optional
-from hypothesis import target
 
 import pyautogui as pg  # type: ignore[import]
 
