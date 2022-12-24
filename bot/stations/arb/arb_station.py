@@ -450,9 +450,9 @@ class ARBStation(Station):
 
         # open the exo mek, search for ARB
         self.exo_mek.inventory.open()
-        self.player.inventory.transfer_amount(METAL_INGOT, 5000, self.exo_mek.inventory)
+        self.player.inventory.transfer_amount(METAL_INGOT, 5400, self.exo_mek.inventory)
         self.exo_mek.inventory.open_craft()
-        self.exo_mek.inventory.search_for("advanced")
+        self.exo_mek.inventory.search_for("advanced rifle")
 
         # craft 1k on each bp
         for slot in [(1292 + (i * 95), 296) for i in range(5)]:
