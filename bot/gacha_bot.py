@@ -100,6 +100,7 @@ class GachaBot:
             grinding_station,
             MeatFeedStation(meat_data, self.player, self.tribelogs),
             BerryFeedStation(berry_data, self.player, self.tribelogs),
+            arb_station,
             ytrap_station,
         ]
 
