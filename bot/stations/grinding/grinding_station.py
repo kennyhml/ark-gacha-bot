@@ -535,6 +535,7 @@ class GrindingStation(Station):
         self.dedi.inventory.click_transfer_all()
 
         if item in [PASTE, SILICA_PEARL]:
+            self.player.inventory.search_for(item)
             self.player.inventory.select_first_slot()
             for _ in range(3):
                 self.player.press("t")
@@ -977,8 +978,10 @@ class GrindingStation(Station):
         `NoItemsDepositedError` up to 3 times when failing to deposit the
         remaining items by resyncing to the bed and trying again.
         """
-        for item in [PASTE, ELECTRONICS, METAL_INGOT]:
-            self.put_item_into_exo_mek(item, self.session_cost[item])
+
+        self.put_item_into_exo_mek(PASTE, self.session_cost[PASTE])
+        self.put_item_into_exo_mek(METAL_INGOT, self.session_cost[METAL_INGOT] - self.electronics_to_craft)
+        self.put_item_into_exo_mek(ELECTRONICS, self.session_cost[ELECTRONICS] + self.electronics_to_craft)
 
     def clear_up_exo_mek(self) -> None:
         """Clears the exo mek after a crafting session."""

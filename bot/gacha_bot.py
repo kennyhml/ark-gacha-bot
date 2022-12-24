@@ -6,8 +6,8 @@ from threading import Thread
 from dacite import from_dict
 from discord import Embed, File, RequestsWebhookAdapter, Webhook  # type: ignore[import]
 
-from ark.beds import Bed, TekPod
-from ark.entities import Player, stryder
+from ark.beds import Bed
+from ark.entities import Player
 from ark.server import Server
 from ark.tribelog import TribeLog
 from ark.window import ArkWindow
@@ -49,7 +49,7 @@ class GachaBot:
         ytrap station comes last (if no other station was ready).
 
         Each of the stations follows the `Station` abstract base class
-        and behave very similar.
+        and behave similar.
         """
         # create all the station data, seperately to the station itself to
         # allow for more readability and easier adjustments.
