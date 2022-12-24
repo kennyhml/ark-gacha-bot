@@ -1,12 +1,7 @@
 """
 dedi inventory
 """
-
-
-from pytesseract import pytesseract as tes  # type: ignore[import]
-from ark.exceptions import NoItemsDepositedError
 from ark.inventories.inventory import Inventory
-from ark.items import Item
 
 
 class DedicatedStorageInventory(Inventory):

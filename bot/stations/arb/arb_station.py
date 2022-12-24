@@ -219,8 +219,8 @@ class ARBStation(Station):
     def charcoal_ready(self) -> bool:
         """Checks if 2h 45min have passed since filling the forges"""
         time_diff = datetime.now() - self._started_cooking_wood
-        print((165 * 60) - time_diff.total_seconds(), "seconds left on wood cooking...")
-        return time_diff.total_seconds() > (165 * 60)
+        print((170 * 60) - time_diff.total_seconds(), "seconds left on wood cooking...")
+        return time_diff.total_seconds() > (170 * 60)
 
     def go_over_chembenches(self) -> list[tuple[Callable, int]]:
         """Returns a list of actions to go over the chembenches"""
@@ -316,9 +316,10 @@ class ARBStation(Station):
             self.forge.inventory.close()
 
             for _ in range(right_turns):
-                self.player.turn_90_degrees("left")
+                self.player.turn_90_degrees("left", delay=1)
             right_turns = 0
 
+            self.player.sleep(1)
             # deposit charcoal
             self.dedi.attempt_deposit(CHARCOAL, False)
 
@@ -344,7 +345,7 @@ class ARBStation(Station):
             for _ in range(3):
                 self.player.turn_90_degrees("right", delay=1)
                 self.forge.inventory.open()
-                self.transfer_gasoline(11)
+                self.transfer_gasoline(9)
                 self.player.inventory.transfer_all(self.forge.inventory, FUNGAL_WOOD)
                 self.forge.turn_on()
                 self.forge.inventory.close()
@@ -545,6 +546,8 @@ class ARBStation(Station):
         we there is 50 slots left once slot 51 is free."""
         self.chembench.inventory.select_first_slot()
         pyautogui.scroll(-700)
+        self.player.sleep(1)
+
         i = 0
         while self.chembench.inventory.locate_template(
             SPARKPOWDER.inventory_icon, region=(1420, 783, 110, 110), confidence=0.8

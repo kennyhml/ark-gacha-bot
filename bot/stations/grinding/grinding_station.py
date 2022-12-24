@@ -553,7 +553,7 @@ class GrindingStation(Station):
             self.player.pick_up_bag()
             self.exo_mek.inventory.open()
 
-        self.player.inventory.transfer_amount(item, amount)
+        self.player.inventory.transfer_amount(item, amount, self.exo_mek.inventory)
         self.exo_mek.inventory.close()
 
         # put remaining resources back into dedi
@@ -990,7 +990,7 @@ class GrindingStation(Station):
         try:
             # clean up the remaining mats from exo mek
             self.turn_to(Stations.EXO_MEK)
-            self.player.do_drop_script(METAL_INGOT, self.exo_mek.inventory)
+            self.player.do_drop_script(METAL_INGOT, self.exo_mek.inventory, slot=1)
             self.player.turn_y_by(-163)
             self.deposit(METAL_INGOT)
             

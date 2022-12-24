@@ -225,7 +225,7 @@ class Inventory(ArkBot):
         """OCRs the amount transferred into the inventory by checking for the
         amount on the lefthand side of the screen."""
         # prepare the image
-        for _ in range(30):
+        for _ in range(10):
             roi = self.get_transferred_frame(item, mode)
             if roi:
                 break

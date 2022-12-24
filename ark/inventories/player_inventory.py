@@ -107,6 +107,9 @@ class PlayerInventory(Inventory):
         transferred = 0
         # transfer the items
         for _ in range(total_transfers):
+            if not self.has_item(item):
+                return
+                
             for pos in [(167 + (i * 95), 282) for i in range(6)]:
                 pg.moveTo(pos)
                 pg.press("t")
