@@ -631,7 +631,7 @@ class ARBStation(Station):
         # put away the remaining charcoal
         if transfer_mats:
             self.dedi.attempt_deposit(CHARCOAL, False)
-            self.access_gasoline("take")
+            self.access_gasoline("deposit")
 
     def craft_gunpowder(self) -> tuple[Embed, ArbStatistics]:
         """Empties the forges, then spawns at the crafting bed, distributes
