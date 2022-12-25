@@ -160,7 +160,7 @@ class Player(ArkBot):
         self.sleep(0.5)
         for _ in range(3):
             self.turn_90_degrees()
-            self.do_precise_crop_plot_stack(item, refill_pellets, precise)
+            self.do_precise_crop_plot_stack(item, refill_pellets, precise=precise)
         self.turn_90_degrees()
         self.sleep(0.2)
 
