@@ -361,12 +361,12 @@ SIMPLE_PISTOL = Item(
     name="Simple Pistol",
     search_name="simple",
     stack_size=1,
-    inventory_icon="templates/simple_pistol.png",
+    inventory_icon="templates/inventory_simple_pistol.png",
 )
 
 SWORD = Item(
     name="Sword",
     search_name="sword",
     stack_size=1,
-    inventory_icon="templates/sword.png",
+    inventory_icon="templates/inventory_sword.png",
 )
