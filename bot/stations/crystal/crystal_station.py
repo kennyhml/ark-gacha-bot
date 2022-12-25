@@ -37,7 +37,7 @@ from bot.stations.ytrap.ytrap_station import YTrapStation
 
 CRYSTAL_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/c3/Gacha_Crystal_%28Extinction%29.png/revision/latest?cb=20181108100408"
 DUST_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b1/Element_Dust.png/revision/latest/scale-to-width-down/228?cb=20181107161643"
-DROP_ITEMS = ["primitive"]
+DROP_ITEMS = ["primitive", "ramshackle"]
 
 
 @dataclass
@@ -361,7 +361,7 @@ class CrystalStation(Station):
                 self.player.sleep(0.3)
 
             # transfer all the grinding items
-            for keep_item in ["riot", "ass", "fab", "miner", "pump"]:
+            for keep_item in ["riot", "rifle", "miner", "pistol", "pump", "sword"]:
                 self.player.inventory.transfer_all(vault.inventory, keep_item)
                 self.player.sleep(0.2)
             vault_full = vault.inventory.is_full()

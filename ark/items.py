@@ -8,6 +8,7 @@ Items objects can be created here if they are needed in multiple modules,
 or in their needed module directly.
 """
 from dataclasses import dataclass
+from inspect import stack
 from pickletools import stackslice
 from typing import Optional
 
@@ -56,7 +57,7 @@ Y_TRAP = Item(
     stack_size=10,
     inventory_icon="templates/inventory_ytrap.png",
     added_text="templates/y_trap_added.png",
-    added_icon="templates/plant_species_y_trap.png"
+    added_icon="templates/plant_species_y_trap.png",
 )
 
 PELLET = Item(
@@ -135,7 +136,7 @@ METAL_INGOT = Item(
     stack_size=300,
     inventory_icon="templates/inventory_metal_ingot.png",
     added_icon="templates/ingot_icon.png",
-    added_text="templates/ingot_text.png"
+    added_text="templates/ingot_text.png",
 )
 
 FABRICATED_SNIPER = Item(
@@ -200,7 +201,7 @@ STONE = Item(
     stack_size=100,
     inventory_icon="templates/inventory_stone.png",
     added_icon="templates/stone_icon.png",
-    added_text="templates/stone_text.png"
+    added_text="templates/stone_text.png",
 )
 
 FUNGAL_WOOD = Item(
@@ -216,7 +217,7 @@ PASTE = Item(
     stack_size=100,
     inventory_icon="templates/inventory_paste.png",
     added_icon="templates/paste_icon.png",
-    added_text="templates/paste_text.png"
+    added_text="templates/paste_text.png",
 )
 
 SILICA_PEARL = Item(
@@ -225,8 +226,7 @@ SILICA_PEARL = Item(
     stack_size=100,
     inventory_icon="templates/inventory_silica_pearl.png",
     added_icon="templates/pearls_icon.png",
-    added_text="templates/pearls_text.png"
-
+    added_text="templates/pearls_text.png",
 )
 
 ELECTRONICS = Item(
@@ -235,7 +235,7 @@ ELECTRONICS = Item(
     stack_size=100,
     inventory_icon="templates/inventory_electronics.png",
     added_icon="templates/electronics_icon.png",
-    added_text="templates/electronics_text.png"
+    added_text="templates/electronics_text.png",
 )
 
 HIDE = Item(
@@ -314,33 +314,29 @@ GASOLINE = Item(
     name="Gasoline",
     search_name="gasoline",
     stack_size=100,
-    inventory_icon="templates/inventory_gasoline.png"
-
-
+    inventory_icon="templates/inventory_gasoline.png",
 )
 
 CHARCOAL = Item(
     name="Charcoal",
     search_name="coal",
     stack_size=100,
-    inventory_icon="templates/inventory_charcoal.png"
-
+    inventory_icon="templates/inventory_charcoal.png",
 )
 
 SPARKPOWDER = Item(
     name="Sparkpowder",
     search_name="spark",
     stack_size=100,
-    inventory_icon="templates/inventory_sparkpowder.png"
+    inventory_icon="templates/inventory_sparkpowder.png",
 )
-
 
 
 GUNPOWDER = Item(
     name="Gunpowder",
     search_name="gunpowder",
     stack_size=100,
-    inventory_icon="templates/inventory_gunpowder.png"
+    inventory_icon="templates/inventory_gunpowder.png",
 )
 
 ARB = Item(
@@ -349,5 +345,28 @@ ARB = Item(
     stack_size=100,
     inventory_icon="templates/inventory_arb.png",
     added_icon="templates/arb_icon.png",
-    added_text="templates/arb_text.png"
+    added_text="templates/arb_text.png",
+)
+
+
+LONGNECK = Item(
+    name="Longneck",
+    search_name="longneck",
+    stack_size=1,
+    inventory_icon="templates/inventory_longneck.png",
+)
+
+
+SIMPLE_PISTOL = Item(
+    name="Simple Pistol",
+    search_name="simple",
+    stack_size=1,
+    inventory_icon="templates/simple_pistol.png",
+)
+
+SWORD = Item(
+    name="Sword",
+    search_name="sword",
+    stack_size=1,
+    inventory_icon="templates/sword.png",
 )

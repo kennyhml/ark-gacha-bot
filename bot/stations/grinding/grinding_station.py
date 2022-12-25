@@ -10,8 +10,7 @@ from pytesseract import pytesseract as tes  # type: ignore[import]
 
 from ark.beds import BedMap
 from ark.entities import Dinosaur, Player
-from ark.exceptions import (DedisNotDetermined, InvalidStationError,
-                            NoItemsAddedError)
+from ark.exceptions import DedisNotDetermined, InvalidStationError, NoItemsAddedError
 from ark.items import *
 from ark.structures import Grinder, Structure, TekDedicatedStorage
 from ark.tribelog import TribeLog
@@ -251,7 +250,15 @@ class GrindingStation(Station):
         deposited into the dedi. After grinding all weapons, the ingots will be
         taken and deposited.
         """
-        weapons = [FABRICATED_PISTOL, FABRICATED_SNIPER, ASSAULT_RIFLE, PUMPGUN]
+        weapons = [
+            FABRICATED_PISTOL,
+            FABRICATED_SNIPER,
+            ASSAULT_RIFLE,
+            PUMPGUN,
+            LONGNECK,
+            SIMPLE_PISTOL,
+            SWORD,
+        ]
 
         for weapon in weapons:
             # continue with next item if no item was found
@@ -980,8 +987,16 @@ class GrindingStation(Station):
         """
 
         self.put_item_into_exo_mek(PASTE, self.session_cost[PASTE])
-        self.put_item_into_exo_mek(METAL_INGOT, self.session_cost[METAL_INGOT] - self.electronics_to_craft)
-        self.put_item_into_exo_mek(ELECTRONICS, self.session_cost[ELECTRONICS] + self.electronics_to_craft)
+
+        # subtract the amount of ingots used to craft electronics
+        self.put_item_into_exo_mek(
+            METAL_INGOT, self.session_cost[METAL_INGOT] - self.electronics_to_craft
+        )
+
+        # add the amount of electronics crafted to determine the total stacks
+        self.put_item_into_exo_mek(
+            ELECTRONICS, self.session_cost[ELECTRONICS] + self.electronics_to_craft
+        )
 
     def clear_up_exo_mek(self) -> None:
         """Clears the exo mek after a crafting session."""
@@ -996,7 +1011,7 @@ class GrindingStation(Station):
             self.player.do_drop_script(METAL_INGOT, self.exo_mek.inventory, slot=1)
             self.player.turn_y_by(-163)
             self.deposit(METAL_INGOT)
-            
+
         except NoItemsAddedError:
             print("Failed to take metal from the exo mek!")
             self.exo_mek.inventory.close()
@@ -1083,7 +1098,7 @@ class GrindingStation(Station):
         if self.electronics_crafted >= self.electronics_to_craft:
             self.status = Status.AWAITING_CRAFT
         self.player.empty_inventory()
-        
+
         time_taken = round(time.time() - start)
         stats = GrindingStatistics(time_taken, False, {ELECTRONICS: to_craft})
 

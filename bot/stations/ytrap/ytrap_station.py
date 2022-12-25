@@ -5,7 +5,7 @@ Contains all classes relevant to run ytrap stations on the gacha tower.
 import time
 from dataclasses import dataclass
 
-from discord import Embed   # type: ignore[import]
+from discord import Embed  # type: ignore[import]
 from ark.console import Console
 from ark import PELLET, Y_TRAP, Item
 from ark.tribelog import TribeLog
@@ -44,7 +44,7 @@ class YTrapStation(Station):
     """
 
     current_lap: int = 0
-    refill_lap: bool = True
+    refill_lap: bool = False
 
     def __init__(
         self, station_data: StationData, player: Player, tribelog: TribeLog
@@ -54,7 +54,7 @@ class YTrapStation(Station):
         self.tribelog = tribelog
         self.current_bed = 0
         self.total_ytraps_deposited = 0
-
+        self.last_refilled_pellets = time.time()
         self.gacha = Dinosaur("Gacha", "gacha")
 
     def complete(self) -> tuple[Embed, YTrapStatistics]:
@@ -85,7 +85,8 @@ class YTrapStation(Station):
                 self.take_pellets_from_gacha()
 
             # empty all the crop plots, load the gacha with the ytraps
-            self.player.do_precise_crop_plots(Y_TRAP, self.refill_lap)
+            self.player.do_precise_crop_plots(Y_TRAP, self.refill_lap, self.refill_lap)
+
             added_traps = self.load_gacha()
 
             # create the statistics for better data management
@@ -96,20 +97,23 @@ class YTrapStation(Station):
             )
             self.total_ytraps_deposited += added_traps
             return self.create_embed(stats), stats
-            
+
         finally:
             self.check_lap_finished()
 
-    def set_gamma(self)-> None:
+    def set_gamma(self) -> None:
         """Sets gamma to 5"""
         console = Console()
         console.set_gamma("5")
 
     def check_refill_lap(self) -> None:
-        """Check if we need to initiate a refill lap. True if a new lap has just 
+        """Check if we need to initiate a refill lap. True if a new lap has just
         started and more than 8 hours have passed since the last refill lap.
         """
-        if not self.current_bed and (time.time() - self.last_refilled_pellets) > 28800:
+        if (
+            not self.current_bed
+            and (time.time() - self.last_refilled_pellets) > 24 * 3600
+        ):
             self.refill_lap = True
 
     def check_lap_finished(self) -> None:

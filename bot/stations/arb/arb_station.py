@@ -352,7 +352,7 @@ class ARBStation(Station):
             for _ in range(3):
                 self.player.turn_90_degrees("right", delay=1)
                 self.forge.inventory.open()
-                self.transfer_gasoline(9)
+                self.transfer_gasoline(7)
                 self.player.inventory.transfer_all(self.forge.inventory, FUNGAL_WOOD)
                 self.forge.turn_on()
                 self.forge.inventory.close()
@@ -671,6 +671,7 @@ class ARBStation(Station):
                 if index >= i - 2:
                     self.chembench.inventory.open()
                     self.chembench.inventory.click_transfer_all()
+                    self.chembench.turn_off()
                     self.chembench.inventory.close()
                     self.player.sleep(0.3)
 

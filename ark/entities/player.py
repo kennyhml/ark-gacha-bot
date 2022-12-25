@@ -154,11 +154,13 @@ class Player(ArkBot):
             self.turn_90_degrees()
             self.name_crop_plot_stack()
 
-    def do_precise_crop_plots(self, item: Item, refill_pellets: bool = False) -> None:
+    def do_precise_crop_plots(
+        self, item: Item, refill_pellets: bool = False, precise: bool = True
+    ) -> None:
         self.sleep(0.5)
         for _ in range(3):
             self.turn_90_degrees()
-            self.do_precise_crop_plot_stack(item, refill_pellets)
+            self.do_precise_crop_plot_stack(item, refill_pellets, precise)
         self.turn_90_degrees()
         self.sleep(0.2)
 
@@ -234,13 +236,13 @@ class Player(ArkBot):
         for val in [-130, *[-17] * 5]:
             self.turn_y_by(val)
             self.sleep(0.3)
-            self.take_item_put_pellets(crop_plot, refill_pellets)
+            self.take_item_put_pellets(crop_plot, refill_pellets, Y_TRAP)
 
         # stand up and take the current one
         self.press(self.keybinds.crouch)
         for val in [50, -17, -17]:
             self.turn_y_by(val)
-            self.take_item_put_pellets(crop_plot, refill_pellets)
+            self.take_item_put_pellets(crop_plot, refill_pellets, Y_TRAP)
 
         # back to crouching
         self.press(self.keybinds.crouch)
@@ -250,6 +252,7 @@ class Player(ArkBot):
         item: Optional[Item] = None,
         refill_pellets: bool = False,
         max_index: int = 8,
+        precise: bool = True,
     ) -> None:
         """Empties the current stack of crop plot, but aims for a 100% access rate.
 
@@ -288,7 +291,8 @@ class Player(ArkBot):
 
             # check for the correct crop plot
             crop_plot.inventory.open()
-            self.adjust_for_crop_plot(crop_plot, expected_index)
+            if precise:
+                self.adjust_for_crop_plot(crop_plot, expected_index)
 
             # empty it
             self.take_item_put_pellets(crop_plot, refill_pellets, item)
