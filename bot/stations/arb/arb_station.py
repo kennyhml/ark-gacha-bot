@@ -682,7 +682,8 @@ class ARBStation(Station):
 
             # turn to the exo mek to put the gunpowder in
             for _ in range(2):
-                self.player.turn_90_degrees("right")
+                self.player.turn_90_degrees("right", delay=1)
+
             self.player.sleep(1)
             self.exo_mek.inventory.open()
             self.player.inventory.transfer_all(self.exo_mek.inventory, GUNPOWDER)
@@ -691,7 +692,7 @@ class ARBStation(Station):
 
             # return to the start
             for _ in range(2):
-                self.player.turn_90_degrees("left")
+                self.player.turn_90_degrees("left", delay=1)
 
         # drop all the items aside from charcoal (stone, flint, spark leftovers...)
         self.player.empty_inventory()

@@ -8,7 +8,7 @@ from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
 
-from ark.beds import BedMap
+from ark.beds import Bed, BedMap
 from ark.entities import Dinosaur, Player
 from ark.exceptions import DedisNotDetermined, InvalidStationError, NoItemsAddedError
 from ark.items import *
@@ -1103,3 +1103,52 @@ class GrindingStation(Station):
         stats = GrindingStatistics(time_taken, False, {ELECTRONICS: to_craft})
 
         return self.create_electronics_embed(time_taken), stats
+
+    def transfer_dedi_wall(self) -> None:
+        bed_map = BedMap()
+        transfer_bed = Bed("grindingtransfer", self.station_data.beds[0].coords)
+        bed_map.travel_to(transfer_bed)
+        self.tribelog.check_tribelogs()
+        self.player.await_spawned()
+
+        for i in range(2):
+
+            # transfer pearls and paste
+            self.player.turn_x_by(-90, delay=0.5)
+            if i != 0:
+                self.player.turn_y_by(50, delay=0.5)
+
+            self.dedi.inventory.open()
+            self.dedi.inventory.click_transfer_all()
+            self.dedi.inventory.close()
+
+            for _ in range(2):
+                self.player.turn_x_by(90, delay=0.5)
+            self.dedi.attempt_deposit(SILICA_PEARL, False)
+            self.player.turn_x_by(-90, delay=0.5)
+
+            if i != 0:
+                self.player.turn_y_by(-50, delay=0.5)
+            
+
+        self.player.turn_x_by(-160, delay=0.5)
+        
+        # take electronics
+        self.dedi.inventory.open()
+        self.dedi.inventory.click_transfer_all()
+        self.dedi.inventory.close()
+
+        # take metal
+        self.player.turn_y_by(50)
+        self.dedi.inventory.open()
+        self.dedi.inventory.click_transfer_all()
+        self.dedi.inventory.close()
+
+        for _ in range(2):
+            self.player.turn_x_by(160, delay=0.5)
+
+        self.dedi.attempt_deposit(METAL_INGOT, False)
+        self.player.turn_y_by(-50, delay=0.5)
+        self.dedi.attempt_deposit(ELECTRONICS, False)
+
+

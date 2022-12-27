@@ -125,15 +125,17 @@ class Player(ArkBot):
             self.sleep(0.05)
         self.sleep(0.3)
 
-    def turn_y_by(self, amount) -> None:
+    def turn_y_by(self, amount: int, delay: int | float = 0.1) -> None:
         """Turns the players' y-axis by the given amount"""
         self.check_status()
         input.moveRel(0, amount, 0, None, False, False, True)
-
-    def turn_x_by(self, amount) -> None:
+        self.sleep(delay)
+        
+    def turn_x_by(self, amount: int, delay: int | float = 0.1) -> None:
         """Turns the players' x-axis by the given amount"""
         self.check_status()
         input.moveRel(amount, 0, 0, None, False, False, True)
+        self.sleep(delay)
 
     def do_crop_plots(self, refill_pellets: bool = False) -> None:
         """Empties all stacks of crop plots
