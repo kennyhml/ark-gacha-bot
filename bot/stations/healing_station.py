@@ -1,7 +1,7 @@
-from dataclasses import dataclass
-from discord import Embed  # type: ignore[import]
-
 import time
+from dataclasses import dataclass
+
+from discord import Embed  # type: ignore[import]
 
 from ark.beds import TekPod
 from ark.entities.player import Player

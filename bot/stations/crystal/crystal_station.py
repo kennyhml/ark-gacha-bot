@@ -39,7 +39,6 @@ CRYSTAL_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia
 DUST_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b1/Element_Dust.png/revision/latest/scale-to-width-down/228?cb=20181107161643"
 DROP_ITEMS = ["primitive", "ramshackle"]
 
-
 @dataclass
 class CrystalStatistics:
     """Represents the stations statistics as dataclass.

@@ -1,9 +1,6 @@
 """
 Ark API module representing the tribelog in ark.
 Using tesseract OCR and discord webhooks to inform the user when getting raided.
-
-As tesseract tends to be fairly inaccurate, `CONTENTS_MAPPING` hashmap contains common
-mistakes and the respective correct version.
 """
 
 import logging
@@ -11,14 +8,16 @@ from dataclasses import dataclass
 from datetime import datetime
 from threading import Thread
 
-import cv2 as cv    # type: ignore[import]
+import cv2 as cv  # type: ignore[import]
 import discord  # type: ignore[import]
 import numpy as np
-from mss.screenshot import ScreenShot#   type: ignore[import]
-from PIL import Image   # type: ignore[import]
+from mss.screenshot import ScreenShot  # type: ignore[import]
+from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
 
 from ark.exceptions import LogsNotOpenedError
+from ark.tribelog.config import (CONTENTS_MAPPING, DAYTIME_MAPPING,
+                                 DENOISE_MAPPING, EVENT_MAPPING, INGORED_TERMS)
 from bot.ark_bot import ArkBot
 
 # configure logging file, helps debugging why certain stuff didnt get posted
@@ -30,141 +29,6 @@ logging.basicConfig(
     filemode="w",
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
-
-# common tesseract mistakes to account for in any tribelog messages
-CONTENTS_MAPPING = {
-    "{": "(",
-    "}": ")",
-    "[": "(",
-    "]": ")",
-    "((": "(",
-    "))": ")",
-    "Owll": "Owl)",
-    "\n": " ",
-    "!!": "!",
-    "Lvi": "Lvl",
-    "Lyi": "Lvl",
-    "Gaby": "Baby",
-    "destroved": "destroyed",
-    "destroyedl": "destroyed!",
-    "destroyedl!": "destroyed!",
-    "destrayed!": "destroyed!",
-    "destraved": "destroyed",
-    "Giaanotosaurus": "Giganotosaurus",
-    "Giganotosaurusl": "Giganotosaurus)",
-    "Giganotosaurusi": "Giganotosaurus)",
-    "Large Gear Trap": "Large Bear Trap",
-    "C4 Charae": "C4 Charge",
-    "C4 Charce": "C4 Charge",
-    "C4& Charae": "C4 Charge",
-    "C4 Charace": "C4 Charge",
-    "C4 Chareae": "C4 Charge",
-    "(Pin Coded!": "(Pin Coded)",
-    "(Pin Codedl": "(Pin Coded)",
-    "tExo": "(Exo",
-    "”": "''",
-    "“": "'",
-    '"': "'",
-    "‘": "'",
-    "’": "'",
-    "''": "'",
-    "hiled": "killed",
-    "hilied": "killed",
-    "Dcorframe": "Doorframe",
-    "Ccorframe": "Doorframe",
-    "Doaorframe": "Doorframe",
-    "Doarframe": "Doorframe",
-    "Ceilina": "Ceiling",
-    "Ficor": "Floor",
-    "iTek Turret!": "(Tek Turret)",
-    "iTek Turret": "(Tek Turret",
-    " Tek Turreti": " (Tek Turret)",
-    "(Tek Turret!": "(Tek Turret)",
-    " Tek Turret)": " (Tek Turret)",
-    "fCarbonemvsl": "(Carbonemys)",
-    "Carbonemvs": "Carbonemys",
-    "(Carbonemysl!": "(Carbonemys)!",
-    "iCarbonemysl": "(Carbonemys)",
-    "iCarbonemysi": "(Carbonemys)",
-    "(Shadowmane!": "(Shadowmane)!",
-    "Desmadus": "Desmodus",
-    "Desmoadus": "Desmodus",
-    "(€lonel": "[CLONE]",
-    "Liahtnina": "Lightning",
-    "tLightning": "(Lightning",
-    "Wvvern": "Wyvern",
-    "Wyvern!": "Wyvern!)",
-    "fLi": "(Li",
-    "ernl": "ern)",
-    "Fiardhawk": "Fjordhawk",
-    "fF": "(F",
-    "wki": "wk)",
-    "iTek": "(Tek",
-    "iTribe": "(Tribe",
-    "i!": ")!",
-    "saurus!": "saurus)!",
-    "(Fin": "(Pin",
-    "Caded": "Coded",
-    "Codedl": "Coded)",
-    "Daeedon": "Daeodon",
-    "Daeodon!": "Daeodon)",
-    "Heavv": "Heavy",
-    "fHeavy": "(Heavy",
-    "Astradelphis": "Astrodelphis",
-    "Astredelphis": "Astrodelphis",
-    "fAstra": "(Astra",
-    "Astrodelphisi": "Astrodelphis)",
-    "Vetonasaur": "Velonasaur",
-    "saurl": "saur)",
-    "Preranodon": "Pteranodon",
-    "Preranodon!": "Pteranodon)",
-    "iDesmodus": "(Desmodus",
-    "R - ": "R-",
-    "R- ": "R-",
-    "R -": "R-",
-    "IR-": "(R-",
-    "iTribe": "Tribe",
-    "i(": "(",
-    "!)": ")",
-    "fExo": "(Exo",
-    "Exo-Mete": "Exo-Mek",
-    "Exo-Met": "Exo-Mek",
-}
-
-# RGB to denoise with if the templates are located in the tribelog message
-DENOISE_MAPPING: dict[tuple[int, int, int], str | list] = {
-    (255, 0, 0): [
-        "templates/tribelog_red_your.png",
-        "templates/tribelog_enemy_destroyed.png",
-    ],
-    (208, 3, 211): "templates/tribelog_purple_your.png",
-    (158, 76, 76): "templates/tribelog_sensor.png",
-}
-
-# Denoise RGB indicating a certain tribelog event
-EVENT_MAPPING = {
-    (255, 0, 0): "Something destroyed!",
-    (208, 3, 211): "Something killed!",
-    (158, 76, 76): "Tek Sensor triggered!",
-}
-
-# common mistakes to replace in the daytime OCR
-DAYTIME_MAPPING = {
-    "|": "",
-    "I": "1",
-    "v": "y",
-    "O": "0",
-    ".": ",",
-    "l": "1",
-    "i": "1",
-    "S": "5",
-    "B": "8",
-    "Dayy": "Day",
-    ";": "",
-}
-
-# terms to prevent alerting for
-INGORED_TERMS = ["C4", "Baby"]
 
 
 @dataclass
@@ -215,8 +79,15 @@ class TribeLog(ArkBot):
         return "".join(f"{log_message}\n" for log_message in self._tribe_log)
 
     def check_tribelogs(self) -> None:
-        """Main tribelog check call. Opens and closes the tribelog to grab a screenshot of it,
-        then starts a thread processing the Image."""
+        """Main tribelog check call.
+        Opens and closes the tribelog to grab a screenshot of it, then starts
+        a thread processing the Image.
+
+        CAREFUL: Do not confuse with `update_tribelogs` which will not take
+        a new snapshot and does not run threaded.
+
+        Read `update_tribelogs` docstring for more information about the tribelogging.
+        """
         logging.log(logging.INFO, "Updating tribelogs...")
         self.open()
         self.grab_screen(self.LOG_REGION, "temp/tribelog.png")
@@ -323,8 +194,18 @@ class TribeLog(ArkBot):
         return any(term in content for term in INGORED_TERMS)
 
     def update_tribelogs(self) -> None:
-        """Returns a list of tuples containing the daytime as string and the
-        corresponding log message image.
+        """Runs a scan on the tribelog snapshot to find all 'Day' occurrences, then
+        extracts the message and checks for contents. Adds new messages to the tribelog
+        and posts them as alert if they are relevant.
+
+        Alerts will @ you if:
+        - A pincoded structure was destroyed
+        - A tek sensor was triggerd by an enemy SURVIVOR
+        - A dinosaur or structure containing the string "ALERT" was destroyed / killed
+        - 3 or more new alerts within 1 log update occurred
+
+        TODO:
+        Split it up into different tasks, its responsible for too much.
         """
         # sort days from top to bottom by y-coordinate so we can get the message frame
         log_img = Image.open("temp/tribelog.png")
@@ -354,7 +235,7 @@ class TribeLog(ArkBot):
                     continue
             except:
                 continue
-            
+
             logging.log(logging.INFO, f"Found {day} with contents {content}")
             print(f"Found {day} with contents {content}")
 
@@ -527,7 +408,7 @@ class TribeLog(ArkBot):
             event = "Something killed!"
         elif "destroyed" in filtered_res:
             event = "Something destroyed!"
-    
+
         return event, filtered_res
 
     def get_denoise_rgb(

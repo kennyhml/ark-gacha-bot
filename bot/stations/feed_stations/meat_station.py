@@ -2,17 +2,16 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 
-import numpy as np
 from discord import Embed  # type: ignore[import]
 
-from ark.tribelog import TribeLog
 from ark.beds import BedMap
 from ark.entities import Dinosaur, Player
 from ark.exceptions import InventoryNotAccessibleError
 from ark.items import PELLET, RAW_MEAT, SPOILED_MEAT, Item
 from ark.structures.structure import Structure
+from ark.tribelog import TribeLog
 from bot.stations.feed_stations import FeedStation
-from bot.stations.station import StationStatistics, StationData
+from bot.stations.station import StationData, StationStatistics
 
 RAW_MEAT_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/e/e9/Raw_Meat.png/revision/latest/scale-to-width-down/228?cb=20150704150605"
 TRANSFER_PELLETS_BACK = 15
@@ -35,8 +34,14 @@ class MeatFeedStation(FeedStation):
 
     Parameters:
     -----------
-    bed :class:`Bed`:
-        The bed object of the station to travel to
+    station_data :class:`StationData`:
+        A dataclass containing data about the station
+
+    player :class:`Player`:
+        The player controller handle responsible for movement
+
+    tribelog :class:`Tribelog`:
+        The tribelog object to check tribelogs when spawning
 
     """
 
@@ -52,18 +57,9 @@ class MeatFeedStation(FeedStation):
         """Checks whether the station is ready by comparing the station
         datas' interval to the last emptied datetime.
         """
-        return False
+        # currently disabled because honestly nobody raises anyways
+        return False 
         
-        time_diff = datetime.now() - self.station_data.last_completed
-        print(f"Time passed since last meat completion: {time_diff}")
-
-        if (time_diff.total_seconds() / 60) > 30:
-            print("Meat should be regenerated.")
-        print(
-            f"{round((self.station_data.interval - time_diff.total_seconds()) / 60)} minutes left until next harvest."
-        )
-        return time_diff.total_seconds() > self.station_data.interval
-
     def travel_to_trough_bed(self) -> None:
         """Travels to the stations secondary bed, that has a `b` in front
         of its numeric suffix created by the beds `create_secondary` method.

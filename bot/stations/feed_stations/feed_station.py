@@ -1,4 +1,4 @@
-import os
+
 from datetime import datetime
 from typing import Callable, Optional, Sequence
 
@@ -6,7 +6,7 @@ import numpy as np
 
 from ark.entities import Dinosaur, Player
 from ark.exceptions import InvalidNpyPathError, NoItemsLeftError
-from ark.items import PELLET, SPOILED_MEAT, Item
+from ark.items import PELLET, Item
 from ark.structures.structure import Structure
 from ark.tribelog import TribeLog
 from bot.stations.station import Station, StationData
@@ -41,8 +41,7 @@ class FeedStation(Station):
         self.check_npy_path()
 
     def check_npy_path(self) -> None:
-        path = self.station_data.npy_path
-        if not path:
+        if not self.station_data.npy_path:
             raise InvalidNpyPathError(f"A feed Station needs a '.npy' file path!")
 
     def gacha_is_right(self) -> bool:
