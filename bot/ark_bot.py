@@ -7,25 +7,21 @@ import os
 import time
 from typing import Optional
 
-import discord  # type: ignore[import]
 import pyautogui as pg  # type: ignore[import]
 import pydirectinput as input  # type: ignore[import]
 from dacite import from_dict
+from discord import Webhook, File # type: ignore[import]
 from pynput.mouse import Button, Controller  # type: ignore[import]
+
+from ark.exceptions import BotTerminatedError
 
 mouse = Controller()
 from ark.window import ArkWindow
-from bot.settings import DiscordSettings, Keybinds
+from bot.settings import Keybinds
 
 pg.FAILSAFE = False
 
-
-class TerminatedException(Exception):
-    """Raised when the script is terminated by keypress"""
-
-
 class ArkBot(ArkWindow):
-
     """Main ArkBot class
     ----------------------------
     Responsible for handling mouse movements and clicks in the ark window
@@ -39,8 +35,9 @@ class ArkBot(ArkWindow):
     running :class:`bool`:
         Whether the bot is currently running or not
 
+    TODO:
+    Find a better way to control the runtime state to reduce cohesion.
     """
-
     __version__ = "1.3.3"
     paused = False
     running = True
@@ -57,12 +54,12 @@ class ArkBot(ArkWindow):
         while paused by user."""
 
         if not self.running:
-            raise TerminatedException
+            raise BotTerminatedError
 
         while self.paused:
             time.sleep(0.1)
             if not self.running:
-                raise TerminatedException
+                raise BotTerminatedError
 
     def sleep(self, duration: int | float):
         """Sleeps the given duration.
@@ -148,38 +145,29 @@ class ArkBot(ArkWindow):
         command = "echo | set /p nul=" + text.strip() + "| clip"
         os.system(command)
 
-    def typewrite(self, message) -> None:
-        for c in message:
-            input.press(c, _pause=False)
-
     def send_to_discord(
         self,
-        webhook: discord.Webhook,
+        webhook: Webhook,
         message: str,
         file: str = "",
         name: str = "Ark Bot",
         avatar: str = default_avatar,
     ) -> None:
         """Sends the given message to the given webhook.
-
         Parameters:
         -----------
         webhook :class:`Webhook`:
             A discord.Webhook object to send the message to
-
         message :class:`str`:
             The message to send to discord
-
         name :class:`str`:
             The appearance name of the webhook bot, Ark Bot by default
-
         avatar :class:`str`:
             The url of the "profile picture" of the webhook bot, Ark Logo by default
-
         """
         try:
             if file:
-                file = discord.File(file)
+                file = File(file)
             webhook.send(content=message, username=name, avatar_url=avatar, file=file)
         except Exception as e:
             print(f"Failed to post to discord!\n{e}")

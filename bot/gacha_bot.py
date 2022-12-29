@@ -1,28 +1,26 @@
+"""
+Gacha bot main handle file. Imagine this as the point where everything sort of comes together.
+"""
 import json
 import time
 from datetime import datetime
 from threading import Thread
 
 from dacite import from_dict
-from discord import Embed, File, RequestsWebhookAdapter, Webhook  # type: ignore[import]
+from discord import (Embed, File,  # type: ignore[import]
+                     RequestsWebhookAdapter, Webhook)
 
 from ark.beds import Bed
 from ark.entities import Player
+from ark.exceptions import BotTerminatedError
 from ark.server import Server
 from ark.tribelog import TribeLog
 from ark.window import ArkWindow
-from bot.ark_bot import ArkBot, TerminatedException
+from bot.ark_bot import ArkBot
 from bot.settings import DiscordSettings, TowerSettings
-from bot.stations import (
-    BerryFeedStation,
-    CrystalStation,
-    GrindingStation,
-    HealingStation,
-    MeatFeedStation,
-    Station,
-    StationData,
-    YTrapStation,
-)
+from bot.stations import (BerryFeedStation, CrystalStation, GrindingStation,
+                          HealingStation, MeatFeedStation, Station,
+                          StationData, YTrapStation)
 from bot.stations.arb.arb_station import ARBStation
 from bot.unstucking import UnstuckHandler
 
@@ -31,6 +29,23 @@ WHIP_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/im
 
 
 class GachaBot:
+    """Main gacha bot control class. Loads up the settings and creates
+    the stations. The basic concept is to have a list of `Station` objects
+    which follow the `Station` Abstract Base Class and thus behave the same
+    on a very low level.
+
+    This allows to simply iterate over the stations and foreach check if it
+    ready. The order they are arranged in can be seen as a priority order.
+
+    TODO:
+    Could probably clean up alot of the bed and station creation code.
+    It also came to my mind that it may be smarter to let each "Bed" be its
+    own station (e.g we dont have 1 ytrap station with 24 beds but 24 ytrap
+    stations). It would remove the need of some attributes on some of them
+    and be a little more intuitive, using `itertools.cycle` to turn the ytrap
+    stations into an iterable would make it pretty easy too.
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self.load_settings()
@@ -40,8 +55,6 @@ class GachaBot:
         self.tribelogs = TribeLog(self.alert_webhook, self.logs_webhook)
         self.player = Player()
         self.stations = self.create_stations()
-
-        return
 
     def create_stations(self) -> list[Station]:
         """Creates a list of the stations the gacha bot will run, the stations
@@ -119,12 +132,8 @@ class GachaBot:
         self.inform_error(task, error)
         unstucking = UnstuckHandler(self.server)
         if not unstucking.attempt_fix():
-            print("Failed to unstuck...")
+            # unstucking faled
             ArkBot.running = False
-
-        print("Unstucking successful!")
-        if unstucking.reconnected:
-            self.last_emptied = time.time()
 
     def inform_started(self) -> None:
         """Sends a message to discord that the bot has been started"""
@@ -167,7 +176,7 @@ class GachaBot:
             )
         except Exception as e:
             print(f"Failed to create one or more webhooks!\n{e}")
-            raise TerminatedException
+            raise BotTerminatedError
 
     def create_seed_beds(self) -> list[Bed]:
         """Creates the seed bed names using the given prefix and the defined
@@ -271,7 +280,7 @@ class GachaBot:
 
         Raises:
         -----------
-        `TerminatedException` if the configs could not be loaded.
+        `BotTerminatedError` if the configs could not be loaded.
 
         """
         try:
@@ -284,13 +293,6 @@ class GachaBot:
         except Exception as e:
             print(f"CRITICAL! Error loading settings!\n{e}")
             ArkBot.running = False
-
-    def get_dust_per_hour(self) -> int:
-        return 0
-        # total_minutes = round(time.time() - self._session_start) / 60
-        # return f"{round((self._total_dust_made / total_minutes) * 60):_}".replace(
-        #     "_", " "
-        # )
 
     def inform_error(self, task: Station, exception: Exception) -> None:
         """Posts an image of the current screenshot alongside current
@@ -331,68 +333,29 @@ class GachaBot:
             },
         ).start()
 
-    #    def inform_lap_finished(self) -> None:
-    #
-    #        station_avg = round(sum(self._station_times) / len(self._station_times))
-    #
-    #        dust = f"{self._total_dust_made:_}".replace("_", " ")
-    #        pearls = f"{self._total_bps_made:_}".replace("_", " ")
-    #
-    #        embed = discord.Embed(
-    #            type="rich",
-    #            title=f"Finished Lap {self._current_lap}!",
-    #            color=0x4285D7,
-    #        )
-    #        embed.add_field(
-    #            name="Time taken:ㅤㅤㅤ", value=self.format_time_taken(self.lap_started)
-    #        )
-    #
-    #        embed.add_field(
-    #            name="Total runtime:ㅤㅤㅤ",
-    #            value=self.format_time_taken(self._session_start),
-    #        )
-    #        embed.add_field(name="\u200b", value="\u200b")
-    #
-    #        embed.add_field(
-    #            name="Average station time:ㅤㅤㅤ",
-    #            value=f"{station_avg} seconds",
-    #        )
-    #
-    #        embed.add_field(
-    #            name="Dust per hour:ㅤㅤㅤ",
-    #            value=f"{self.get_dust_per_hour()}",
-    #        )
-    #        embed.add_field(name="\u200b", value="\u200b")
-    #
-    #        embed.add_field(name="Total Element Dust:", value=f"{dust}")
-    #        embed.add_field(name="Total Black Pearls:", value=f"{pearls}")
-    #        embed.add_field(name="\u200b", value="\u200b")
-    #
-    #        embed.set_thumbnail(url=self.dust_avatar)
-    #        embed.set_footer(text="Ling Ling on top!")
-    #
-    #        self.info_webhook.send(
-    #            avatar_url=self.discord_avatar,
-    #            embed=embed,
-    #            username="Ling Ling",
-    #        )
-
     def do_next_task(self) -> None:
-        """Gacha bot main call method, runs the next task in line.
+        """Gacha bots main call method, call repeatedly to keep doing the
+        next task in line. Iterates over each station in our station list
+        and checks for the first one to be ready.
 
-        Current tasks are: Healing, crafting electronics, picking crystals,
-        gacha feeding and grinding gear where healing wont block the next task.
+        TODO:
+        Statistic parsing
         """
 
         try:
             for station in self.stations:
-                if station.is_ready():
-                    embed, stats = station.complete()
-                    self.info_webhook.send(embed=embed)
-                    print(stats)
-                    return
+                if not station.is_ready():
+                    continue
 
-        except TerminatedException:
+                embed, _ = station.complete()
+                self.info_webhook.send(
+                    avatar_url=DISCORD_AVATAR,
+                    embed=embed,
+                    username="Ling Ling",
+                )
+                return
+
+        except BotTerminatedError:
             pass
 
         except Exception as e:

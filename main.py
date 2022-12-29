@@ -9,11 +9,7 @@ from bot.gacha_bot import GachaBot
 
 def main():
     bot = GachaBot()
-
-    bot.stations[2].transfer_dedi_wall()
-
-    quit()
-
+    
     while ArkBot.running:
         bot.do_next_task()
 

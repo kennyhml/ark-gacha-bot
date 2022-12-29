@@ -10,18 +10,8 @@ from ark.beds import Bed, BedMap
 from ark.entities.dinosaurs import Dinosaur
 from ark.entities.player import Player
 from ark.exceptions import InvalidStatusError
-from ark.items import (
-    ARB,
-    CHARCOAL,
-    FLINT,
-    FUNGAL_WOOD,
-    GASOLINE,
-    GUNPOWDER,
-    METAL_INGOT,
-    SPARKPOWDER,
-    STONE,
-    Item,
-)
+from ark.items import (ARB, CHARCOAL, FLINT, FUNGAL_WOOD, GASOLINE, GUNPOWDER,
+                       METAL_INGOT, SPARKPOWDER, STONE, Item)
 from ark.structures.chemistry_bench import ChemistryBench
 from ark.structures.dedi_storage import TekDedicatedStorage
 from ark.structures.industrial_forge import IndustrialForge
@@ -47,7 +37,15 @@ class ArbStatistics:
 
 
 class ARBStation(Station):
-    """Represents a plant Y-Trap station. Follows the `Station` protocol.
+    """Represents the ARB Station, follows the `Station` abstract base class.
+    Is set ready whenever the wood at the forges hits near 30000, then (just like
+    the grinding station) it uses a `Status` enum to determine the next steps
+    until fully done, at which points it waits to get set ready again.
+
+    TODO:
+    Currently it waits 15 minutes for all the ARB to craft, could make the pickup
+    a seperate task, or do it at another time so that it can start cooking up
+    the next wood and sparkpowder while the ARB crafts.
 
     Parameters:
     -----------
@@ -98,6 +96,8 @@ class ARBStation(Station):
         self._status = status
 
     def spawn(self) -> None:
+        """Override spawn method to wait 10 seconds because spawning at the
+        dedi sometimes the stamina bar can be mistaken with a dedi."""
         bed_map = BedMap()
         bed_map.travel_to(self.station_data.beds[0])
         self.tribelog.check_tribelogs()
@@ -700,9 +700,9 @@ class ARBStation(Station):
     def craft_arb(self) -> tuple[Embed, ArbStatistics]:
         """Spawns at the crafting bed, empties the chembenches to put the
         gunpowder into the exomek, then crafts ARB inside the exo mek.
-        
+
         Returns an embed displaying the time taken and the statistics.
-        
+
         Upon finishing, the the status property is set to `WAITING_FOR_ARB`,
         and the `_started_crafting_arb` datetime is created to check when its
         finished.

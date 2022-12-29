@@ -54,9 +54,12 @@ class CrystalStatistics:
 class CrystalStation(Station):
     """Crystal Station handle.
     ------------------------------
-    Follows the `Station` Protocol and uses its default implementations.
-    Picks the crystals at the station, deposits the items and gacha gear,
-    then OCRs the profit
+    Follows the `Station` abstract base class and uses its default implementations.
+    Has two different use modes, regular dedi depositing and stryder depositing
+    where stryder depositing is required to run the ARB station and makes checking
+    amounts gained alot more accurate.
+
+    Additionally, the crystal station is responsible for setting other stations ready.
 
     Parameters:
     -----------
@@ -71,6 +74,9 @@ class CrystalStation(Station):
 
     grinding_station :class:`GrindingStation`:
         The grinding station object to set ready when the vault is capped
+
+    arb_station :class:`ARBStation`:
+        The arb station object to add the wood to
     """
 
     def __init__(
@@ -104,11 +110,10 @@ class CrystalStation(Station):
         self.stryder = Stryder()
 
     def is_ready(self) -> bool:
+        """Checks whether the station is ready or not"""
         if self.ytrap_station.total_ytraps_deposited < 2000:
             return False
-
-        time_diff = datetime.now() - self.station_data.last_completed
-        return time_diff.total_seconds() > self.station_data.interval
+        return super().is_ready()
 
     def complete(self) -> tuple[Embed, CrystalStatistics]:
         """Completes the crystal collection station of the given bed.
@@ -117,11 +122,6 @@ class CrystalStation(Station):
         puts away the items into the vault as configured by the user.
 
         Keeps track of the amounts it has deposited into dedis and returns them.
-
-        Parameters:
-        -----------
-        bed :class:`Bed`:
-            The crystal bed to spawn at
         """
         try:
             self.spawn()

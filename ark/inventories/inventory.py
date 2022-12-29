@@ -1,12 +1,8 @@
 """
 Ark API module representing inventories in ark.
-
 The `Inventory` parent class contains methods that make it easy to derive other inventories.
-
-The `PlayerInventory` class derives from the `Inventory` class, mainly checking the left side instead.
-
-All sub-classes in this module derive from the `Inventory` class.
 """
+
 import math
 import os
 from typing import Literal, Optional
@@ -35,6 +31,15 @@ class Inventory(ArkBot):
     action_wheel_img :class:`str`:
         The path to the action wheel image of the item
 
+    max_slots :class:`str`: [Optional]
+        An image path containing the image of the max capacity.
+
+    TODO:
+    Make an action wheel class, reduce coupling a good amount.
+
+    max_slots should be defined in a `Structure` rather than inventory
+    because shit like dinos doesnt have a max_slot so it doesnt make a
+    whole lot of sense despite being optional.
     """
 
     INVENTORY_REGION = (1235, 88, 184, 60)
@@ -56,28 +61,7 @@ class Inventory(ArkBot):
         self._action_wheel_img = action_wheel_img
         self._max_slots_img = max_slots
 
-    def is_open(self) -> bool:
-        """Checks if the inventory is open."""
-        return (
-            self.locate_template(
-                "templates/inventory.png", region=self.INVENTORY_REGION, confidence=0.8
-            )
-            is not None
-        )
 
-    def is_full(self) -> bool:
-        """Checks if the vault is full, raises an `AttributeError` if no
-        max slot image path was defined."""
-        if not self._max_slots_img:
-            raise AttributeError(
-                f"You need to define a 'max_slot_img' for '{self._name}' in order to use this method."
-            )
-        return (
-            self.locate_template(
-                self._max_slots_img, region=(1074, 500, 60, 23), confidence=0.9
-            )
-            is not None
-        )
 
     def click_drop_all(self) -> None:
         """Clicks the drop all button at the classes drop all position"""
@@ -96,30 +80,136 @@ class Inventory(ArkBot):
         self.click_at(self.INVENTORY_TAB, delay=0.3)
 
     def drop_all_items(self, item: Item | str) -> None:
+        """Searches for the given item and drops all of it"""
         self.search_for(item)
         self.click_drop_all()
 
     def select_first_slot(self) -> None:
+        """Moves to the first slot"""
         self.move_to(*self.FIRST_SLOT)
 
     def popcorn(self, item: Item) -> None:
+        """Searches for the given item and popcorns it until there is none left."""
         self.search_for(item)
         self.select_first_slot()
         while self.has_item(item):
             self.press("o")
 
-    def create_folder(self, name: str) -> None:
-        """Creates a folder in the inventory at the classes folder button"""
-        command = "echo | set /p nul=" + name.strip() + "| clip"
-        os.system(command)
+    def count_item(self, item: Item) -> int:
+        """Returns the amount of stacks of the given item located within the inventory."""
+        return len(
+            self.locate_all_template(
+                item.inventory_icon, region=self.ITEM_REGION, confidence=0.8
+            )
+        )
 
-        self.click_at(1585, 187)
-        self.sleep(0.3)
-        pg.hotkey("ctrl", "v", interval=0.2)
-        self.sleep(0.3)
-        self.click_at(961, 677)
-        self.sleep(0.5)
-        self.click("left")
+    def find_item(self, item: Item) -> tuple | None:
+        """Returns the position of the given item within the inventory."""
+        return self.locate_template(
+            item.inventory_icon, region=self.ITEM_REGION, confidence=0.8
+        )
+
+    def item_added(self) -> bool:
+        """Checks if an item was added by matching for the added template"""
+        return self.locate_template(
+            f"templates/added.png", region=self.ADDED_REGION, confidence=0.7
+        )
+
+    def is_open(self) -> bool:
+        """Checks if the inventory is open."""
+        return (
+            self.locate_template(
+                "templates/inventory.png", region=self.INVENTORY_REGION, confidence=0.8
+            )
+            is not None
+        )
+
+    def has_item(self, item: Item) -> bool:
+        """Checks if the player inventory has the passed item.
+        Beware that we grayscale the item to make it compatible
+        across qualities.
+
+        Parameters:
+        ------------
+        item :class:`Item`:
+            The item object of the item to check for
+
+        Returns whether the item is in the inventory or not.
+        """
+        return (
+            self.locate_template(
+                item.inventory_icon,
+                region=self.ITEM_REGION,
+                confidence=0.8,
+                grayscale=True,
+            )
+            is not None
+        )
+
+    def search_for(self, item: Item | str) -> None:
+        """Searches for a term in the target inventory using pyautogui typewrite"""
+        self.check_status()
+
+        # write the name into the search bar
+        if isinstance(item, str):
+            self.click_search()
+            pg.typewrite(item, interval=0.001)
+        else:
+            self.click_search(delete_prior=item.search_name != "trap")
+            pg.typewrite(item.search_name.lower(), interval=0.001)
+
+        # escape out of the searchbar so presing f closes the inventory
+        self.press("esc")
+
+    def take_all_items(self, item: Item) -> None:
+        """Searches the given item and takes all.
+
+        Parameters:
+        -----------
+        item :class:`Item`:
+            The item object to search for
+        """
+        # search for the item and hit take all
+        self.search_for(item)
+        self.click_transfer_all()
+
+    def take_one_item(self, item: Item, slot: int) -> None:
+        """Searches the given item and takes one.
+
+        Parameters:
+        -----------
+        item :class:`Item`:
+            The item object to search for
+
+        slot :class:`int`:
+            The slot to take from (in case the inventory has a folder)
+            either 1 or 2
+        """
+        # search for the item and hit take all
+        self.search_for(item)
+        self.sleep(0.2)
+
+        slots = {1: (1288, 285), 2: (1384, 281)}
+        self.move_to(*slots[slot])
+        pg.doubleClick(button="left", interval=0.2)
+
+    def craft(self, item: Item, amount: int) -> None:
+        """Crafts the given amount of the given item. Spams 'A' if
+        there is more than 50 to craft.
+        """
+        self.search_for(item)
+        self.click_at(1294, 290, delay=1)
+
+        if amount < 50:
+            for _ in range(amount):
+                self.press("e")
+                self.sleep(0.3)
+            return
+
+        for _ in range(math.ceil(amount / 100)):
+            self.press("a")
+            self.sleep(0.5)
+
 
     def get_slots(self) -> int:
         """Attempts to OCR the amount of slots occupied in the structure.
@@ -160,12 +250,31 @@ class Inventory(ArkBot):
 
         raise Exception("Index not determined")
 
-    def count_item(self, item: Item) -> int:
-        """Returns the amount of stacks of the given item located within the inventory."""
-        return len(
-            self.locate_all_template(
-                item.inventory_icon, region=self.ITEM_REGION, confidence=0.8
+    def create_folder(self, name: str) -> None:
+        """Creates a folder in the inventory at the classes folder button"""
+        command = "echo | set /p nul=" + name.strip() + "| clip"
+        os.system(command)
+
+        self.click_at(1585, 187)
+        self.sleep(0.3)
+        pg.hotkey("ctrl", "v", interval=0.2)
+        self.sleep(0.3)
+        self.click_at(961, 677)
+        self.sleep(0.5)
+        self.click("left")
+
+    def is_full(self) -> bool:
+        """Checks if the vault is full, raises an `AttributeError` if no
+        max slot image path was defined."""
+        if not self._max_slots_img:
+            raise AttributeError(
+                f"You need to define a 'max_slot_img' for '{self._name}' in order to use this method."
             )
+        return (
+            self.locate_template(
+                self._max_slots_img, region=(1074, 500, 60, 23), confidence=0.9
+            )
+            is not None
         )
 
     def receiving_remote_inventory(self) -> bool:
@@ -260,29 +369,6 @@ class Inventory(ArkBot):
 
         except:
             return 0
-
-    def has_item(self, item: Item) -> bool:
-        """Checks if the player inventory has the passed item.
-
-        Parameters:
-        ------------
-
-        item :class:`Item`:
-            The item object of the item to check for
-
-        Returns:
-        ------------
-        `True` if the item was found else `False`
-        """
-        return (
-            self.locate_template(
-                item.inventory_icon if isinstance(item, Item) else item,
-                region=self.ITEM_REGION,
-                confidence=0.8,
-                grayscale=True,
-            )
-            is not None
-        )
 
     def await_receiving_remove_inventory(self) -> None:
         """Waits until 'Receiving Remote Inventory' disappears.
@@ -408,59 +494,11 @@ class Inventory(ArkBot):
         input.press("a")
         input.keyUp("ctrl")
 
-    def search_for(self, item: Item | str) -> None:
-        """Searches for a term in the target inventory using pyautogui typewrite"""
-        self.check_status()
-
-        # write the name into the search bar
-        if isinstance(item, str):
-            self.click_search()
-            pg.typewrite(item, interval=0.001)
-        else:
-            self.click_search(delete_prior=item.search_name != "trap")
-            pg.typewrite(item.search_name.lower(), interval=0.001)
-
-        # escape out of the searchbar so presing f closes the inventory
-        self.press("esc")
-
     def delete_search(self) -> None:
+        """Deletes the search"""
         self.click_search(delete_prior=True)
         self.press("backspace")
         self.press("esc")
-
-    def take_all_items(self, item: Item) -> None:
-        """Searches the given item and takes all.
-
-        Parameters:
-        -----------
-        item :class:`Item`:
-            The item object to search for
-        """
-        # search for the item and hit take all
-        self.search_for(item)
-        self.click_transfer_all()
-
-    def take_one_item(self, item: Item, slot: int) -> None:
-        """Searches the given item and takes one.
-
-        Parameters:
-        -----------
-        item :class:`Item`:
-            The item object to search for
-
-        slot :class:`int`:
-            The slot to take from (in case the inventory has a folder)
-            either 1 or 2
-
-
-        """
-        # search for the item and hit take all
-        self.search_for(item)
-        self.sleep(0.2)
-
-        slots = {1: (1288, 285), 2: (1384, 281)}
-        self.move_to(*slots[slot])
-        pg.doubleClick(button="left", interval=0.2)
 
     def can_craft(self, item: Item) -> bool:
         """Checks if the given item can be crafted."""
@@ -470,20 +508,3 @@ class Inventory(ArkBot):
             self.locate_template(item.inventory_icon, self.ITEM_REGION, confidence=0.75)
             is not None
         )
-
-    def craft(self, item: Item, amount: int) -> None:
-        """Crafts the given amount of the given item. Spams 'A' if
-        there is more than 50 to craft.
-        """
-        self.search_for(item)
-        self.click_at(1294, 290, delay=1)
-
-        if amount < 50:
-            for _ in range(amount):
-                self.press("e")
-                self.sleep(0.3)
-            return
-
-        for _ in range(math.ceil(amount / 100)):
-            self.press("a")
-            self.sleep(0.5)

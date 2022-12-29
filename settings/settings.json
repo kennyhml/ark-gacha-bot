@@ -26,7 +26,7 @@
     "server_name": "47",
     "server_search": "s47",
     "pod_name": "Gacha Heal",
-    "webhook_alert": "aaa",
+    "webhook_alert": "",
     "webhook_gacha": "",
     "webhook_logs": ""
 }

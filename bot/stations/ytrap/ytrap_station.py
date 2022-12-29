@@ -28,7 +28,12 @@ class YTrapStatistics:
 
 
 class YTrapStation(Station):
-    """Represents a plant Y-Trap station. Follows the `Station` protocol.
+    """Represents a plant Y-Trap station, the most commonly executed station.
+    Like all other stations, it follows the `Station` abstract base class.
+
+    It keeps track of its current bed and increments it after completion, as
+    mentioned in the gacha bot class, it might be better to split these things
+    apart and create a ytrap station for each bed exclusively.
 
     Parameters:
     -----------
@@ -61,12 +66,6 @@ class YTrapStation(Station):
         """Completes the Y-Trap station. Travels to the gacha station,
         empties the crop plots and fills the gacha.
 
-        Parameters:
-        -----------
-        refill_pellets :class:`bool`:
-            Boolean flag to make ling ling take pellets from the gacha first,
-            to refill the crop plots while taking T-Traps.
-
         Returns:
         ----------
         A `discord.Embed` with the station statistics to post to discord and
@@ -85,8 +84,8 @@ class YTrapStation(Station):
                 self.take_pellets_from_gacha()
 
             # empty all the crop plots, load the gacha with the ytraps
+            # changed it so it only does the crop plot stack precisely on refill laps
             self.player.do_precise_crop_plots(Y_TRAP, self.refill_lap, self.refill_lap)
-
             added_traps = self.load_gacha()
 
             # create the statistics for better data management
@@ -99,6 +98,7 @@ class YTrapStation(Station):
             return self.create_embed(stats), stats
 
         finally:
+            # need to make sure we create our embed before we check this
             self.check_lap_finished()
 
     def set_gamma(self) -> None:
@@ -117,6 +117,8 @@ class YTrapStation(Station):
             self.refill_lap = True
 
     def check_lap_finished(self) -> None:
+        """Checks if we finished a lap, if we did and it was a refill lap
+        set the 'last refilled' timer."""
         if self.current_bed < len(self.station_data.beds) - 1:
             self.current_bed += 1
             return

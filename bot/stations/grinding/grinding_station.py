@@ -11,7 +11,7 @@ from pytesseract import pytesseract as tes  # type: ignore[import]
 from ark.beds import Bed, BedMap
 from ark.entities import Dinosaur, Player
 from ark.exceptions import DedisNotDetermined, InvalidStationError, NoItemsAddedError
-from ark.items import *
+from ark.items import *  # allow a wildcard import because we need ALOT of the items.
 from ark.structures import Grinder, Structure, TekDedicatedStorage
 from ark.tribelog import TribeLog
 from ark.window import ArkWindow
@@ -31,6 +31,7 @@ TURRET_COST = {PASTE: 200, ELECTRONICS: 270, METAL_INGOT: 540, POLYMER: 70}
 # map common mistakes in the dedi OCR
 DEDI_NUMBER_MAPPING = {"l": "1", "i": "1", "I": "1", "|": "1", "O": "0"}
 
+# the default mats we assume when the dedis could not be determined
 DEFAULT_MATS: dict[Item, int] = {
     SILICA_PEARL: 5211,
     PASTE: 2600,
@@ -53,11 +54,28 @@ class GrindingStatistics:
 
 
 class GrindingStation(Station):
-    """
-    Instance attributes:
-    ------------------
-    station_mapping :class:`dict` [CONSTANT]:
-        A map containing the turns for each station, to get around the station
+    """Represents the grinding station on the gacha bot.
+
+    The basic concept is to grind the gear from higher quality crystals into
+    material to then craft turrets. The station is set ready by the crystal
+    station when it notices the vault is full, until finished it then uses
+    a `Status` enum to control the tasks.
+
+    Parameters:
+    -----------
+    station_data :class:`StationData`:
+        A dataclass containing data about the station
+
+    player :class:`Player`:
+        The player controller handle responsible for movement
+
+    tribelog :class:`Tribelog`:
+        The tribelog object to check tribelogs when spawning
+
+    TODO:
+    Dont quite like the dependency creation, might want to switch to dependency
+    injection instead, feels pointless but its better practice.
+    Find a way to make it refill gasoline itself
     """
 
     def __init__(
@@ -70,6 +88,11 @@ class GrindingStation(Station):
         self.ready = False
         self.status = Status.WAITING_FOR_ITEMS
         self.current_station = "Gear Vault"
+        self.grinder = Grinder()
+        self.dedi = TekDedicatedStorage()
+        self.vault = Structure("Vault", "vault", "templates/vault_capped.png")
+        self.exo_mek = Dinosaur("Exo Mek", "exo_mek")
+        self.screen = ArkWindow()
         self.STATION_MAPPING: dict[str, tuple | list] = {
             "Grinder": (self.player.turn_x_by, -50),
             "Exo Mek": (self.player.turn_x_by, -110),
@@ -82,11 +105,6 @@ class GrindingStation(Station):
             "Paste": (self.player.turn_y_by, 40),
             "Gear Vault": [(self.player.turn_y_by, -40), (self.player.turn_x_by, -70)],
         }
-        self.grinder = Grinder()
-        self.dedi = TekDedicatedStorage()
-        self.vault = Structure("Vault", "vault", "templates/vault_capped.png")
-        self.exo_mek = Dinosaur("Exo Mek", "exo_mek")
-        self.screen = ArkWindow()
 
     @property
     def ready(self) -> bool:
@@ -120,8 +138,7 @@ class GrindingStation(Station):
         for multiple steps within the same instance.
         """
         if self.status == Status.WAITING_FOR_ITEMS:
-            # ready property set True by the crystal station if the vault
-            # is full
+            # ready property set by the crystal station if the vault is full
             return self._ready
 
         if self.status == Status.QUEUING_ELECTRONICS:
@@ -136,25 +153,15 @@ class GrindingStation(Station):
             f"Grinding Station failed to match current status '{self.status}'!"
         )
 
-    def create_embed(self, statistics: StationStatistics) -> Embed:
-        return Embed
-
     def complete(self) -> tuple[Embed, GrindingStatistics]:
-        """Completes the Y-Trap station. Travels to the gacha station,
-        empties the crop plots and fills the gacha.
-
-        Parameters:
-        -----------
-        refill_pellets :class:`bool`:
-            Boolean flag to make ling ling take pellets from the gacha first,
-            to refill the crop plots while taking T-Traps.
+        """Completes the current task at the grinding station.
 
         Returns:
         ----------
         A `discord.Embed` with the station statistics to post to discord and
-        the raw `YTrapStatistics` data object of the station run.
+        the raw `GrindingStatistics` data object of the station run.
         """
-        # check what status we are in
+        # check what status we are on
         if self.status == Status.WAITING_FOR_ITEMS:
             return self.grind_and_compute_crafting()
 
@@ -169,6 +176,8 @@ class GrindingStation(Station):
         )
 
     def grind_and_compute_crafting(self) -> tuple[Embed, GrindingStatistics]:
+        """Grinds the gear down, determines the amount of resources we have
+        and calculates the optimal crafting."""
         self.spawn()
         start = time.time()
 
@@ -853,7 +862,6 @@ class GrindingStation(Station):
         self.electronics_crafted = 0
         self.session_turrets = floor(lowest_1 + lowest_2)
         self.session_cost = cost
-
         print(
             f"Need to craft {self.electronics_to_craft} electronics for {self.session_turrets} Turrets"
         )
@@ -932,15 +940,18 @@ class GrindingStation(Station):
         # send to the webhook as Ling Ling
         return embed
 
-    def create_result_embed(self, result: int, time_taken: int) -> Embed:
-
+    def create_embed(self, statistics: StationStatistics) -> Embed:
+        """Creates the final embed displaying the time taken and the amount
+        of heavies that have been crafted."""
         embed = Embed(
             type="rich",
             title="Finished crafting!",
             color=0x133DE7,
         )
-        embed.add_field(name=f"Time taken:ㅤ", value=f"{time_taken} seconds")
-        embed.add_field(name="Heavies crafted:", value=result)
+        embed.add_field(name=f"Time taken:ㅤ", value=f"{statistics.time_taken} seconds")
+        embed.add_field(
+            name="Heavies crafted:", value=statistics.profit[HEAVY_AUTO_TURRET]
+        )
         embed.set_thumbnail(url=EXOMEK_AVATAR)
         embed.set_footer(text="Ling Ling on top!")
         return embed
@@ -950,11 +961,10 @@ class GrindingStation(Station):
         queue up."""
         try:
             time_diff = round(time.time() - self.last_crafted)
-            if time_diff > 120:
-                return True
-            print(f"{120 - time_diff} seconds left for electronics to finish...")
-            return False
+            return time_diff > 120
+
         except AttributeError:
+            # last_crafted is not yet set, so no electronics are queued
             return True
 
     def craft(self, item: Item, amount: int) -> None:
@@ -1061,7 +1071,7 @@ class GrindingStation(Station):
             stats = GrindingStatistics(
                 total_time, False, {HEAVY_AUTO_TURRET: turrets_crafted}
             )
-            return self.create_result_embed(turrets_crafted, total_time), stats
+            return self.create_embed(stats), stats
 
         finally:
             self.status = Status.WAITING_FOR_ITEMS
@@ -1105,6 +1115,12 @@ class GrindingStation(Station):
         return self.create_electronics_embed(time_taken), stats
 
     def transfer_dedi_wall(self) -> None:
+        """Spawns at the grindingtransfer bed and transfers the materials
+        left after crafting into the next dediwall, so that the ARB station
+        can use the metal and it does not clog up the grinding dedis.
+
+        Im sure theres a cleaner way to do this but it works.
+        """
         bed_map = BedMap()
         transfer_bed = Bed("grindingtransfer", self.station_data.beds[0].coords)
         bed_map.travel_to(transfer_bed)
@@ -1112,7 +1128,6 @@ class GrindingStation(Station):
         self.player.await_spawned()
 
         for i in range(2):
-
             # transfer pearls and paste
             self.player.turn_x_by(-90, delay=0.5)
             if i != 0:
@@ -1129,10 +1144,9 @@ class GrindingStation(Station):
 
             if i != 0:
                 self.player.turn_y_by(-50, delay=0.5)
-            
 
         self.player.turn_x_by(-160, delay=0.5)
-        
+
         # take electronics
         self.dedi.inventory.open()
         self.dedi.inventory.click_transfer_all()
@@ -1150,5 +1164,3 @@ class GrindingStation(Station):
         self.dedi.attempt_deposit(METAL_INGOT, False)
         self.player.turn_y_by(-50, delay=0.5)
         self.dedi.attempt_deposit(ELECTRONICS, False)
-
-

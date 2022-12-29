@@ -1,3 +1,6 @@
+"""
+Ark API module representing the players inventory.
+"""
 import math
 from typing import Optional
 
@@ -28,27 +31,6 @@ class PlayerInventory(Inventory):
 
     def __init__(self):
         super().__init__("Player", None)
-
-    def has_item(self, item: Item) -> bool:
-        """Checks if the inventory contains the given item."""
-        return (
-            self.locate_template(
-                item.inventory_icon, region=self.ITEM_REGION, confidence=0.8
-            )
-            is not None
-        )
-
-    def find_item(self, item: Item) -> tuple | None:
-        """Returns the position of the given item within the inventory."""
-        return self.locate_template(
-            item.inventory_icon, region=self.ITEM_REGION, confidence=0.8
-        )
-
-    def item_added(self) -> bool:
-        """Checks if an item was added by matching for the added template"""
-        return self.locate_template(
-            f"templates/added.png", region=self.ADDED_REGION, confidence=0.7
-        )
 
     def await_items_added(self) -> None:
         """Waits for items to be added to the inventory"""

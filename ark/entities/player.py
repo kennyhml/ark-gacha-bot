@@ -1,8 +1,10 @@
+"""
+Ark API module representing the player in ark.
+"""
 from typing import Optional
 
 import pyautogui as pg  # type: ignore[import]
 import pydirectinput as input  # type: ignore[import]
-from ark import inventories
 
 from ark.buffs import Buff, broken_bones, hungry, thirsty
 from ark.exceptions import PlayerDidntTravelError
@@ -13,6 +15,8 @@ from bot.ark_bot import ArkBot
 
 
 class Player(ArkBot):
+    """Represents the player in ark.
+    Contains methods related to the player has its own inventory attribute."""
 
     DEBUFF_REGION = (1270, 950, 610, 130)
     HP_BAR = (1882, 1022, 15, 50)
@@ -33,23 +37,31 @@ class Player(ArkBot):
         ]
 
     def pick_up(self) -> None:
+        """Picks up an item by pressing E"""
         self.press(self.keybinds.use)
 
     def pick_all(self) -> None:
+        """Picks all items by pressing F"""
         self.press(self.keybinds.target_inventory)
 
     def empty_inventory(self) -> None:
+        """Spams the hotbar and then drops all items in inventory to clear up
+        the inventory. Spamming the hotbar is important in case it has somehow
+        picked up a crystal, which goes into the hotbar.
+        """
         self.spam_hotbar()
         self.inventory.open()
         self.inventory.click_drop_all()
         self.inventory.close()
 
     def drop_all_items(self, item: Item) -> None:
+        """Opens the inventory and drops all on the specified item"""
         self.inventory.open()
         self.inventory.drop_all_items(item)
         self.inventory.close()
 
     def hide_hands(self) -> None:
+        """Looks up and down to hide the hands temporarily"""
         self.look_up_hard()
         self.sleep(0.2)
         self.look_down_hard()
@@ -64,6 +76,7 @@ class Player(ArkBot):
         pg.typewrite("".join(c for c in self.HOTBAR), interval=0.01)
 
     def set_hotbar(self) -> None:
+        """Sets the hotbar using shift left click on the crystals"""
         input.keyDown("shift")
         for _ in range(4):
             for slot in self.HOTBAR:
@@ -81,11 +94,8 @@ class Player(ArkBot):
         )
 
     def needs_recovery(self) -> bool:
-        for buff in [thirsty, hungry, broken_bones]:
-            if self.has_effect(buff):
-                print(f"Bad effect located: {buff.name}! Going to heal...")
-                return True
-        return False
+        """Checks if the player needs to recover"""
+        return any(self.has_effect(buff) for buff in [thirsty, hungry, broken_bones])
 
     def has_effect(self, buff: Buff) -> bool:
         """Checks if the player has the given buff"""
@@ -95,6 +105,8 @@ class Player(ArkBot):
         )
 
     def await_spawned(self) -> None:
+        """Waits for the player to spawn in, up to 50 seconds after which a
+        `PlayerDidntTravelError` is raised."""
         counter = 0
         while not self.is_spawned():
             self.sleep(0.5)
@@ -130,7 +142,7 @@ class Player(ArkBot):
         self.check_status()
         input.moveRel(0, amount, 0, None, False, False, True)
         self.sleep(delay)
-        
+
     def turn_x_by(self, amount: int, delay: int | float = 0.1) -> None:
         """Turns the players' x-axis by the given amount"""
         self.check_status()
@@ -138,9 +150,8 @@ class Player(ArkBot):
         self.sleep(delay)
 
     def do_crop_plots(self, refill_pellets: bool = False) -> None:
-        """Empties all stacks of crop plots
-        Starts facing the gacha, ends facing the gacha
-        """
+        """Empties all stacks of crop plots, starts facing the gacha, 
+        ends facing the gacha."""
         self.sleep(0.5)
         self.press(self.keybinds.crouch)
 
@@ -151,6 +162,7 @@ class Player(ArkBot):
         self.sleep(0.2)
 
     def name_crop_plots(self) -> None:
+        """Names the crop plots for you!"""
         self.sleep(0.5)
         for _ in range(3):
             self.turn_90_degrees()
@@ -159,6 +171,21 @@ class Player(ArkBot):
     def do_precise_crop_plots(
         self, item: Item, refill_pellets: bool = False, precise: bool = True
     ) -> None:
+        """Does the crop plot stack, used to always do them precisely, now the
+        flag can be changed, should probably rename the method and remove the
+        old one.
+        
+        Parameters:
+        ------------
+        item :class:`Item`:
+            The item to take out of the crop plots
+
+        refill_pellets :class:`bool`:
+            Whether to put pellets in or not
+
+        precise :class:`bool`:
+            Whether to aim for 100% access rate using folders
+        """
         self.sleep(0.5)
         for _ in range(3):
             self.turn_90_degrees()
