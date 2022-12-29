@@ -1,1 +1,7 @@
-settings
+settings/
+temp/
+logs/
+__pycache__
+test
+.vscode
+.mypy_cache
