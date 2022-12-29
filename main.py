@@ -9,10 +9,8 @@ from bot.gacha_bot import GachaBot
 
 def main():
     bot = GachaBot()
-    
     while ArkBot.running:
         bot.do_next_task()
-
 
 def on__key_press(key):
     """Connets inputs from listener thread to their corresponding function"""
@@ -25,7 +23,6 @@ def on__key_press(key):
 
             bot = Thread(target=main, daemon=True, name="Main bot Thread")
             bot.start()
-            bot.run
             
     elif key == keyboard.Key.f3:
         if ArkBot.running:

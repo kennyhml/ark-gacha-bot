@@ -47,7 +47,6 @@ class GachaBot:
     """
 
     def __init__(self) -> None:
-        super().__init__()
         self.load_settings()
         self.create_webhooks()
         self.server = self.create_server()
@@ -68,6 +67,8 @@ class GachaBot:
         # allow for more readability and easier adjustments.
         healing_data = StationData(interval=0, beds=self.create_healing_bed())
         ytrap_data = StationData(interval=0, beds=self.create_seed_beds())
+        arb_data = StationData(interval=0, beds=self.create_arb_bed())
+
         crystal_data = StationData(
             interval=self.tower_settings.crystal_interval,
             beds=self.create_crystal_bed(),
@@ -81,11 +82,6 @@ class GachaBot:
             interval=10 * 3600,
             beds=self.create_berry_beds(),
             npy_path="temp/last_berry_harvest.npy",
-        )
-
-        arb_data = StationData(
-            interval=0,
-            beds=self.create_arb_bed(),
         )
 
         # create grinding station first so we can pass it to YTrapStation,

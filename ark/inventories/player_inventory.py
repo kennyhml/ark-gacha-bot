@@ -60,8 +60,12 @@ class PlayerInventory(Inventory):
         self, item: Item, amount: int, target_inventory: Optional[Inventory] = None
     ) -> None:
         """Transfers the amount of the given item into the target inventory.
-        After each transfer, a check on the amount is made that may cancel the transfers if
-        the OCR'd amount is in a valid range.
+        If the amount divided by the item stacksize is greater than 40,
+        the amount transferred will be OCRd and validated, which is fairly accurate.
+
+        Else, after each transfer it checks how many stacks of the item are in the
+        target inventory and multiplies it by the item stacksize, which is very
+        accurate.
 
         Parameters:
         -----------
@@ -71,7 +75,13 @@ class PlayerInventory(Inventory):
         amount :class:`int`:
             The quantity of items to be transferred
 
-        TODO: Make it more precise for smaller amounts
+        target_inventory :class:`Inventory`: [Optional]
+            The inventory to transfer the items to
+
+        TODO:
+        Implement an algorithm to make it slow down as it approaches the desired
+        amount, which would be fairly easy as amount transferred increasing = delay
+        increasing, just need a linear function for it.
         """
         # make sure we dont transfer any other items
         self.search_for(item)
@@ -90,7 +100,7 @@ class PlayerInventory(Inventory):
         for _ in range(total_transfers):
             if not self.has_item(item):
                 return
-                
+
             for pos in [(167 + (i * 95), 282) for i in range(6)]:
                 pg.moveTo(pos)
                 pg.press("t")
@@ -98,7 +108,6 @@ class PlayerInventory(Inventory):
 
                 if count_by_stacks and target_inventory:
                     transferred = target_inventory.count_item(item) * item.stack_size
-
                 else:
                     # OCR the total amount transferred, None if undetermined
                     transferred = self.get_amount_transferred(item, "rm")
@@ -121,11 +130,8 @@ class PlayerInventory(Inventory):
             The item to search for
         """
         if not inventory.is_open():
-            print(
-                f"{inventory._name} could not be found!\n"
-                f'Theres no inventory to transfer "{item}" to!'
-            )
             return
+
         if item:
             self.search_for(item)
         self.click_transfer_all()
