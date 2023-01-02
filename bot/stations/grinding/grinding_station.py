@@ -550,13 +550,6 @@ class GrindingStation(Station):
         self.dedi.inventory.open()
         self.dedi.inventory.click_transfer_all()
 
-        if item in [PASTE, SILICA_PEARL]:
-            self.player.inventory.search_for(item)
-            self.player.inventory.select_first_slot()
-            for _ in range(3):
-                self.player.press("t")
-                self.player.sleep(0.5)
-
         self.dedi.inventory.close()
         self.player.sleep(1)
 

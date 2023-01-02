@@ -310,19 +310,6 @@ class CrystalStation(Station):
 
         # return to original position
         self.player.turn_x_by(40)
-
-        turns = {
-            120: self.player.turn_x_by,
-            -40: self.player.turn_y_by,
-            60: self.player.turn_x_by,
-            40: self.player.turn_y_by,
-        }
-        for val, func in turns.items():
-            func(val)
-            self.dedi.attempt_deposit(
-                [FLINT, STONE, FUNGAL_WOOD], determine_amount=False
-            )
-        self.player.turn_x_by(-180)
         return gains
 
     def need_to_access_top_vault(self) -> bool:
