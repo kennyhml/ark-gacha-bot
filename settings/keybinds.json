@@ -13,9 +13,9 @@
     "hotbar_8": "8",
     "hotbar_9": "9",
     "inventory": "tab",
+    "logs": "l",
     "prone": "mouse4",
     "target_inventory": "f",
     "toggle_hud": "h",
-    "logs": "l",
     "use": "e"
 }
