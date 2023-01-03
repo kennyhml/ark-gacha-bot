@@ -9,13 +9,13 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-import gui.Resources
+import gui.resources
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1054, 719)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget = QtWidgets.QWidget()
         self.centralwidget.setObjectName("centralwidget")
         self.TitleText = QtWidgets.QLabel(self.centralwidget)
         self.TitleText.setGeometry(QtCore.QRect(320, 20, 141, 51))
@@ -562,9 +562,9 @@ class Ui_MainWindow(object):
 "<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" vertical-align:sub;\">- The amount of resources transferred can be counted reliably </span></p>\n"
 "<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" vertical-align:sub;\">- You no longer need to empty any dedis, instead just have a huge wall near the collection point it gets teleported to </span></p>\n"
 "<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" vertical-align:sub;\">- You can teleport resources where other stations need them. Without this concept the ARB station would not be possible. </span></p>\n"
-"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" vertical-align:sub;\">  </span></p>\n"
+"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" vertical-align:sub;\">  </span></p>\n"
 "<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" vertical-align:sub;\">The only disadvantage that I could see is that it may be difficult to protect a stryder at open gacha tower spots such as lunar. </span></p>\n"
-"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" vertical-align:sub;\">  </span></p>\n"
+"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" vertical-align:sub;\">  </span></p>\n"
 "<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" vertical-align:sub;\">Note that enabling stryder depositing is required if you want to run the ARB station, because thats how the ARB station gets flint, stone and wood from the gachas. </span></p>\n"
 "<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" vertical-align:sub;\">Heres the build: Put gravestones to keep the player in the box, with a dedi in the middle. Whats inside the dedi doesnt matter, its just to keep the same concept of walking forward. The catwalk is needed to make the items drop above, but make sure to higher it so that you can actually walk below it. </span></p>\n"
 "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><img src=\":/png/StryderDepositingOne.png\" /></p>\n"
@@ -579,7 +579,7 @@ class Ui_MainWindow(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:15pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\',\'sans-serif\'; font-size:10pt;\"> The grinding station is the first feature added. It goes active when the crystal collection gear vault is completely filled. The bot will then travel to a bed called grinding. You cannot change this prefix and you do not need to. Note that you WILL need to place multiple of them inside each other though. For each grinding session you can expect about 12-15 heavies.</span> </p>\n"
+"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\',\'sans-serif\'; font-size:10pt;\"> The grinding station is the first feature added. It goes active when the crystal collection gear vault is completely filled. The bot will then travel to a bed called grinding. You cannot change this prefix and you do not need to. Note that you WILL need to place multiple of them inside each other though. For each grinding session you can expect about 12-15 heavies.</span> </p>\n"
 "<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\',\'sans-serif\'; font-size:10pt;\">Heres the build:</span> </p>\n"
 "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><img src=\":/png/GrindingStationONe.png\" /></p>\n"
 "<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\',\'sans-serif\'; font-size:10pt;\">Note that the beds need to face the gear vault from the collection point and all need to be in the same location.</span> </p>\n"

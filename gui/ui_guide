@@ -1,4 +1,0 @@
-Command to generate gachaUI.py file: pyuic5 gui/gachaUI.ui -o gui/gachaUI.py
-Command to generate Resources.py file: pyrcc5 gui/Resources.qrc -o gui/Resources.py
-
-After generating gachaUI.py file, remove "import Resources_rc" from bottom and put "import gui.Resources" at top of file. pyqt5 is unable to properly import resources file on its own

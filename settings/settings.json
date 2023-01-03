@@ -1,6 +1,9 @@
 {
     "account_name": "Ling Ling",
-    "bed_position": [782, 183],
+    "bed_position": [
+        782,
+        183
+    ],
     "crystal_prefix": "crystal",
     "crystal_beds": 1,
     "seed_prefix": "seed",
@@ -14,7 +17,6 @@
     "drop_items": [
         "prim"
     ],
-    "game_launcher": "Steam",
     "keep_items": [
         "riot",
         "fab",
@@ -23,6 +25,7 @@
         "mining",
         "wood"
     ],
+    "game_launcher": "Steam",
     "server_name": "47",
     "server_search": "s47",
     "pod_name": "Gacha Heal",
