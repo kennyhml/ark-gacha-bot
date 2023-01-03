@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="png">
+    <file>ARBStationOne.png</file>
+    <file>GrindingStationONe.png</file>
+    <file>GrindingStationThree.png</file>
+    <file>GrindingStationTwo.png</file>
+    <file>StryderDepositingTwo.png</file>
+    <file>StryderDepositingOne.png</file>
+  </qresource>
+</RCC>
