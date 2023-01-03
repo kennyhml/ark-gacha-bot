@@ -266,7 +266,6 @@ class GrindingStation(Station):
             PUMPGUN,
             LONGNECK,
             SIMPLE_PISTOL,
-            SWORD,
         ]
 
         for weapon in weapons:
