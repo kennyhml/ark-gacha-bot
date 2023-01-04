@@ -29,7 +29,7 @@
     "server_name": "47",
     "server_search": "s47",
     "pod_name": "Gacha Heal",
-    "webhook_alert": "https://discord.com/api/webhooks/1045378199737073714/HtrFyfX3Ya2EPgWJJgwlIxxUmJeTcP0jj9xSatizBEqNOxojyl4FA4K7gK-_LzMqxhQp",
-    "webhook_gacha": "https://discord.com/api/webhooks/1044908713389084753/QKbHNdFmTmlYkjhTlXyETjE25PbkIyxU1ciA3e9IL9VQwBW5DdkWK56M2f7EcDF9nepa",
-    "webhook_logs": "https://discord.com/api/webhooks/1045378297321771019/079MeqEVvJdfsDCX-l6tSLi2OvP9yvHdSdMrYyGZbNkm7VDlcfer399UOwZtekPXIeFm"
+    "webhook_alert": "",
+    "webhook_gacha": "",
+    "webhook_logs": ""
 }
