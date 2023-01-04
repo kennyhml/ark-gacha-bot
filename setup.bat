@@ -11,6 +11,8 @@ if errorlevel 1 (
     echo:
 
     "%USERPROFILE%\AppData\Local\Temp\python-3.11.1.exe"
+    pause
+    echo Please press any button once you have completed the python setup, so we can continue installing the depedencies.
 
 ) else (
     echo Python is already installed. Please make sure its of version 3.10 or higher.
