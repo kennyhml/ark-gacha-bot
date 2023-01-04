@@ -9,13 +9,12 @@ from typing import Literal, Optional
 
 import pyautogui as pg  # type: ignore[import]
 import pydirectinput as input  # type: ignore[import]
+import win32clipboard  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
 
-from ark.exceptions import (
-    InventoryNotAccessibleError,
-    InventoryNotClosableError,
-    ReceivingRemoveInventoryTimeout,
-)
+from ark.exceptions import (InventoryNotAccessibleError,
+                            InventoryNotClosableError,
+                            ReceivingRemoveInventoryTimeout)
 from ark.items import Item
 from bot.ark_bot import ArkBot
 
@@ -252,8 +251,10 @@ class Inventory(ArkBot):
 
     def create_folder(self, name: str) -> None:
         """Creates a folder in the inventory at the classes folder button"""
-        command = "echo | set /p nul=" + name.strip() + "| clip"
-        os.system(command)
+        win32clipboard.OpenClipboard()
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardText(name, win32clipboard.CF_TEXT)
+        win32clipboard.CloseClipboard()
 
         self.click_at(1585, 187)
         self.sleep(0.3)

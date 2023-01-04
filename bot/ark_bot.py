@@ -9,8 +9,9 @@ from typing import Optional
 
 import pyautogui as pg  # type: ignore[import]
 import pydirectinput as input  # type: ignore[import]
+import win32clipboard # type: ignore[import]
 from dacite import from_dict
-from discord import Webhook, File # type: ignore[import]
+from discord import File, Webhook  # type: ignore[import]
 from pynput.mouse import Button, Controller  # type: ignore[import]
 
 from ark.exceptions import BotTerminatedError
@@ -142,8 +143,10 @@ class ArkBot(ArkWindow):
 
     def set_clipboard(self, text):
         """Puts the passed text into the clipboard to allow for pasting"""
-        command = "echo | set /p nul=" + text.strip() + "| clip"
-        os.system(command)
+        win32clipboard.OpenClipboard()
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardText(text, win32clipboard.CF_TEXT)
+        win32clipboard.CloseClipboard()
 
     def send_to_discord(
         self,
