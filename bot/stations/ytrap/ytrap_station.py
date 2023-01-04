@@ -49,7 +49,7 @@ class YTrapStation(Station):
     """
 
     current_lap: int = 0
-    refill_lap: bool = False
+    refill_lap: bool = True
 
     def __init__(
         self, station_data: StationData, player: Player, tribelog: TribeLog

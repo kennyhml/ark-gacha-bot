@@ -36,6 +36,9 @@ class Player(ArkBot):
             self.keybinds.hotbar_0,
         ]
 
+    def set_first_person(self) -> None:
+        pg.scroll(100)
+
     def pick_up(self) -> None:
         """Picks up an item by pressing E"""
         self.press(self.keybinds.use)
@@ -126,15 +129,13 @@ class Player(ArkBot):
     def look_down_hard(self) -> None:
         """Looks down all the way to the ground"""
         for _ in range(7):
-            self.turn_y_by(50)
-            self.sleep(0.05)
+            self.turn_y_by(50, delay=0.05)
         self.sleep(0.3)
 
     def look_up_hard(self) -> None:
         """Looks up all the way to the ceiling"""
         for _ in range(7):
-            self.turn_y_by(-50)
-            self.sleep(0.05)
+            self.turn_y_by(-50, delay=0.05)
         self.sleep(0.3)
 
     def turn_y_by(self, amount: int, delay: int | float = 0.1) -> None:

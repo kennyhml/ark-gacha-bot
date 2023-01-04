@@ -11,6 +11,7 @@ from discord import (Embed, File,  # type: ignore[import]
                      RequestsWebhookAdapter, Webhook)
 
 from ark.beds import Bed
+from ark.console import Console
 from ark.entities import Player
 from ark.exceptions import BotTerminatedError
 from ark.server import Server
@@ -328,6 +329,16 @@ class GachaBot:
                 "avatar_url": DISCORD_AVATAR,
             },
         ).start()
+
+    def start(self) -> None:
+        """Sends an embed informing that the bot has been started.
+        
+        Sets gamma and first person.
+        """
+        self.inform_started()
+        console = Console()
+        console.set_gamma("5")
+        self.player.set_first_person()
 
     def do_next_task(self) -> None:
         """Gacha bots main call method, call repeatedly to keep doing the

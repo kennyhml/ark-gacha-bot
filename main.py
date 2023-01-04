@@ -10,6 +10,8 @@ from gui.gacha_ui_handle import MainUi
 
 def main():
     bot = GachaBot()
+    bot.start()
+    
     while ArkBot.running:
         bot.do_next_task()
 
