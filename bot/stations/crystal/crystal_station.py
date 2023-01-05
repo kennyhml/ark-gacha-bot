@@ -347,7 +347,7 @@ class CrystalStation(Station):
                 self.player.sleep(0.3)
 
             # transfer all the grinding items
-            for keep_item in ["riot", "rifle", "miner", "pistol", "pump", "sword"]:
+            for keep_item in ["riot", "rifle", "miner", "pistol", "pump"]:
                 self.player.inventory.transfer_all(vault.inventory, keep_item)
                 self.player.sleep(0.2)
             vault_full = vault.inventory.is_full()
