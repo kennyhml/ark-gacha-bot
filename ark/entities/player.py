@@ -151,7 +151,7 @@ class Player(ArkBot):
         self.sleep(delay)
 
     def do_crop_plots(self, refill_pellets: bool = False) -> None:
-        """Empties all stacks of crop plots, starts facing the gacha, 
+        """Empties all stacks of crop plots, starts facing the gacha,
         ends facing the gacha."""
         self.sleep(0.5)
         self.press(self.keybinds.crouch)
@@ -175,7 +175,7 @@ class Player(ArkBot):
         """Does the crop plot stack, used to always do them precisely, now the
         flag can be changed, should probably rename the method and remove the
         old one.
-        
+
         Parameters:
         ------------
         item :class:`Item`:
@@ -190,7 +190,7 @@ class Player(ArkBot):
         self.sleep(0.5)
         for _ in range(3):
             self.turn_90_degrees()
-            self.do_precise_crop_plot_stack(item, refill_pellets, precise=precise)
+            self.do_precise_crop_plot_stack(item, refill_pellets, precise=False)
         self.turn_90_degrees()
         self.sleep(0.2)
 
