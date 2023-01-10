@@ -16,8 +16,13 @@ from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
 
 from ark.exceptions import LogsNotOpenedError
-from ark.tribelog.config import (CONTENTS_MAPPING, DAYTIME_MAPPING,
-                                 DENOISE_MAPPING, EVENT_MAPPING, INGORED_TERMS)
+from ark.tribelog.config import (
+    CONTENTS_MAPPING,
+    DAYTIME_MAPPING,
+    DENOISE_MAPPING,
+    EVENT_MAPPING,
+    INGORED_TERMS,
+)
 from bot.ark_bot import ArkBot
 
 # configure logging file, helps debugging why certain stuff didnt get posted
@@ -398,6 +403,9 @@ class TribeLog(ArkBot):
         for c in CONTENTS_MAPPING:
             raw_res = raw_res.replace(c, CONTENTS_MAPPING[c])
         filtered_res = raw_res.rstrip()
+        if len(filtered_res) > 250:
+            print("Message is too long for an embed. Shortening it...")
+        filtered_res = filtered_res[:250]
 
         if EVENT_MAPPING[denoise_rgb] == "Tek Sensor triggered!":
             sensor_event = self.get_sensor_event(image)

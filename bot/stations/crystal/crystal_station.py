@@ -291,7 +291,7 @@ class CrystalStation(Station):
         -----------
         A dictionary containing the amounts of items deposited for dust and pearls
         """
-        gains = {DUST: 0, BLACK_PEARL: 0}
+        gains = {DUST: 0, BLACK_PEARL: 0, FLINT: 0, STONE: 0, FUNGAL_WOOD: 0}
         turns = {
             40: self.player.turn_x_by,
             -50: self.player.turn_y_by,

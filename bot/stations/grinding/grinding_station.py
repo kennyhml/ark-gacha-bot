@@ -126,7 +126,7 @@ class GrindingStation(Station):
         """Override spawn method to set current station"""
         bed_map = BedMap()
         bed_map.travel_to(self.station_data.beds[self.current_bed])
-        self.tribelog.update_tribelogs()
+        self.tribelog.check_tribelogs()
         self.player.await_spawned()
         self.player.sleep(1)
 
@@ -189,6 +189,7 @@ class GrindingStation(Station):
         try:
             available_mats = self.get_dedi_materials()
         except DedisNotDetermined:
+            print("WARNING! Unable to determine dedis. Assuming default materials.")
             available_mats = DEFAULT_MATS
 
         self.compute_crafting_plan(available_mats)
@@ -596,6 +597,7 @@ class GrindingStation(Station):
         for dedi in (SILICA_PEARL, PASTE, METAL_INGOT, ELECTRONICS, CRYSTAL, HIDE):
             region = self.find_dedi(dedi, image)
             if not region:
+                print(f"Failed to find dedi: {dedi.name}")
                 return None
 
             # convert bc grab screen is retarded + extend boundaries
@@ -694,6 +696,7 @@ class GrindingStation(Station):
         if dedis:
             return dedis
 
+        print("Walking back further in attempt to fix dedi icons...")
         self.walk_back_little()
         return None
 
@@ -720,6 +723,7 @@ class GrindingStation(Station):
                     raw_result: str = tes.image_to_string(
                         img, config=tes_config
                     ).strip()
+                    print(f"Raw result of {name}: {raw_result}")
                     # replace common tesseract fuckups
                     for char, new_char in DEDI_NUMBER_MAPPING.items():
                         raw_result = raw_result.replace(char, new_char)
@@ -730,6 +734,7 @@ class GrindingStation(Station):
                         raise ValueError(
                             f"Invalid amount of resources for {name}: {final_result}"
                         )
+                    print(f"Determined {name}: {final_result}")
                     amounts[name] = int(final_result)
 
             except (TypeError, ValueError) as e:
