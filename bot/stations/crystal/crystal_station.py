@@ -173,7 +173,7 @@ class CrystalStation(Station):
             self.player.inventory.search_for(item)
             self.player.sleep(0.3)
             stacks = self.player.inventory.count_item(item)
-            profits[item] = int((stacks * item.stack_size) - (0.5 * item.stack_size))
+            profits[item] = max(int((stacks * item.stack_size) - (0.5 * item.stack_size)), 0)
             self.player.inventory.click_transfer_all()
         self.stryder.inventory.close()
 
