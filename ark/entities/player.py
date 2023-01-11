@@ -7,7 +7,7 @@ import pyautogui as pg  # type: ignore[import]
 import pydirectinput as input  # type: ignore[import]
 
 from ark.buffs import Buff, broken_bones, hungry, thirsty
-from ark.exceptions import PlayerDidntTravelError
+from ark.exceptions import InventoryNotAccessibleError, PlayerDidntTravelError
 from ark.inventories import Inventory, PlayerInventory
 from ark.items import Y_TRAP, Item
 from ark.structures.structure import Structure
@@ -318,14 +318,19 @@ class Player(ArkBot):
 
             self.turn_y_by(turn)
             self.sleep(0.3)
+            try:
+                # check for the correct crop plot
+                crop_plot.inventory.open()
+                if precise:
+                    self.adjust_for_crop_plot(crop_plot, expected_index)
 
-            # check for the correct crop plot
-            crop_plot.inventory.open()
-            if precise:
-                self.adjust_for_crop_plot(crop_plot, expected_index)
+                # empty it
+                self.take_item_put_pellets(crop_plot, refill_pellets, item)
 
-            # empty it
-            self.take_item_put_pellets(crop_plot, refill_pellets, item)
+            except InventoryNotAccessibleError as e:
+                if expected_index < 3:
+                    continue
+                raise e
 
     def name_crop_plot_stack(self) -> None:
         """Names the crop plot stack to prepare the tower for 100% access running.
