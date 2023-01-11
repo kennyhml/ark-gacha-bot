@@ -12,9 +12,11 @@ import pydirectinput as input  # type: ignore[import]
 import win32clipboard  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
 
-from ark.exceptions import (InventoryNotAccessibleError,
-                            InventoryNotClosableError,
-                            ReceivingRemoveInventoryTimeout)
+from ark.exceptions import (
+    InventoryNotAccessibleError,
+    InventoryNotClosableError,
+    ReceivingRemoveInventoryTimeout,
+)
 from ark.items import Item
 from bot.ark_bot import ArkBot
 
@@ -59,8 +61,6 @@ class Inventory(ArkBot):
         self._name = entity_name
         self._action_wheel_img = action_wheel_img
         self._max_slots_img = max_slots
-
-
 
     def click_drop_all(self) -> None:
         """Clicks the drop all button at the classes drop all position"""
@@ -208,7 +208,6 @@ class Inventory(ArkBot):
         for _ in range(math.ceil(amount / 100)):
             self.press("a")
             self.sleep(0.5)
-
 
     def get_slots(self) -> int:
         """Attempts to OCR the amount of slots occupied in the structure.
