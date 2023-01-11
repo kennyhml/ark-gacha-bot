@@ -512,10 +512,11 @@ class GrindingStation(Station):
         # drop all on the remaining items
         self.turn_to(Stations.GRINDER)
         self.grinder.inventory.open()
-        for _ in range(3):
-            self.grinder.inventory.click_transfer_all()
-            self.player.inventory.click_drop_all()
 
+        self.grinder.inventory.take_all_items(FIBER)
+        self.grinder.inventory.take_all_items(ANGLER_GEL)
+        self.player.inventory.click_drop_all()
+        
         # turn off grinder if requestes and close it
         if turn_off:
             self.grinder.turn_off()

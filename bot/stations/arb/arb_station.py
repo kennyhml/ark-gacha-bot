@@ -10,8 +10,18 @@ from ark.beds import Bed, BedMap
 from ark.entities.dinosaurs import Dinosaur
 from ark.entities.player import Player
 from ark.exceptions import InvalidStatusError
-from ark.items import (ARB, CHARCOAL, FLINT, FUNGAL_WOOD, GASOLINE, GUNPOWDER,
-                       METAL_INGOT, SPARKPOWDER, STONE, Item)
+from ark.items import (
+    ARB,
+    CHARCOAL,
+    FLINT,
+    FUNGAL_WOOD,
+    GASOLINE,
+    GUNPOWDER,
+    METAL_INGOT,
+    SPARKPOWDER,
+    STONE,
+    Item,
+)
 from ark.structures.chemistry_bench import ChemistryBench
 from ark.structures.dedi_storage import TekDedicatedStorage
 from ark.structures.industrial_forge import IndustrialForge
@@ -744,6 +754,8 @@ class ARBStation(Station):
         try:
             self.exo_mek.inventory.open()
             self.exo_mek.inventory.take_all_items(ARB)
+            self.exo_mek.inventory.sleep(5)
+            self.player.inventory.transfer_all(self.exo_mek.inventory, "blueprint")
             self.exo_mek.inventory.close()
             self.player.sleep(5)
 

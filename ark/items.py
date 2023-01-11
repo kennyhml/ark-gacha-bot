@@ -374,3 +374,17 @@ SWORD = Item(
     stack_size=1,
     inventory_icon="templates/inventory_sword.png",
 )
+
+ANGLER_GEL = Item(
+    name="Angler Gel",
+    search_name="gel",
+    stack_size=100,
+    inventory_icon="templates/inventory_angler_gel.png",
+)
+
+FIBER = Item(
+    name="Fiber",
+    search_name="fiber",
+    stack_size=300,
+    inventory_icon="templates/inventory_fiber.png",
+)
