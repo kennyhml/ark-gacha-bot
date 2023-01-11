@@ -185,7 +185,7 @@ class YTrapStation(Station):
 
         if 400 < amount_of_traps < 800:
             return amount_of_traps
-        return 600
+        return 600 if ocr_amount else 0
 
     def validate_stats(self, statistics: StationStatistics) -> str:
         """Checks on the amount of traps deposited given the current runtime.
