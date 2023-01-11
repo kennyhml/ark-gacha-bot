@@ -12,6 +12,7 @@ from typing import Optional
 
 import os
 
+
 @dataclass
 class Item:
     """Represents an ark item"""
@@ -32,6 +33,7 @@ class Item:
             if path is None:
                 continue
             assert os.path.exists(path), f"Path not found: {path}"
+
 
 DUST = Item(
     name="Element Dust",
@@ -386,5 +388,13 @@ FIBER = Item(
     name="Fiber",
     search_name="fiber",
     stack_size=300,
+    inventory_icon="templates/inventory_fiber.png",
+)
+
+
+WOOD = Item(
+    name="Wood",
+    search_name="wood",
+    stack_size=100,
     inventory_icon="templates/inventory_fiber.png",
 )

@@ -515,6 +515,7 @@ class GrindingStation(Station):
 
         self.grinder.inventory.take_all_items(FIBER)
         self.grinder.inventory.take_all_items(ANGLER_GEL)
+        self.grinder.inventory.take_all_items(WOOD)
         self.player.inventory.click_drop_all()
         
         # turn off grinder if requestes and close it
