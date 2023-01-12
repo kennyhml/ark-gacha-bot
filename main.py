@@ -11,9 +11,10 @@ from gui.gacha_ui_handle import MainUi
 def main():
     bot = GachaBot()
     bot.start()
-    
+
     while ArkBot.running:
         bot.do_next_task()
+
 
 def on__key_press(key):
     """Connets inputs from listener thread to their corresponding function"""
@@ -26,7 +27,7 @@ def on__key_press(key):
 
             bot = Thread(target=main, daemon=True, name="Main bot Thread")
             bot.start()
-            
+
     elif key == keyboard.Key.f3:
         if ArkBot.running:
             print("Terminated!")
@@ -42,6 +43,7 @@ def on__key_press(key):
             print("Resumed!")
             ArkBot.paused = False
 
+
 if __name__ == "__main__":
     ArkBot.running = False
     ArkBot.paused = False
@@ -50,4 +52,3 @@ if __name__ == "__main__":
 
     ui = MainUi()
     ui.display()
-    

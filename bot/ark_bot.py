@@ -9,7 +9,7 @@ from typing import Optional
 
 import pyautogui as pg  # type: ignore[import]
 import pydirectinput as input  # type: ignore[import]
-import win32clipboard # type: ignore[import]
+import win32clipboard  # type: ignore[import]
 from dacite import from_dict
 from discord import File, Webhook  # type: ignore[import]
 from pynput.mouse import Button, Controller  # type: ignore[import]
@@ -21,6 +21,7 @@ from ark.window import ArkWindow
 from bot.settings import Keybinds
 
 pg.FAILSAFE = False
+input.FAILSAFE = False
 
 class ArkBot(ArkWindow):
     """Main ArkBot class
