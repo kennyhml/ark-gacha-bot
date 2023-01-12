@@ -39,7 +39,9 @@ if not exist "%USERPROFILE%\AppData\Local\Temp\tesseract.exe" (
 if exist "C:\Program Files\Tesseract-OCR\" (
     echo Skipped executing installer because tesseract is already installed.
 
-) else ("%USERPROFILE%\AppData\Local\Temp\tesseract.exe")
+) else (
+    echo Tesseract needs to be installed, please install it at C:\Program Files\Tesseract-OCR
+    "%USERPROFILE%\AppData\Local\Temp\tesseract.exe")
 
 
 echo Setup finished.
