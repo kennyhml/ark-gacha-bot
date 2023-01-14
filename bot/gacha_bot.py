@@ -24,7 +24,7 @@ from bot.stations import (BerryFeedStation, CrystalStation, GrindingStation,
                           StationData, YTrapStation)
 from bot.stations.arb.arb_station import ARBStation
 from bot.unstucking import UnstuckHandler
-
+import traceback
 DISCORD_AVATAR = "https://i.kym-cdn.com/entries/icons/facebook/000/022/293/Bloodyshadow_rolled_user_shutupandsleepwith_i_m_bisexual_let_s_work_from__a48265eae6a474904cdc2cae9f184aad.jpg"
 WHIP_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b9/Whip_%28Scorched_Earth%29.png/revision/latest/scale-to-width-down/228?cb=20160901213011"
 
@@ -366,4 +366,6 @@ class GachaBot:
             pass
 
         except Exception as e:
+            print("Ran into an unhandled exception!")
+            print(traceback.format_exc())
             self.unstuck(station, e)

@@ -96,7 +96,7 @@ class ArkBot(ArkWindow):
 
         input.moveTo(x, y)
 
-    def click(self, button):
+    def click(self, button: str) -> None:
         """Sends a click event for the given button.
 
         Parameters:
@@ -107,7 +107,7 @@ class ArkBot(ArkWindow):
         self.check_status()
         pg.click(button=button)
 
-    def press(self, key):
+    def press(self, key: str) -> None:
         """Sends a press event for the given key.
 
         Parameters:
@@ -119,7 +119,7 @@ class ArkBot(ArkWindow):
 
         # check if pydirectinput supports the key
         if key not in ["mouse4", "mouse5"]:
-            pg.press(key)
+            pg.press(key.lower())
             return
 
         # use pynputs Controller to emulate side mouse button presses

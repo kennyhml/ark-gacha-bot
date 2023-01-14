@@ -50,7 +50,7 @@ class ArkWindow:
     """
 
     TITLE_BAR_HEIGHT = 30
-
+    
     def __init__(self) -> None:
         self._window = self.get_window()
         self._monitor = self.get_monitor()
