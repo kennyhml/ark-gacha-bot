@@ -11,14 +11,13 @@ from gui.gacha_ui_handle import MainUi
 def main():
     bot = GachaBot()
     bot.start()
-    
+
     while ArkBot.running:
         bot.do_next_task()
 
 
 def on__key_press(key):
     """Connets inputs from listener thread to their corresponding function"""
-    print(key)
     if key == keyboard.Key.f1:
         # make sure bot is not already active
         if not (ArkBot.paused or ArkBot.running):
