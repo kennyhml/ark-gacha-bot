@@ -177,6 +177,9 @@ class YTrapStation(Station):
         self.player.sleep(0.5)
         self.player.inventory.transfer_all(self.gacha.inventory)
         self.player.sleep(0.5)
+        
+        if self.player.inventory.has_item(Y_TRAP):
+            self.player.inventory.popcorn(Y_TRAP)
 
         # drop rest of the pellets, close and return the amount of ytraps
         # deposited into the gacha

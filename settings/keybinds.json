@@ -1,6 +1,6 @@
 {
-    "console": "subtract",
-    "crouch": "mouse5",
+    "console": "tab",
+    "crouch": "c",
     "drop": "o",
     "hotbar_0": "0",
     "hotbar_1": "1",
@@ -12,10 +12,10 @@
     "hotbar_7": "7",
     "hotbar_8": "8",
     "hotbar_9": "9",
-    "inventory": "tab",
-    "logs": "l",
-    "prone": "mouse4",
+    "inventory": "i",
+    "prone": "x",
     "target_inventory": "f",
     "toggle_hud": "h",
+    "logs": "l",
     "use": "e"
 }

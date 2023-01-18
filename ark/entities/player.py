@@ -91,7 +91,7 @@ class Player(ArkBot):
         """Checks if the player is spawned"""
         return (
             self.locate_template(
-                "templates/stamina.png", region=(1850, 955, 70, 65), confidence=0.7
+                "templates/stamina.png", region=(1850, 955, 70, 65), confidence=0.65
             )
             is not None
         )

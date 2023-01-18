@@ -1,4 +1,3 @@
-import time
 from threading import Thread
 
 from pynput import keyboard  # type: ignore[import]
