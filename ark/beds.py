@@ -78,7 +78,7 @@ class BedMap(ArkBot):
 
     def travelling(self) -> bool:
         """Check if we are currently travelling (whitescreen)"""
-        return pg.pixelMatchesColor(959, 493, (255, 255, 255), tolerance=0)
+        return pg.pixelMatchesColor(959, 493, (255, 255, 255), tolerance=10)
 
     def await_travelling(self) -> None:
         """Waits for the whitescreent to appear to find out we travelled.
