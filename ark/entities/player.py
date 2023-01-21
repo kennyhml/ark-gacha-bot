@@ -463,6 +463,7 @@ class Player(ArkBot):
 
         self.inventory.close()
         self.pick_up_bag()
+        self.sleep(1)
         self.crouch()
         self.sleep(0.5)
 
