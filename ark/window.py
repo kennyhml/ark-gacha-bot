@@ -180,11 +180,7 @@ class ArkWindow:
 
     def need_boundary_scaling(self):
         """Checks if we need to scale width and height on regions or images"""
-        return not (
-            self._monitor["height"] == 1080
-            and self._monitor["width"] == 1920
-            or not self._fullscreen
-        )
+        return False
 
     def update_boundaries(self):
         """Re-initializes the class to update the window"""
@@ -283,9 +279,15 @@ class ArkWindow:
     ):
         """Finds the given template on the screen."""
 
-        return pg.locateOnScreen(
-            self.convert_image(template),
-            region=self.convert_region(region) if convert else region,
+        if convert:
+            region = self.convert_region(region)
+
+        haystack: np.ndarray = np.asarray(self.grab_screen(region, convert=False))  # type: ignore[arg-type]
+        image_rgb = cv.cvtColor(haystack, cv.COLOR_BGR2RGB)
+        img = Image.fromarray(image_rgb)
+        return pg.locate(
+            self.convert_image(template) if convert else template,
+            img,
             confidence=confidence,
             grayscale=grayscale,
         )

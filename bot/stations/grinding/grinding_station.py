@@ -666,9 +666,9 @@ class GrindingStation(Station):
         """
         expected = {
             SILICA_PEARL: (6000, 60000),
-            PASTE: (7000, 160000),
+            PASTE: (7000, 180000),
             ELECTRONICS: (800, 10000),
-            METAL_INGOT: (9000, 40000),
+            METAL_INGOT: (9000, 60000),
         }
         # we dont care about crystal or hide
         if item not in expected:

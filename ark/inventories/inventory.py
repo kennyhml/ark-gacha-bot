@@ -5,6 +5,7 @@ The `Inventory` parent class contains methods that make it easy to derive other 
 
 import math
 import os
+import time
 from typing import Literal, Optional
 
 import pyautogui as pg  # type: ignore[import]
@@ -12,11 +13,9 @@ import pydirectinput as input  # type: ignore[import]
 import win32clipboard  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
 
-from ark.exceptions import (
-    InventoryNotAccessibleError,
-    InventoryNotClosableError,
-    ReceivingRemoveInventoryTimeout,
-)
+from ark.exceptions import (InventoryNotAccessibleError,
+                            InventoryNotClosableError,
+                            ReceivingRemoveInventoryTimeout)
 from ark.items import Item
 from bot.ark_bot import ArkBot
 
@@ -53,6 +52,8 @@ class Inventory(ArkBot):
     DROP_ALL = (1477, 187)
     CREATE_FOLDER = (1584, 187)
     FIRST_SLOT = (1292, 294)
+    LAST_TRANSFER_ALL = time.time()
+
 
     def __init__(
         self, entity_name: str, action_wheel_img: str, max_slots: Optional[str] = None
@@ -68,7 +69,10 @@ class Inventory(ArkBot):
 
     def click_transfer_all(self) -> None:
         """Clicks the transfer all button at the classes transfer all position"""
+        while (time.time() - Inventory.LAST_TRANSFER_ALL) < 2:
+            self.sleep(0.1)
         self.click_at(self.TRANSFER_ALL, delay=0.2)
+        Inventory.LAST_TRANSFER_ALL = time.time()
 
     def open_craft(self) -> None:
         """Opens the crafting tab assuming the inventory is already open"""

@@ -3,17 +3,13 @@ from dataclasses import dataclass
 
 from discord import Embed  # type: ignore[import]
 
-from ark.beds import TekPod
+from ark.beds import BedMap, TekPod
 from ark.entities.player import Player
 from ark.exceptions import TekPodNotAccessibleError
 from ark.items import Item
 from ark.tribelog import TribeLog
-from bot.stations.station import (
-    Station,
-    StationData,
-    StationStatistics,
-    format_time_taken,
-)
+from bot.stations.station import (Station, StationData, StationStatistics,
+                                  format_time_taken)
 
 
 @dataclass
@@ -39,6 +35,11 @@ class HealingStation(Station):
     def is_ready(self) -> bool:
         return self.player.needs_recovery()
 
+    def spawn(self) -> None:
+        bed_map = BedMap()
+        bed_map.travel_to(self.station_data.beds[self.current_bed])
+        self.player.await_spawned()
+
     def create_embed(self, statistics: StationStatistics) -> Embed:
         """Sends a msg to discord that we healed"""
         embed = Embed(
@@ -62,15 +63,16 @@ class HealingStation(Station):
         """
         self.spawn()
         start = time.time()
-
+        
         # try to enter the pod 3 times
         for _ in range(3):
-            if not self.tek_pod.enter():
+            if not (self.tek_pod.enter() or self.player.has_died()):
                 self.player.sleep(1)
                 continue
 
-            self.tek_pod.heal(60)
-            self.tek_pod.leave()
+            if not self.player.has_died():
+                self.tek_pod.heal(60)
+                self.tek_pod.leave()
 
             stats = HealingStatistics(round(time.time() - start), False, {})
 

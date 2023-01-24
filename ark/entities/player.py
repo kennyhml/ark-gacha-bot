@@ -39,6 +39,14 @@ class Player(ArkBot):
     def set_first_person(self) -> None:
         pg.scroll(100)
 
+    def has_died(self) -> bool:
+        return (
+            self.locate_template(
+                "templates/you_died.png", region=(630, 10, 590, 80), confidence=0.7
+            )
+            is not None
+        )
+
     def pick_up(self) -> None:
         """Picks up an item by pressing E"""
         self.press(self.keybinds.use)
@@ -111,7 +119,7 @@ class Player(ArkBot):
         """Waits for the player to spawn in, up to 50 seconds after which a
         `PlayerDidntTravelError` is raised."""
         counter = 0
-        while not self.is_spawned():
+        while not (self.is_spawned() or self.has_died()):
             self.sleep(0.5)
             counter += 1
 

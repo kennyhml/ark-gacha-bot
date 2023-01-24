@@ -57,7 +57,7 @@ class YTrapStation(Station):
         self.station_data = station_data
         self.player = player
         self.tribelog = tribelog
-        self.current_bed = 0
+        self.current_bed = 1
         self.total_ytraps_deposited = 0
         self.last_refilled_pellets = time.time()
         self.gacha = Dinosaur("Gacha", "gacha")
