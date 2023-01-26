@@ -11,16 +11,16 @@ resolution.
 """
 import re
 
-import cv2 as cv # type: ignore[import]
+import cv2 as cv  # type: ignore[import]
 import numpy as np
-import PIL # type: ignore[import]
-import pyautogui as pg # type: ignore[import]
-import pygetwindow # type: ignore[import]
-import win32gui # type: ignore[import]
-from mss import mss, tools # type: ignore[import]
+import PIL  # type: ignore[import]
+import pyautogui as pg  # type: ignore[import]
+import pygetwindow  # type: ignore[import]
+import win32gui  # type: ignore[import]
+from mss import mss, tools  # type: ignore[import]
 from PIL import Image, ImageOps
-from pytesseract import pytesseract as tes # type: ignore[import]
-from screeninfo import get_monitors # type: ignore[import]
+from pytesseract import pytesseract as tes  # type: ignore[import]
+from screeninfo import get_monitors  # type: ignore[import]
 
 # set tesseract path
 tes.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -413,5 +413,8 @@ class ArkWindow:
 
     def set_foreground(self):
         """put the window in the foreground"""
-        self.find_window_wildcard(".*ARK: Survival Evolved.*")
-        win32gui.SetForegroundWindow(self._handle)
+        try:
+            self.find_window_wildcard(".*ARK: Survival Evolved.*")
+            win32gui.SetForegroundWindow(self._handle)
+        except Exception:
+            pass

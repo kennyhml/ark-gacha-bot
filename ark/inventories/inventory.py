@@ -463,7 +463,7 @@ class Inventory(ArkBot):
                 if not self.in_access_range():
                     raise InventoryNotAccessibleError(f"Failed to access {self._name}!")
 
-            if c >= 6:
+            if c >= 12:
                 raise InventoryNotAccessibleError(f"Failed to access {self._name}!")
 
         self.await_receiving_remove_inventory()

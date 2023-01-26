@@ -16,13 +16,8 @@ from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
 
 from ark.exceptions import LogsNotOpenedError
-from ark.tribelog.config import (
-    CONTENTS_MAPPING,
-    DAYTIME_MAPPING,
-    DENOISE_MAPPING,
-    EVENT_MAPPING,
-    INGORED_TERMS,
-)
+from ark.tribelog.config import (CONTENTS_MAPPING, DAYTIME_MAPPING,
+                                 DENOISE_MAPPING, EVENT_MAPPING, INGORED_TERMS)
 from bot.ark_bot import ArkBot
 
 # configure logging file, helps debugging why certain stuff didnt get posted
