@@ -390,6 +390,7 @@ class CrystalStation(Station):
         ----------
         The given amount if its within a valid range, else the average amount
         """
+        return amount
         try:
             average_amount = round(self._total_dust_made / self._total_pickups)
         except ZeroDivisionError:
