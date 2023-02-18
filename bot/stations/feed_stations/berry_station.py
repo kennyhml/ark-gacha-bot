@@ -43,7 +43,6 @@ class BerryFeedStation(FeedStation):
     def is_ready(self) -> bool:
         return False
 
-
     def do_crop_plots(self) -> None:
         """Does the crop plot stack, finishes facing the last stack"""
         direction = "left" if self.gacha_is_right() else "right"

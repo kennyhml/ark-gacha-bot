@@ -1,35 +1,51 @@
 {
-    "account_name": "Ling Ling",
-    "bed_position": [
-        782,
-        183
-    ],
-    "crystal_prefix": "crystal",
-    "crystal_beds": 1,
-    "seed_prefix": "seed",
-    "seed_beds": 52,
-    "berry_prefix": "autoberry",
-    "berry_beds": 4,
-    "meat_prefix": "automeat",
-    "meat_beds": 4,
-    "crystal_interval": 300,
-    "stryder_depositing": true,
-    "drop_items": [
-        "prim"
-    ],
-    "keep_items": [
-        "riot",
-        "fab",
-        "pump",
-        "ass",
-        "mining",
-        "wood"
-    ],
-    "game_launcher": "Steam",
-    "server_name": "47",
-    "server_search": "s47",
-    "pod_name": "Gacha Heal",
-    "webhook_alert": "",
-    "webhook_gacha": "",
-    "webhook_logs": ""
+    "main": {
+        "game_launcher": "Steam"
+    },
+    "player": {
+        "health": 300,
+        "food": 100,
+        "water": 100,
+        "weight": 1000
+    },
+    "discord": {
+        "user_id": "",
+        "webhook_alert": "",
+        "webhook_gacha": "",
+        "webhook_logs": "",
+        "webhook_state": "",
+        "state_message_id": "1076478549864755210"
+    },
+    "ytrap": {
+        "ytrap_beds": 52,
+        "ytrap_prefix": "seed"
+    },
+    "crystal": {
+        "crystal_beds": 1,
+        "crystal_prefix": "crystal",
+        "crystal_interval": 300,
+        "stryder_depositing": false,
+        "drop_items": [
+            "prim"
+        ],
+        "keep_items": [
+            "riot",
+            "fab",
+            "pump",
+            "ass",
+            "mining",
+            "wood"
+        ]
+    },
+    "berry": {
+        "berry_beds": 4,
+        "berry_prefix": "autoberry"
+    },
+    "meat": {
+        "meat_beds": 4,
+        "meat_prefix": "automeat"
+    },
+    "healing": {
+        "pod_name": "Gacha Heal"
+    }
 }

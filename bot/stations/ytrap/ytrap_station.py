@@ -1,30 +1,12 @@
-"""
-Contains all classes relevant to run ytrap stations on the gacha tower.
-"""
-
 import time
-from dataclasses import dataclass
 
+from ark import Bed, Console, Dinosaur, Player, TribeLog, items
 from discord import Embed  # type: ignore[import]
-from ark.console import Console
-from ark import PELLET, Y_TRAP, Item
-from ark.tribelog import TribeLog
-from ark.entities import Dinosaur, Player
-from bot.stations import Station, StationData, StationStatistics
+
+from ..station import Station, StationData
 
 Y_TRAP_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/cb/Plant_Species_Y_Trap_%28Scorched_Earth%29.png/revision/latest?cb=20160901233007"
 TRANSFER_PELLETS_BACK = 15
-
-
-@dataclass
-class YTrapStatistics:
-    """Represents the stations statistics as dataclass.
-    Follows the `StationStatistics` protocol.
-    """
-
-    time_taken: int
-    refill_lap: bool
-    profit: dict[Item, int]
 
 
 class YTrapStation(Station):
@@ -48,28 +30,19 @@ class YTrapStation(Station):
 
     """
 
-    current_lap: int = 0
-    refill_lap: bool = True
-
     def __init__(
-        self, station_data: StationData, player: Player, tribelog: TribeLog
+        self, station_data: StationData, player: Player, tribelog: TribeLog, bed: Bed
     ) -> None:
         self.station_data = station_data
         self.player = player
         self.tribelog = tribelog
-        self.current_bed = 0
         self.total_ytraps_deposited = 0
         self.last_refilled_pellets = time.time()
         self.gacha = Dinosaur("Gacha", "gacha")
 
-    def complete(self) -> tuple[Embed, YTrapStatistics]:
+    def complete(self) -> None:
         """Completes the Y-Trap station. Travels to the gacha station,
         empties the crop plots and fills the gacha.
-
-        Returns:
-        ----------
-        A `discord.Embed` with the station statistics to post to discord and
-        the raw `YTrapStatistics` data object of the station run.
         """
         # set times and tasks, travel to station
         self.spawn()
@@ -177,7 +150,7 @@ class YTrapStation(Station):
         self.player.sleep(0.5)
         self.player.inventory.transfer_all(self.gacha.inventory)
         self.player.sleep(0.5)
-        
+
         if self.player.inventory.has_item(Y_TRAP):
             self.player.inventory.popcorn(Y_TRAP)
 

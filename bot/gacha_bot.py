@@ -1,33 +1,20 @@
-"""
-Gacha bot main handle file. Imagine this as the point where everything sort of comes together.
-"""
 import json
-import time
+import traceback
 from datetime import datetime
 from threading import Thread
 
+from ark import ArkWindow, Bed, Console, Player, Server, TribeLog
 from dacite import from_dict
 from discord import (Embed, File,  # type: ignore[import]
                      RequestsWebhookAdapter, Webhook)
 
-from ark.beds import Bed
-from ark.console import Console
-from ark.entities import Player
-from ark.exceptions import BotTerminatedError
-from ark.server import Server
-from ark.tribelog import TribeLog
-from ark.window import ArkWindow
 from bot.ark_bot import ArkBot
-from bot.settings import DiscordSettings, TowerSettings
+from bot.settings.settings import DiscordSettings, TowerSettings
 from bot.stations import (BerryFeedStation, CrystalStation, GrindingStation,
                           HealingStation, MeatFeedStation, Station,
                           StationData, YTrapStation)
 from bot.stations.arb.arb_station import ARBStation
 from bot.unstucking import UnstuckHandler
-import traceback
-DISCORD_AVATAR = "https://i.kym-cdn.com/entries/icons/facebook/000/022/293/Bloodyshadow_rolled_user_shutupandsleepwith_i_m_bisexual_let_s_work_from__a48265eae6a474904cdc2cae9f184aad.jpg"
-WHIP_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b9/Whip_%28Scorched_Earth%29.png/revision/latest/scale-to-width-down/228?cb=20160901213011"
-
 
 class GachaBot:
     """Main gacha bot control class. Loads up the settings and creates

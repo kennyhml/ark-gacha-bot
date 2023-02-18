@@ -51,7 +51,6 @@ class StationData:
     """
 
     interval: int
-    beds: list[Bed]
     last_completed: datetime = datetime.now()
     npy_path: Optional[str] = None
 
