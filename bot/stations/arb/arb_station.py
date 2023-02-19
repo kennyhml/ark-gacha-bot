@@ -28,7 +28,7 @@ from ark.structures.industrial_forge import IndustrialForge
 from ark.tribelog import TribeLog
 from bot.stations.arb.status import Status
 from bot.stations.grinding.grinding_station import EXOMEK_AVATAR
-from bot.stations.station import Station, StationData, StationStatistics
+from bot.stations._station import Station, StationData, StationStatistics
 
 FORGE_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/c5/Industrial_Forge.png/revision/latest/scale-to-width-down/228?cb=20151126023709"
 CHEMBENCH_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/9/9d/Chemistry_Bench.png/revision/latest/scale-to-width-down/228?cb=20160428045516"

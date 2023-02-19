@@ -3,13 +3,14 @@ from dataclasses import dataclass
 
 from discord import Embed  # type: ignore[import]
 
-from ark.tribelog import TribeLog
-from ark.beds import BedMap
+
+
+from ark import TribeLog
+from ark import SpawnScreen
 from ark.entities import Player
 from ark.items import MEJOBERRY, Item
-from ark.structures.structure import Structure
+from ark import Structure
 from bot.stations.feed_stations import FeedStation
-from bot.stations.station import StationStatistics, StationData
 
 MEJOBERRY_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/0/00/Mejoberry.png/revision/latest/scale-to-width-down/228?cb=20160219215159"
 
@@ -34,7 +35,7 @@ class BerryFeedStation(FeedStation):
     """
 
     def __init__(
-        self, station_data: StationData, player: Player, tribelog: TribeLog
+        self, station_data, player: Player, tribelog: TribeLog
     ) -> None:
         super().__init__(station_data, player, tribelog)
         self.bed_map = BedMap()
@@ -51,7 +52,7 @@ class BerryFeedStation(FeedStation):
             self.player.turn_90_degrees(direction)
             self.player.do_precise_crop_plot_stack(MEJOBERRY, refill_pellets=True)
 
-    def create_embed(self, statistics: StationStatistics) -> Embed:
+    def create_embed(self, statistics: StatStatistics) -> Embed:
         """Creates a `discord.Embed` from the stations statistics.
 
         The embed contains info about what station was finished and how

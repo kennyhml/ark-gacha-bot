@@ -4,15 +4,12 @@ from datetime import datetime
 
 from discord import Embed  # type: ignore[import]
 
-from ark.beds import BedMap
-from ark.entities import Dinosaur, Player
+
+from ark import SpawnScreen, Dinosaur, Player, Structure, TribeLog
+
 from ark.exceptions import InventoryNotAccessibleError
 from ark.items import PELLET, RAW_MEAT, SPOILED_MEAT, Item
-from ark.structures.structure import Structure
-from ark.tribelog import TribeLog
 from bot.stations.feed_stations import FeedStation
-from bot.stations.station import StationData, StationStatistics
-
 RAW_MEAT_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/e/e9/Raw_Meat.png/revision/latest/scale-to-width-down/228?cb=20150704150605"
 TRANSFER_PELLETS_BACK = 15
 
@@ -46,7 +43,7 @@ class MeatFeedStation(FeedStation):
     """
 
     def __init__(
-        self, station_data: StationData, player: Player, tribelog: TribeLog
+        self, station_data, player: Player, tribelog: TribeLog
     ) -> None:
         super().__init__(station_data, player, tribelog)
         self.dire_bear = Dinosaur("Dire Bear", "dire_bear")
@@ -161,7 +158,7 @@ class MeatFeedStation(FeedStation):
         self.player.sleep(1)
         return meat
 
-    def create_embed(self, statistics: StationStatistics) -> Embed:
+    def create_embed(self, statistics) -> Embed:
         """Creates a `discord.Embed` from the stations statistics.
 
         The embed contains info about what station was finished and how
@@ -192,7 +189,7 @@ class MeatFeedStation(FeedStation):
         embed.set_footer(text="Ling Ling on top!")
         return embed
 
-    def complete(self) -> tuple[Embed, StationStatistics]:
+    def complete(self) -> tuple[Embed]:
         """Completes the station, returns an embed displaying the
         statistics, and the statistics object itself."""
         self.spawn()

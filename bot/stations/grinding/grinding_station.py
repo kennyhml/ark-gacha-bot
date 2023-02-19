@@ -18,7 +18,7 @@ from ark.window import ArkWindow
 from bot.stations import Station, StationData
 from bot.stations.grinding.stations import Stations
 from bot.stations.grinding.status import Status
-from bot.stations.station import StationStatistics
+from bot.stations._station import StationStatistics
 
 GRINDER_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/f/fe/Industrial_Grinder.png/revision/latest/scale-to-width-down/228?cb=20160728174054"
 EXOMEK_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/6/6d/Unassembled_Exo-Mek_%28Genesis_Part_2%29.png/revision/latest/scale-to-width-down/228?cb=20210603184626"

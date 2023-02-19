@@ -1,82 +1,104 @@
 import time
-from dataclasses import dataclass
 
+from ark import Player, TekSleepingPod, TribeLog, _tools, exceptions
 from discord import Embed  # type: ignore[import]
 
-from ark.beds import BedMap, TekPod
-from ark.entities.player import Player
-from ark.exceptions import TekPodNotAccessibleError
-from ark.items import Item
-from ark.tribelog import TribeLog
-from bot.stations.station import (Station, StationData, StationStatistics,
-                                  format_time_taken)
-
-
-@dataclass
-class HealingStatistics:
-    """The protocol to follow when creating a station statistics dataclass."""
-
-    time_taken: int
-    refill_lap: bool
-    profit: dict[Item, int]
+from ..tools import format_seconds
+from ..webhooks import InfoWebhook
+from ._station import Station
 
 
 class HealingStation(Station):
+    """Represents a healing station, a healing station is responsible for
+    ensuring that the player does not die. It will be travelled to when
+    the player has a bad debuff such as hunger, thirst or broken bones.
+
+    The player will enter a tek pod to heal up, healing is finished when
+    health, food and water have reached their maximum or when the healing
+    timer has elapsed, which is calculated by the players stats / the rate
+    a tek pod heals at.
+
+    Parameters
+    -----------
+    name :class:`str`:
+        The name of the station, or the name of the bed to travel to.
+
+    player :class:`Player`:
+        The player instance to handle movements.
+
+    tribelog :class:`Tribelog`:
+        The tribelog instance to check tribelogs when spawning.
+
+    info_webhook :class:`InfoWebhook`:
+        The info webhook instance to post station statistics to.
+    """
+
+    POD_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/0/0b/Tek_Sleeping_Pod_%28Aberration%29.png/revision/latest/scale-to-width-down/228?cb=20171214081119"
+
     def __init__(
-        self, station_data: StationData, player: Player, tribelog: TribeLog
+        self,
+        name: str,
+        player: Player,
+        tribelog: TribeLog,
+        info_webhook: InfoWebhook,
     ) -> None:
-        self.station_data = station_data
-        self.player = player
-        self.tribelog = tribelog
-        self.current_bed = 0
+        self._name = name
+        self._player = player
+        self._tribelog = tribelog
+        self._webhook = info_webhook
+
         self._least_healed = time.time()
-        self.tek_pod = TekPod(station_data.beds[0].name, station_data.beds[0].coords)
+        self.pod = TekSleepingPod(name)
 
     def is_ready(self) -> bool:
-        return self.player.needs_recovery()
+        return self._player.needs_recovery()
+
+    def complete(self) -> None:
+        """Spawns at the healing station and enters the tek pod to heal,
+        then leaves the tek pod and sends a healing statistics embed.
+        """
+        start = time.time()
+        try:
+            self.spawn()
+
+            self.pod.heal(self._player)
+            self.pod.leave()
+
+        except exceptions.PlayerDiedError:
+            pass
+
+        except exceptions.WheelError:
+            if not _tools.await_event(self._player.has_died, max_duration=20):
+                raise
+
+        embed = self._create_embed(round(time.time() - start))
+        self._webhook.send_embed(embed)
 
     def spawn(self) -> None:
-        bed_map = BedMap()
-        bed_map.travel_to(self.station_data.beds[self.current_bed])
-        self.player.await_spawned()
+        """Spawns at the healing station, override to use a pod
+        instead of a bed.
+        """
+        self._player.stand_up()
+        self._player.prone()
+        self._player.look_down_hard()
 
-    def create_embed(self, statistics: StationStatistics) -> Embed:
+        self.pod.spawn()
+        self._tribelog.check_tribelogs()
+        self._player.spawn_in()
+
+    def _create_embed(self, time_taken: int) -> Embed:
         """Sends a msg to discord that we healed"""
+        taken = format_seconds(time_taken)
+        interval = format_seconds(round(time.time() - self._least_healed))
         embed = Embed(
             type="rich",
-            title=f"Recovered player at '{self.tek_pod.name}'!",
+            title=f"Recovered player at '{self._name}'!",
             color=0x4F4F4F,
         )
-        embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{statistics.time_taken} seconds")
-        embed.add_field(
-            name="Last healed:", value=format_time_taken(self._least_healed)
-        )
-        embed.set_thumbnail(url=self.tek_pod.discord_image)
+        embed.add_field(name="Time taken:ㅤㅤㅤ", value=taken)
+        embed.add_field(name="Last healed:", value=interval)
+
+        embed.set_thumbnail(url=self.POD_AVATAR)
         embed.set_footer(text="Ling Ling on top!")
 
         return embed
-
-    def complete(self) -> tuple[Embed, HealingStatistics]:
-        """Goes to heal by travelling to the tek pod, trying to enter it up to
-        3 times. If it can not enter the tek pod, a `TekPodNotAccessible` Error
-        is raised.
-        """
-        self.spawn()
-        start = time.time()
-        
-        # try to enter the pod 3 times
-        for _ in range(3):
-            if not (self.tek_pod.enter() or self.player.has_died()):
-                self.player.sleep(1)
-                continue
-
-            if not self.player.has_died():
-                self.tek_pod.heal(60)
-                self.tek_pod.leave()
-
-            stats = HealingStatistics(round(time.time() - start), False, {})
-
-            return self.create_embed(stats), stats
-
-        # we cant heal, raise an error so we can try to unstuck
-        raise TekPodNotAccessibleError("Failed to access the tek pod!")

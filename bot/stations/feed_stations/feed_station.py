@@ -3,13 +3,11 @@ from datetime import datetime
 from typing import Callable, Optional, Sequence
 
 import numpy as np
-
+from ark import TribeLog
 from ark.entities import Dinosaur, Player
-from ark.exceptions import InvalidNpyPathError, NoItemsLeftError
 from ark.items import PELLET, Item
-from ark.structures.structure import Structure
-from ark.tribelog import TribeLog
-from bot.stations.station import Station, StationData
+
+from bot.stations._station import Station
 
 
 class FeedStation(Station):
@@ -28,7 +26,7 @@ class FeedStation(Station):
     """
 
     def __init__(
-        self, station_data: StationData, player: Player, tribelog: TribeLog
+        self, station_data, player: Player, tribelog: TribeLog
     ) -> None:
 
         self.station_data = station_data
