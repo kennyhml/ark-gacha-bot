@@ -1,12 +1,14 @@
 import itertools  # type:ignore[import]
 import time
-from typing import Literal, final
+from typing import final
 
 from ark import Bed, Gacha, Player, TekCropPlot, TribeLog, exceptions, items
 from discord import Embed  # type:ignore[import]
+
 from ...tools import threaded
 from ...webhooks import InfoWebhook
 from .._station import Station
+from ._settings import YTrapStationSettings
 
 
 @final
@@ -38,15 +40,6 @@ class YTrapStation(Station):
     info_webhook :class:`InfoWebhook`:
         The info webhook instance to post station statistics to.
 
-    turn_direction :class:`Literal["left", "right"]`:
-        The turn direction for the crop plots, default right.
-
-    stacks :class:`int`:
-        The amount of crop plot stacks the station has.
-
-    per_stack :class:`int`:
-        The amount of crop plot stacks per station.
-
     Properties
     ----------
     stacks :class:`str`:
@@ -57,6 +50,7 @@ class YTrapStation(Station):
     """
 
     Y_TRAP_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/cb/Plant_Species_Y_Trap_%28Scorched_Earth%29.png/revision/latest?cb=20160901233007"
+    total_ytraps_collected = 0
 
     def __init__(
         self,
@@ -64,30 +58,29 @@ class YTrapStation(Station):
         player: Player,
         tribelog: TribeLog,
         info_webhook: InfoWebhook,
-        *,
-        turn_direction: Literal["left", "right"] = "right",
-        stacks: int = 3,
-        per_stack: int = 8,
-        expected_pellet_coverage: float = 0.8,
     ) -> None:
         self._name = name
         self._player = player
         self._tribelog = tribelog
         self._webhook = info_webhook
-        self._turn_direction = turn_direction
+
+        conf = self.settings  = YTrapStationSettings.load()
+        if (l2 := conf.plots_per_stack) != (l1 := len(conf.crop_plot_turns)):
+            raise ValueError(
+                f"Turns do not match crop plots, got {l2} crop plots, and {l1} turns."
+            )
+
         self.bed = Bed(name)
         self.gacha = Gacha(name)
-        self.expected_pellet_coverage = expected_pellet_coverage
         self.total_completions = 0
-        self.total_ytraps_deposited = 0
         self._stacks = [
             [
                 TekCropPlot(f"Crop Plot {stack+ 1}:{idx+1} at {name}")
-                for idx in range(per_stack)
+                for idx in range(self.settings.plots_per_stack)
             ]
-            for stack in range(stacks)
+            for stack in range(self.settings.plot_stacks)
         ]
-        
+
     def is_ready(self) -> bool:
         return True
 
@@ -118,7 +111,7 @@ class YTrapStation(Station):
         start = time.time()
 
         self.refill = (
-            self.pellet_coverage < self.expected_pellet_coverage
+            self.pellet_coverage < self.settings.min_pellet_coverage
             and self.total_completions > 0
         )
 
@@ -129,7 +122,7 @@ class YTrapStation(Station):
         turns = len(self._stacks)
 
         for stack in range(turns):
-            self._player.turn_90_degrees(self._turn_direction, delay=0.5)
+            self._player.turn_90_degrees(self.settings.turn_direction, delay=0.5)
             self._do_crop_plot_stack(self._stacks[stack])
 
         for _ in range(4 - turns):
@@ -137,7 +130,7 @@ class YTrapStation(Station):
 
         added_traps = self._load_gacha()
 
-        self.total_ytraps_deposited += added_traps
+        YTrapStation.total_ytraps_collected += added_traps
         self.total_completions += 1
 
         embed = self._create_embed(round(time.time() - start), added_traps)

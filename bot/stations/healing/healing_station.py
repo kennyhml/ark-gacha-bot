@@ -3,10 +3,10 @@ import time
 from ark import Player, TekSleepingPod, TribeLog, _tools, exceptions
 from discord import Embed  # type: ignore[import]
 
-from ..tools import format_seconds
-from ..webhooks import InfoWebhook
-from ._station import Station
-
+from ...tools import format_seconds
+from ...webhooks import InfoWebhook
+from .._station import Station
+from ._settings import HealingStationSettings
 
 class HealingStation(Station):
     """Represents a healing station, a healing station is responsible for
@@ -37,18 +37,19 @@ class HealingStation(Station):
 
     def __init__(
         self,
-        name: str,
         player: Player,
         tribelog: TribeLog,
         info_webhook: InfoWebhook,
     ) -> None:
-        self._name = name
+
+        self.settings = HealingStationSettings.load()
+        self._name = self.settings.pod_name
         self._player = player
         self._tribelog = tribelog
         self._webhook = info_webhook
 
         self._least_healed = time.time()
-        self.pod = TekSleepingPod(name)
+        self.pod = TekSleepingPod(self._name)
 
     def is_ready(self) -> bool:
         return self._player.needs_recovery()

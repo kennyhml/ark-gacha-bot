@@ -1,6 +1,16 @@
 {
     "main": {
-        "game_launcher": "Steam"
+        "account_name": "rawr",
+        "game_launcher": "Epic",
+        "ytrap_beds": 52,
+        "ytrap_prefix": "spidert1seed",
+        "crystal_beds": 1,
+        "crystal_prefix": "spidert1crystal",
+        "ytrap_station": true,
+        "grinding_station": true,
+        "arb_station": false,
+        "berry_station": false,
+        "meat_station": true
     },
     "player": {
         "health": 300,
@@ -10,20 +20,22 @@
     },
     "discord": {
         "user_id": "",
-        "webhook_alert": "",
-        "webhook_gacha": "",
-        "webhook_logs": "",
-        "webhook_state": "",
-        "state_message_id": "1076478549864755210"
+        "webhook_alert": "https://discord.com/api/webhooks/1060008859533586432/EPGZtUs1sojVr9y5yJLAK-n2Fp-idhU_QKpQuDY1IIiXANCzC0BARwHz27ykUcGa2SrA",
+        "webhook_gacha": "https://discord.com/api/webhooks/1060008859533586432/EPGZtUs1sojVr9y5yJLAK-n2Fp-idhU_QKpQuDY1IIiXANCzC0BARwHz27ykUcGa2SrA",
+        "webhook_logs": "https://discord.com/api/webhooks/1060008859533586432/EPGZtUs1sojVr9y5yJLAK-n2Fp-idhU_QKpQuDY1IIiXANCzC0BARwHz27ykUcGa2SrA",
+        "webhook_state": "https://discord.com/api/webhooks/1063901406836293752/AmLRmnrH3oIMv3mLeCn0ALGAAqN-oHBzttDDdVhJcLWAOj3lzwdMMEk5HLHguEeaX-Kf",
+        "state_message_id": "1077152160405540937",
+        "timer_pop": 30
     },
     "ytrap": {
-        "ytrap_beds": 52,
-        "ytrap_prefix": "seed"
+        "turn_direction": "right",
+        "plot_stacks": 3,
+        "plots_per_stack": 10,
+        "min_pellet_coverage": 0.8,
+        "crop_plot_turns": "[-130, *[-17] * 5, 50, -17, -17, -17]"
     },
     "crystal": {
-        "crystal_beds": 1,
-        "crystal_prefix": "crystal",
-        "crystal_interval": 300,
+        "crystal_interval": 5,
         "stryder_depositing": false,
         "drop_items": [
             "prim"
@@ -35,7 +47,8 @@
             "ass",
             "mining",
             "wood"
-        ]
+        ],
+        "min_ytraps_collected": 0
     },
     "berry": {
         "berry_beds": 4,
@@ -46,6 +59,6 @@
         "meat_prefix": "automeat"
     },
     "healing": {
-        "pod_name": "Gacha Heal"
+        "pod_name": "spidert1heal"
     }
 }

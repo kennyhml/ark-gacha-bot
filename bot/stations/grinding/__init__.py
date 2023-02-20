@@ -1,3 +1,3 @@
-from .status import Status
+from ._status import Status
 from .grinding_station import GrindingStation
-from .stations import Stations
+from ._stations import Stations

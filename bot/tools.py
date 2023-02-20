@@ -1,9 +1,10 @@
 import functools
 from threading import Thread
 from typing import Callable
-from PIL import Image
+
+import cv2 as cv  # type:ignore[import]
 import numpy as np
-import cv2 as cv
+from PIL import Image # type:ignore[import]
 
 
 def threaded(name: str):

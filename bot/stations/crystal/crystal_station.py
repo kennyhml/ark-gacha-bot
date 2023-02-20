@@ -1,18 +1,28 @@
 import time
 from datetime import datetime
 
-from ark import (Bed, Player, Structure, Stryder, TekDedicatedStorage,
-                 TribeLog, _tools)
+from ark import (
+    Bed,
+    Player,
+    Structure,
+    Stryder,
+    TekDedicatedStorage,
+    TribeLog,
+    _tools,
+    exceptions,
+)
 from ark.exceptions import DediNotInRangeError
 from ark.items import *
 from discord import Embed  # type: ignore[import]
 
 from ...exceptions import NoCrystalAddedError
-from ...webhooks import InfoWebhook
+from ...webhooks import InfoWebhook, TimerWebhook
 from .._station import Station
+
 # from ..arb import ARBStation
 # from ..grinding import GrindingStation
 from ..ytrap import YTrapStation
+from ._settings import CrystalStationSettings
 
 
 class CrystalStation(Station):
@@ -71,42 +81,39 @@ class CrystalStation(Station):
         name: str,
         player: Player,
         tribelog: TribeLog,
-        interval: int,
         info_webhook: InfoWebhook,
+        timer_webhook: TimerWebhook,
         grinding_station,
         arb_station,
-        *,
-        stryder_depositing: bool,
-        drop_quality: list[str],
-        keep_items: list[str],
     ) -> None:
 
         self._name = name
         self._player = player
         self._tribelog = tribelog
         self._webhook = info_webhook
-        self.interval = interval
+        self._timer_webhook = timer_webhook
+        self.settings = CrystalStationSettings.load()
+
         self.bed = Bed(name)
         self.dedi = TekDedicatedStorage()
         self.stryder = Stryder()
 
         self._grinding_station = grinding_station
         self._arb_station = arb_station
-        self._stryder_depositing = stryder_depositing
 
         self._keep_items: list[Item | str] = []
-        self._drop_quality = drop_quality
         self._first_pickup = True
-
-        for item in self._ITEMS:
-            if item.name in keep_items:
-                self._keep_items.append(item)
-                keep_items.remove(item.name)
-        self._keep_items.extend(keep_items)
 
         self._total_pickups = 0
         self._resources_made: dict[Item, int] = {}
         self.last_completed = datetime.now()
+        self.interval = self.settings.crystal_interval
+
+    def is_ready(self) -> bool:
+        if YTrapStation.total_ytraps_collected < self.settings.min_ytraps_collected:
+            return False
+            
+        return super().is_ready()
 
     def complete(self) -> None:
         """Completes the crystal collection station.
@@ -125,7 +132,7 @@ class CrystalStation(Station):
             self._walk_to_dedi()
             self._open_crystals()
 
-            if self._stryder_depositing:
+            if self.settings.stryder_depositing:
                 resources_deposited = self.deposit_into_stryder()
                 # self._arb_station.add_wood(resources_deposited[FUNGAL_WOOD])
             else:
@@ -169,6 +176,31 @@ class CrystalStation(Station):
         self.stryder.sort_items_to_nearby_dedis()
         self.stryder.sleep(1)
         return profits
+
+    def _get_timer(self, vault: Structure) -> None:
+        if not self._timer_webhook.timer_popped:
+            return
+
+        vault.inventory.search(EXO_GLOVES)
+        if not vault.inventory.has(EXO_GLOVES, is_searched=True):
+            return
+
+        vault.inventory.take(EXO_GLOVES, stacks=1)
+        self._player.inventory.equip(EXO_GLOVES)
+
+        vault.inventory.close()
+        try:
+            timer = self._player.hud.get_timer()
+        except exceptions.TimerNotVisibleError:
+            print("Failed to get timer!")
+            timer = None
+
+        if timer is not None:
+            self._timer_webhook.timer = timer
+
+        vault.inventory.open()
+        self._player.inventory.unequip(EXO_GLOVES)
+        self._player.inventory.transfer_all(EXO_GLOVES)
 
     def _pick_crystals(self) -> None:
         """Picks up the crystals in the collection point.
@@ -331,14 +363,15 @@ class CrystalStation(Station):
         vault.inventory.open()
 
         if not vault.inventory.is_full():
-            self._player.inventory.drop_all(self._drop_quality)
+            self._player.inventory.drop_all(self.settings.drop_items)
             self._player.inventory.transfer_all(self._keep_items)
 
             vault_full = vault.inventory.is_full()
         else:
             vault_full = True
 
-        if not self.need_to_access_top_vault() or self._stryder_depositing:
+        if not self.need_to_access_top_vault() or self.settings.stryder_depositing:
+            self._get_timer(vault)
             vault.inventory.close()
             return vault_full
 
@@ -350,13 +383,16 @@ class CrystalStation(Station):
 
         if vault.inventory.is_full():
             self._player.inventory.drop_all()
+            self._get_timer(vault)
             vault.inventory.close()
             return vault_full
 
         self._player.inventory.transfer_all([METAL_GATE, TREE_PLATFORM])
 
         self._player.inventory.drop_all()
+        self._get_timer(vault)
         vault.inventory.close()
+
         return vault_full
 
     def validate_dust_amount(self, amount: int) -> int:
@@ -393,9 +429,7 @@ class CrystalStation(Station):
             title=f"Collected crystals at '{self._name}'!",
             color=0x07F2EE,
         )
-        embed.add_field(
-            name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds"
-        )
+        embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds")
         embed.add_field(name="Crystals opened:", value=f"~{crystals} crystals")
 
         embed.add_field(name="\u200b", value="\u200b")
