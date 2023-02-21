@@ -225,10 +225,12 @@ class YTrapStation(Station):
         self._player.inventory.transfer_all()
 
         if self._player.inventory.has(items.Y_TRAP):
+            self._player.inventory.drop_all([items.PELLET])
             self._player.inventory.drop(items.Y_TRAP)
-
-        self._player.inventory.drop_all()
-        self._player.inventory.close()
+            self._player.inventory.close()
+        else:
+            self._player.inventory.drop_all()
+            self._player.inventory.close()
 
         if ytraps < 420 or not 0 < ytraps_removed < 800:
             return ytraps

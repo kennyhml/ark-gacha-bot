@@ -4,6 +4,8 @@ import traceback
 
 from ark import Player, Server, TribeLog, UserSettings
 
+from bot.recovery import Unstucking
+
 from .settings import TowerSettings
 from .stations import (
     CrystalStation,
@@ -132,6 +134,7 @@ class GachaBot:
                     station.complete()
                     return
 
-        except Exception as e:
+        except Exception:
             print("Ran into an unhandled exception!")
             print(traceback.format_exc())
+            Unstucking(self.server, "epic", self.info_webhook).unstuck()

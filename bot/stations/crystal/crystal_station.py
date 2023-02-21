@@ -177,6 +177,8 @@ class CrystalStation(Station):
             pass
 
         vault.inventory.search(EXO_GLOVES)
+        vault.inventory.sleep(0.3)
+
         if not vault.inventory.has(EXO_GLOVES, is_searched=True):
             return
 
@@ -408,7 +410,7 @@ class CrystalStation(Station):
         The given amount if its within a valid range, else the average amount
         """
         try:
-            average_amount = round(self._resources_made[DUST] / self._total_pickups)
+            average_amount = round(self._resources_made.get(DUST, 0) / self._total_pickups)
         except ZeroDivisionError:
             # assume 6000 dust / minute, or 100 / second
             average_amount = round(100 * self.settings.crystal_interval)

@@ -2,7 +2,7 @@
     "main": {
         "account_name": "rawr",
         "game_launcher": "Epic",
-        "ytrap_beds": 52,
+        "ytrap_beds": 32,
         "ytrap_prefix": "spidert1seed",
         "crystal_beds": 1,
         "crystal_prefix": "spidert1crystal",
@@ -20,11 +20,11 @@
     },
     "discord": {
         "user_id": "",
-        "webhook_alert": "https://discord.com/api/webhooks/1060008859533586432/EPGZtUs1sojVr9y5yJLAK-n2Fp-idhU_QKpQuDY1IIiXANCzC0BARwHz27ykUcGa2SrA",
-        "webhook_gacha": "https://discord.com/api/webhooks/1060008859533586432/EPGZtUs1sojVr9y5yJLAK-n2Fp-idhU_QKpQuDY1IIiXANCzC0BARwHz27ykUcGa2SrA",
-        "webhook_logs": "https://discord.com/api/webhooks/1060008859533586432/EPGZtUs1sojVr9y5yJLAK-n2Fp-idhU_QKpQuDY1IIiXANCzC0BARwHz27ykUcGa2SrA",
-        "webhook_state": "https://discord.com/api/webhooks/1063901406836293752/AmLRmnrH3oIMv3mLeCn0ALGAAqN-oHBzttDDdVhJcLWAOj3lzwdMMEk5HLHguEeaX-Kf",
-        "state_message_id": "1077152160405540937",
+        "webhook_alert": "https://discord.com/api/webhooks/1077483168111800380/0O9TQcyhHq9KFvcszsT2wGZSpoJ_FFjDc8dHHi-Ar9HY-8evGfkphkZJ1P8rJm94XUvz",
+        "webhook_gacha": "https://discord.com/api/webhooks/1077483168111800380/0O9TQcyhHq9KFvcszsT2wGZSpoJ_FFjDc8dHHi-Ar9HY-8evGfkphkZJ1P8rJm94XUvz",
+        "webhook_logs": "https://discord.com/api/webhooks/1060008797508223057/tLB-cG9c2jdTBG4Evdzp6p0bIgeBfI_TrHUBqSIpGIc2wTM1tCOvGCU3vKcUqUMPA2vG",
+        "webhook_state": "https://discord.com/api/webhooks/1077483268598927380/NRqWR9FClwaPSnFSoNeJBBc8gSSXvTm04xJgdxPBWISeA-O877cgZxibLwzNEJz5-KUU",
+        "state_message_id": "1077483503765168189",
         "timer_pop": 30
     },
     "ytrap": {
@@ -36,7 +36,7 @@
     },
     "crystal": {
         "crystal_interval": 5,
-        "stryder_depositing": false,
+        "stryder_depositing": true,
         "drop_items": [
             "prim"
         ],
