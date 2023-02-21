@@ -5,9 +5,14 @@ import traceback
 from ark import Player, Server, TribeLog, UserSettings
 
 from .settings import TowerSettings
-from .stations import CrystalStation, HealingStation, Station, YTrapStation, GrindingStation
-from .webhooks import (AlertWebhook, DiscordSettings, InfoWebhook, LogWebhook,
-                       TimerWebhook)
+from .stations import (
+    CrystalStation,
+    HealingStation,
+    Station,
+    YTrapStation,
+    GrindingStation,
+)
+from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook
 
 
 class GachaBot:
@@ -40,13 +45,19 @@ class GachaBot:
         Each of the stations follows the `Station` abstract base class
         and behave similar.
         """
-        stations: list[Station | itertools.cycle] = [HealingStation(self.player, self.tribelogs, self.info_webhook)]
+        stations: list[Station | itertools.cycle] = [
+            HealingStation(self.player, self.tribelogs, self.info_webhook)
+        ]
+
+        grinding = GrindingStation(self.player, self.tribelogs, self.info_webhook)
+        ytraps = self._create_ytrap_stations()
+        crystal = self._create_crystal_stations(grinding)
 
         if self.settings.ytrap_station:
-            stations.extend(self._create_crystal_stations())
+            stations.extend(crystal)
 
         if self.settings.grinding_station:
-            stations.append(GrindingStation(self.player, self.tribelogs, self.info_webhook))
+            stations.append(grinding)
 
         if self.settings.arb_station:
             ...
@@ -58,7 +69,7 @@ class GachaBot:
             ...
 
         if self.settings.ytrap_station:
-            stations.append(self._create_ytrap_stations())
+            stations.append(ytraps)
 
         return stations
 
@@ -93,11 +104,13 @@ class GachaBot:
         try:
             settings = DiscordSettings.load()
             self.info_webhook = InfoWebhook(settings.webhook_gacha, settings.user_id)
-            self.alert_webhook = AlertWebhook(settings.webhook_alert, settings.user_id)
-            self.logs_webhook = LogWebhook(settings.webhook_logs)
-            
-            self.tribelogs = TribeLog(self.alert_webhook, self.logs_webhook)
-            self.timer_webhook = TimerWebhook(settings.webhook_state, self.server, self.tribelogs, settings.timer_pop)
+
+            self.tribelogs = TribeLog(
+                settings.webhook_alert, settings.webhook_logs, settings.user_id
+            )
+            self.timer_webhook = TimerWebhook(
+                settings.webhook_state, self.server, self.tribelogs, settings.timer_pop
+            )
 
         except Exception as e:
             print(f"Failed to create one or more webhooks!\n{e}")

@@ -35,7 +35,6 @@ class TimerWebhook:
             server_query.query(server)
 
         self._timer: int | None = None
-
         self._server = server
         self.timer_loop_running = True
 

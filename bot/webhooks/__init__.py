@@ -1,6 +1,5 @@
-from .alert_webhook import AlertWebhook
+
 from .info_webhook import InfoWebhook
-from .log_webhook import LogWebhook
 from .settings import DiscordSettings
 from .timer_webhook import TimerWebhook
 

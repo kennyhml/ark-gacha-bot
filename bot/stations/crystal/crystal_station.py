@@ -1,16 +1,8 @@
 import time
 from datetime import datetime
 
-from ark import (
-    Bed,
-    Player,
-    Structure,
-    Stryder,
-    TekDedicatedStorage,
-    TribeLog,
-    _tools,
-    exceptions,
-)
+from ark import (Bed, Player, Structure, Stryder, TekDedicatedStorage,
+                 TribeLog, _tools, exceptions)
 from ark.exceptions import DediNotInRangeError
 from ark.items import *
 from discord import Embed  # type: ignore[import]
@@ -18,9 +10,8 @@ from discord import Embed  # type: ignore[import]
 from ...exceptions import NoCrystalAddedError
 from ...webhooks import InfoWebhook, TimerWebhook
 from .._station import Station
-
+from ..grinding import GrindingStation
 # from ..arb import ARBStation
-# from ..grinding import GrindingStation
 from ..ytrap import YTrapStation
 from ._settings import CrystalStationSettings
 
@@ -83,7 +74,7 @@ class CrystalStation(Station):
         tribelog: TribeLog,
         info_webhook: InfoWebhook,
         timer_webhook: TimerWebhook,
-        grinding_station,
+        grinding_station: GrindingStation,
         arb_station,
     ) -> None:
 
@@ -101,7 +92,6 @@ class CrystalStation(Station):
         self._grinding_station = grinding_station
         self._arb_station = arb_station
 
-        self._keep_items: list[Item | str] = []
         self._first_pickup = True
 
         self._total_pickups = 0
@@ -112,7 +102,7 @@ class CrystalStation(Station):
     def is_ready(self) -> bool:
         if YTrapStation.total_ytraps_collected < self.settings.min_ytraps_collected:
             return False
-            
+
         return super().is_ready()
 
     def complete(self) -> None:
@@ -140,7 +130,7 @@ class CrystalStation(Station):
 
             # put items into vault
             vault_full = self.deposit_items()
-            if vault_full and 0:
+            if vault_full:
                 self._grinding_station.ready = True
 
             # increase the counters
@@ -165,11 +155,13 @@ class CrystalStation(Station):
         for item in [DUST, FLINT, STONE, FUNGAL_WOOD, BLACK_PEARL]:
             self._player.inventory.search(item)
             self._player.sleep(0.3)
+
             stacks = self._player.inventory.count(item)
             profits[item] = max(
                 int((stacks * item.stack_size) - (0.5 * item.stack_size)), 0
             )
-            self._player.inventory.transfer_all()
+            if stacks:
+                self._player.inventory.transfer_all()
 
         self.stryder.inventory.close()
 
@@ -178,8 +170,11 @@ class CrystalStation(Station):
         return profits
 
     def _get_timer(self, vault: Structure) -> None:
-        if not self._timer_webhook.timer_popped:
-            return
+        try:
+            if not self._timer_webhook.timer_popped:
+                return
+        except AttributeError:
+            pass
 
         vault.inventory.search(EXO_GLOVES)
         if not vault.inventory.has(EXO_GLOVES, is_searched=True):
@@ -188,7 +183,7 @@ class CrystalStation(Station):
         vault.inventory.take(EXO_GLOVES, stacks=1)
         self._player.inventory.equip(EXO_GLOVES)
 
-        vault.inventory.close()
+        vault.close()
         try:
             timer = self._player.hud.get_timer()
         except exceptions.TimerNotVisibleError:
@@ -198,7 +193,7 @@ class CrystalStation(Station):
         if timer is not None:
             self._timer_webhook.timer = timer
 
-        vault.inventory.open()
+        vault.open()
         self._player.inventory.unequip(EXO_GLOVES)
         self._player.inventory.transfer_all(EXO_GLOVES)
 
@@ -232,7 +227,11 @@ class CrystalStation(Station):
         if self._first_pickup:
             raise NoCrystalAddedError
 
-        self._player.sleep(3)
+        if self._timer_webhook.timer is not None and self._timer_webhook.timer < 120:
+            print("Idling 20 seconds because timer is likely to have popped...")
+            self._player.sleep(20)
+        else:
+            self._player.sleep(5)
         self._player.walk("s", duration=3)
 
     def _walk_forward_spam_f(self) -> None:
@@ -326,6 +325,8 @@ class CrystalStation(Station):
             if item_deposited is None:
                 continue
             item, amount = item_deposited
+            if item == DUST:
+                amount = self.validate_dust_amount(amount)
             gains[item] += amount
 
         # return to original position
@@ -360,31 +361,30 @@ class CrystalStation(Station):
         self._player.sleep(0.3)
         self._player.turn_90_degrees("left")
         self._player.sleep(1)
-        vault.inventory.open()
+        vault.open()
 
         if not vault.inventory.is_full():
             self._player.inventory.drop_all(self.settings.drop_items)
-            self._player.inventory.transfer_all(self._keep_items)
-
+            self._player.inventory.transfer_all(self.settings.keep_items)
             vault_full = vault.inventory.is_full()
         else:
             vault_full = True
 
         if not self.need_to_access_top_vault() or self.settings.stryder_depositing:
             self._get_timer(vault)
-            vault.inventory.close()
+            vault.close()
             return vault_full
 
         # turn to the upper vault
-        vault.inventory.close()
+        vault.close()
         self._player.turn_90_degrees("right")
         self._player.look_up_hard()
-        vault.inventory.open()
+        vault.open()
 
         if vault.inventory.is_full():
             self._player.inventory.drop_all()
             self._get_timer(vault)
-            vault.inventory.close()
+            vault.close()
             return vault_full
 
         self._player.inventory.transfer_all([METAL_GATE, TREE_PLATFORM])
@@ -407,19 +407,17 @@ class CrystalStation(Station):
         ----------
         The given amount if its within a valid range, else the average amount
         """
-        return amount
         try:
-            average_amount = round(self._total_dust_made / self._total_pickups)
+            average_amount = round(self._resources_made[DUST] / self._total_pickups)
         except ZeroDivisionError:
             # assume 6000 dust / minute, or 100 / second
-            average_amount = round(100 * self.station_data.interval)
+            average_amount = round(100 * self.settings.crystal_interval)
 
-        if average_amount - 5000 < amount < average_amount + 10000:
+        if average_amount - 15000 < amount < average_amount + 15000:
             return amount
         return average_amount
 
     def create_embed(self, profit: dict[Item, int], time_taken: int) -> Embed:
-
         dust = f"{profit[DUST]:_}".replace("_", " ")
         pearls = f"{profit[BLACK_PEARL]:_}".replace("_", " ")
         crystals = round(profit[DUST] / 150)
