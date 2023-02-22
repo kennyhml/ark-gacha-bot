@@ -75,7 +75,7 @@ class TimerWebhook:
         return (
             "```fix\n"
             f"Online Tribemembers: {self._tribelog.online_members}\n"
-            f"Server Timer: {'?' if self._timer is None else f'{minutes}:{seconds}'}\n"
+            f"Server Timer: {'?' if self._timer is None else f'{minutes}:{seconds:02d}'}\n"
             f"Server Status: {self._server.status}\n"
             f"Server Day: {self._server.day}```"
         )

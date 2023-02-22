@@ -39,7 +39,7 @@ class Unstucking:
         
         try:
             self._escape_menu.open()
-            self._escape_menu.sleep(3)
+            self._escape_menu.click("right")
             self._escape_menu.close()
         except exceptions.InterfaceError:
             print("Game not responding..")
