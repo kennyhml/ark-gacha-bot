@@ -1,14 +1,14 @@
+import time
 from threading import Thread
+
 from ark import State
 from pynput import keyboard  # type: ignore[import]
 
 from bot.gacha_bot import GachaBot
-from gui.gacha_ui_handle import MainUi
 
 
 def main():
     bot = GachaBot()
-    bot.start()
 
     while State.running:
         bot.do_next_task()
@@ -44,8 +44,9 @@ def on__key_press(key):
 if __name__ == "__main__":
     State.running = False
     State.paused = False
+
     listener = keyboard.Listener(on_press=on__key_press)
     listener.start()  # start listener thread
 
-    ui = MainUi()
-    ui.display()
+    while True:
+        time.sleep(1000)

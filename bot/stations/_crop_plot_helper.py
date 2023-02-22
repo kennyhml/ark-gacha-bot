@@ -19,14 +19,16 @@ def do_crop_plot_stack(
         player.stand_up()
 
     player.look_down_hard()
-
+    fails = 0
     for idx, (turn_value, crop_plot) in enumerate(zip(turns, stack)):
         if idx == 6:
             stand_up()
 
         player.turn_y_by(turn_value, delay=0.3)
-        take_and_refill(player, crop_plot, item, refill=refill, precise=precise)
-
+        if not take_and_refill(player, crop_plot, item, refill=refill, precise=precise):
+            fails += 1
+            if fails >= 2:
+                raise exceptions.InventoryNotAccessibleError
     player.crouch()
 
 
@@ -37,7 +39,7 @@ def take_and_refill(
     *,
     refill: bool,
     precise: bool
-) -> None:
+) -> bool:
     """Takes ytraps out of a crop plot, then puts pellets in if
     we need to refill them. Skips taking or transferring if there
     is no items available.
@@ -49,7 +51,7 @@ def take_and_refill(
             _adjust_for_crop_plot(player, crop_plot)
     except (exceptions.WheelError):
         crop_plot.action_wheel.deactivate()
-        return
+        return False
 
     if crop_plot.inventory.has(item):
         crop_plot.inventory.search(item, delete_prior=False)
@@ -60,7 +62,7 @@ def take_and_refill(
 
     crop_plot.inventory.set_content(items.PELLET)
     crop_plot.close()
-
+    return True
 
 def _adjust_for_crop_plot(
     player: Player, crop_plot: TekCropPlot

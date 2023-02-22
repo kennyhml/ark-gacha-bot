@@ -77,7 +77,7 @@ class CrystalStation(Station):
         grinding_station: GrindingStation,
         arb_station,
         *,
-        gen2: bool
+        gen2: bool,
     ) -> None:
 
         self._name = name
@@ -90,6 +90,9 @@ class CrystalStation(Station):
         self.bed = Bed(name)
         self.dedi = TekDedicatedStorage()
         self.stryder = Stryder()
+        self.vault = Structure(
+            "Vault", "templates/vault.png", capacity="templates/vault_capped.png"
+        )
         self.gen2 = gen2
 
         self._grinding_station = grinding_station
@@ -121,7 +124,13 @@ class CrystalStation(Station):
             start = time.time()
 
             # open the crystals and deposit the items into dedis
-            self._pick_crystals()
+            try:
+                self._pick_crystals()
+            except NoCrystalAddedError:
+                if self.gen2:
+                    self._get_timer()
+                return
+
             self._walk_to_dedi()
             self._open_crystals()
 
@@ -172,7 +181,7 @@ class CrystalStation(Station):
         self.stryder.sleep(1)
         return profits
 
-    def _get_timer(self, vault: Structure) -> None:
+    def _get_timer(self) -> None:
         try:
             if not self._timer_webhook.timer_popped:
                 return
@@ -180,16 +189,16 @@ class CrystalStation(Station):
             pass
 
         if not self.gen2:
-            vault.inventory.search(EXO_GLOVES)
-            vault.inventory.sleep(0.3)
+            self.vault.inventory.search(EXO_GLOVES)
+            self.vault.inventory.sleep(0.3)
 
-            if not vault.inventory.has(EXO_GLOVES, is_searched=True):
+            if not self.vault.inventory.has(EXO_GLOVES, is_searched=True):
                 return
 
-            vault.inventory.take(EXO_GLOVES, stacks=1)
+            self.vault.inventory.take(EXO_GLOVES, stacks=1)
             self._player.inventory.equip(EXO_GLOVES)
 
-        vault.close()
+        self.vault.close()
         try:
             timer = self._player.hud.get_timer()
         except exceptions.TimerNotVisibleError:
@@ -202,7 +211,7 @@ class CrystalStation(Station):
         if self.gen2:
             return
 
-        vault.open()
+        self.vault.open()
         self._player.inventory.unequip(EXO_GLOVES)
         self._player.inventory.transfer_all(EXO_GLOVES)
 
@@ -361,46 +370,43 @@ class CrystalStation(Station):
         --------
         Whether the vault is full after or before depositing items.
         """
-        vault = Structure(
-            "Vault", "templates/vault.png", capacity="templates/vault_capped.png"
-        )
         vault_full = False
 
         # put the grinding items in the left vault
         self._player.sleep(0.3)
         self._player.turn_90_degrees("left")
         self._player.sleep(1)
-        vault.open()
+        self.vault.open()
 
-        if not vault.inventory.is_full():
+        if not self.vault.inventory.is_full():
             self._player.inventory.drop_all(self.settings.drop_items)
             self._player.inventory.transfer_all(self.settings.keep_items)
-            vault_full = vault.inventory.is_full()
+            vault_full = self.vault.inventory.is_full()
         else:
             vault_full = True
 
         if not self.need_to_access_top_vault() or self.settings.stryder_depositing:
-            self._get_timer(vault)
-            vault.close()
+            self._get_timer()
+            self.vault.close()
             return vault_full
 
         # turn to the upper vault
-        vault.close()
+        self.vault.close()
         self._player.turn_90_degrees("right")
         self._player.look_up_hard()
-        vault.open()
+        self.vault.open()
 
-        if vault.inventory.is_full():
+        if self.vault.inventory.is_full():
             self._player.inventory.drop_all()
-            self._get_timer(vault)
-            vault.close()
+            self._get_timer()
+            self.vault.close()
             return vault_full
 
         self._player.inventory.transfer_all([METAL_GATE, TREE_PLATFORM])
 
         self._player.inventory.drop_all()
-        self._get_timer(vault)
-        vault.inventory.close()
+        self._get_timer()
+        self.vault.inventory.close()
 
         return vault_full
 
@@ -417,7 +423,9 @@ class CrystalStation(Station):
         The given amount if its within a valid range, else the average amount
         """
         try:
-            average_amount = round(self._resources_made.get(DUST, 0) / self._total_pickups)
+            average_amount = round(
+                self._resources_made.get(DUST, 0) / self._total_pickups
+            )
         except ZeroDivisionError:
             # assume 6000 dust / minute, or 100 / second
             average_amount = round(100 * self.settings.crystal_interval)

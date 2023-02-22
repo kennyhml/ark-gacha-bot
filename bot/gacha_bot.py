@@ -8,8 +8,13 @@ from ark import Player, Server, TribeLog, UserSettings, exceptions
 from bot.recovery import Unstucking
 
 from .settings import TowerSettings
-from .stations import (CrystalStation, GrindingStation, HealingStation,
-                       Station, YTrapStation)
+from .stations import (
+    CrystalStation,
+    GrindingStation,
+    HealingStation,
+    Station,
+    YTrapStation,
+)
 from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook
 
 
@@ -24,16 +29,17 @@ class GachaBot:
     """
 
     def __init__(self) -> None:
+        print("Bot started, initializing gacha bot...")
         self.settings = TowerSettings.load()
         self.ark_settings = UserSettings.load()
-
         self.server = Server(self.ark_settings.last_server)
         self.create_webhooks()
 
         with open("settings/settings.json") as f:
             self.player = Player(**json.load(f)["player"])
-
         self.stations = self.create_stations()
+
+        print("Initialization successful.")
 
     def create_stations(self) -> list[Station | Iterable[YTrapStation]]:
         """Creates a list of the stations the gacha bot will run, the stations
@@ -93,7 +99,7 @@ class GachaBot:
                 self.timer_webhook,
                 grinding,
                 arb,
-                gen2=self.settings.gen2
+                gen2=self.settings.gen2,
             )
             for i in range(self.settings.crystal_beds)
         ]
