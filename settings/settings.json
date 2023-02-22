@@ -2,6 +2,7 @@
     "main": {
         "account_name": "rawr",
         "game_launcher": "Epic",
+        "gen2": true,
         "ytrap_beds": 32,
         "ytrap_prefix": "spidert1seed",
         "crystal_beds": 1,
@@ -20,14 +21,15 @@
     },
     "discord": {
         "user_id": "",
-        "webhook_alert": "https://discord.com/api/webhooks/1077483168111800380/0O9TQcyhHq9KFvcszsT2wGZSpoJ_FFjDc8dHHi-Ar9HY-8evGfkphkZJ1P8rJm94XUvz",
-        "webhook_gacha": "https://discord.com/api/webhooks/1077483168111800380/0O9TQcyhHq9KFvcszsT2wGZSpoJ_FFjDc8dHHi-Ar9HY-8evGfkphkZJ1P8rJm94XUvz",
-        "webhook_logs": "https://discord.com/api/webhooks/1060008797508223057/tLB-cG9c2jdTBG4Evdzp6p0bIgeBfI_TrHUBqSIpGIc2wTM1tCOvGCU3vKcUqUMPA2vG",
-        "webhook_state": "https://discord.com/api/webhooks/1077483268598927380/NRqWR9FClwaPSnFSoNeJBBc8gSSXvTm04xJgdxPBWISeA-O877cgZxibLwzNEJz5-KUU",
+        "webhook_alert": "",
+        "webhook_gacha": "",
+        "webhook_logs": "",
+        "webhook_state": "",
         "state_message_id": "1077483503765168189",
         "timer_pop": 30
     },
     "ytrap": {
+        "mode": "normal",
         "turn_direction": "right",
         "plot_stacks": 3,
         "plots_per_stack": 10,

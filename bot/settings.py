@@ -10,6 +10,7 @@ import dacite
 class TowerSettings:
     account_name: str
     game_launcher: str
+    gen2: bool
 
     ytrap_beds: int
     ytrap_prefix: str

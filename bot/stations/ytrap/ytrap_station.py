@@ -2,11 +2,11 @@ import itertools  # type:ignore[import]
 import time
 from typing import final
 
-from ark import Bed, Gacha, Player, TekCropPlot, TribeLog, exceptions, items
+from ark import Bed, Gacha, Player, TekCropPlot, TribeLog, items
 from discord import Embed  # type:ignore[import]
 
-from ...tools import threaded
 from ...webhooks import InfoWebhook
+from .._crop_plot_helper import do_crop_plot_stack, set_stack_folders
 from .._station import Station
 from ._settings import YTrapStationSettings
 
@@ -64,7 +64,7 @@ class YTrapStation(Station):
         self._tribelog = tribelog
         self._webhook = info_webhook
 
-        conf = self.settings  = YTrapStationSettings.load()
+        conf = self.settings = YTrapStationSettings.load()
         if (l2 := conf.plots_per_stack) != (l1 := len(conf.crop_plot_turns)):
             raise ValueError(
                 f"Turns do not match crop plots, got {l2} crop plots, and {l1} turns."
@@ -119,13 +119,23 @@ class YTrapStation(Station):
             self._take_pellets_from_gacha()
 
         self._player.crouch()
-        turns = len(self._stacks)
 
-        for stack in range(turns):
+        for stack in self._stacks:
             self._player.turn_90_degrees(self.settings.turn_direction, delay=0.5)
-            self._do_crop_plot_stack(self._stacks[stack])
+            if self.settings.mode == "set folders":
+                set_stack_folders(self._player, stack)
+            else:
+                do_crop_plot_stack(
+                    self._player,
+                    stack,
+                    items.Y_TRAP,
+                    self.settings.crop_plot_turns,
+                    refill=self.refill,
+                    precise=self.settings.mode == "precise"
+                    or (self.settings.mode == "precise on refill" and self.refill),
+                )
 
-        for _ in range(4 - turns):
+        for _ in range(4 - len(self._stacks)):
             self._player.turn_90_degrees(delay=1)
 
         added_traps = self._load_gacha()
@@ -135,47 +145,6 @@ class YTrapStation(Station):
 
         embed = self._create_embed(round(time.time() - start), added_traps)
         self._webhook.send_embed(embed)
-
-    def _do_crop_plot_stack(self, stack: list[TekCropPlot]) -> None:
-        """Empties a stack of crop plots."""
-
-        @threaded("Standing up")
-        def stand_up() -> None:
-            self._player.stand_up()
-
-        self._player.look_down_hard()
-        turns = [-130, *[-17] * 5, 50, -17, -17, -17]
-
-        for idx, (turn_value, crop_plot) in enumerate(zip(turns, stack)):
-            if idx == 6:
-                stand_up()
-
-            self._player.turn_y_by(turn_value, delay=0.3)
-            self._take_ytraps_put_pellets(crop_plot)
-
-        self._player.crouch()
-
-    def _take_ytraps_put_pellets(self, crop_plot: TekCropPlot) -> None:
-        """Takes ytraps out of a crop plot, then puts pellets in if
-        we need to refill them. Skips taking or transferring if there
-        is no items available.
-
-        If the crop plot could not be opened it will simply be skipped."""
-        try:
-            crop_plot.open()
-        except (exceptions.WheelError):
-            crop_plot.action_wheel.deactivate()
-            return
-
-        if crop_plot.inventory.has(items.Y_TRAP):
-            crop_plot.inventory.search(items.Y_TRAP, delete_prior=False)
-            crop_plot.inventory.transfer_all()
-
-        if self.refill:
-            self._player.inventory.transfer_all()
-
-        crop_plot.inventory.set_content(items.PELLET)
-        crop_plot.close()
 
     def _take_pellets_from_gacha(self) -> None:
         """Takes the pellets from the gacha (on a refill lap only).
@@ -223,6 +192,7 @@ class YTrapStation(Station):
             ytraps_removed = self._player.inventory.get_amount_transferred(items.Y_TRAP)
 
         self._player.inventory.transfer_all()
+        self._player.sleep(0.3)
 
         if self._player.inventory.has(items.Y_TRAP):
             self._player.inventory.drop_all([items.PELLET])

@@ -11,7 +11,8 @@ import dacite
 class YTrapStationSettings:
     """Contains the settings of the crystal station"""
 
-    plot_stacks: int 
+    mode: Literal["precise", "precise on refill", "normal", "set folders"]
+    plot_stacks: int
     plots_per_stack: int
     min_pellet_coverage: float
     turn_direction: Literal["left", "right"]

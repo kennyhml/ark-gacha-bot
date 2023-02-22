@@ -1,19 +1,15 @@
 import itertools
 import json
 import traceback
+from typing import Iterable
 
-from ark import Player, Server, TribeLog, UserSettings
+from ark import Player, Server, TribeLog, UserSettings, exceptions
 
 from bot.recovery import Unstucking
 
 from .settings import TowerSettings
-from .stations import (
-    CrystalStation,
-    HealingStation,
-    Station,
-    YTrapStation,
-    GrindingStation,
-)
+from .stations import (CrystalStation, GrindingStation, HealingStation,
+                       Station, YTrapStation)
 from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook
 
 
@@ -39,7 +35,7 @@ class GachaBot:
 
         self.stations = self.create_stations()
 
-    def create_stations(self) -> list[Station | itertools.cycle]:
+    def create_stations(self) -> list[Station | Iterable[YTrapStation]]:
         """Creates a list of the stations the gacha bot will run, the stations
         are ordered by 'priority', e.g the crystal station comes first, the
         ytrap station comes last (if no other station was ready).
@@ -47,7 +43,7 @@ class GachaBot:
         Each of the stations follows the `Station` abstract base class
         and behave similar.
         """
-        stations: list[Station | itertools.cycle] = [
+        stations: list[Station | Iterable[YTrapStation]] = [
             HealingStation(self.player, self.tribelogs, self.info_webhook)
         ]
 
@@ -97,6 +93,7 @@ class GachaBot:
                 self.timer_webhook,
                 grinding,
                 arb,
+                gen2=self.settings.gen2
             )
             for i in range(self.settings.crystal_beds)
         ]
@@ -125,16 +122,25 @@ class GachaBot:
         """
         try:
             for station in self.stations:
-                if isinstance(station, itertools.cycle):
-                    # ytrap station
-                    next(station).complete()
-                    return
+                if isinstance(station, Station):
+                    if not station.is_ready():
+                        continue
+                    task = station
 
-                if station.is_ready():
-                    station.complete()
-                    return
+                elif isinstance(station, itertools.cycle):
+                    task = next(station)
 
-        except Exception:
-            print("Ran into an unhandled exception!")
+                task.complete()
+                break
+
+        except exceptions.TerminatedError:
+            pass
+
+        except exceptions.BedNotFoundError as e:
+            # no point trying to unstuck, if we were stuck the bed
+            # menu would not be open to begin with.
+            self.info_webhook.send_error(f"Travelling to '{task}'", e)
+
+        except Exception as e:
             print(traceback.format_exc())
             Unstucking(self.server, "epic", self.info_webhook).unstuck()

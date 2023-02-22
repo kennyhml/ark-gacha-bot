@@ -76,6 +76,8 @@ class CrystalStation(Station):
         timer_webhook: TimerWebhook,
         grinding_station: GrindingStation,
         arb_station,
+        *,
+        gen2: bool
     ) -> None:
 
         self._name = name
@@ -88,6 +90,7 @@ class CrystalStation(Station):
         self.bed = Bed(name)
         self.dedi = TekDedicatedStorage()
         self.stryder = Stryder()
+        self.gen2 = gen2
 
         self._grinding_station = grinding_station
         self._arb_station = arb_station
@@ -176,14 +179,15 @@ class CrystalStation(Station):
         except AttributeError:
             pass
 
-        vault.inventory.search(EXO_GLOVES)
-        vault.inventory.sleep(0.3)
+        if not self.gen2:
+            vault.inventory.search(EXO_GLOVES)
+            vault.inventory.sleep(0.3)
 
-        if not vault.inventory.has(EXO_GLOVES, is_searched=True):
-            return
+            if not vault.inventory.has(EXO_GLOVES, is_searched=True):
+                return
 
-        vault.inventory.take(EXO_GLOVES, stacks=1)
-        self._player.inventory.equip(EXO_GLOVES)
+            vault.inventory.take(EXO_GLOVES, stacks=1)
+            self._player.inventory.equip(EXO_GLOVES)
 
         vault.close()
         try:
@@ -194,6 +198,9 @@ class CrystalStation(Station):
 
         if timer is not None:
             self._timer_webhook.timer = timer
+
+        if self.gen2:
+            return
 
         vault.open()
         self._player.inventory.unequip(EXO_GLOVES)

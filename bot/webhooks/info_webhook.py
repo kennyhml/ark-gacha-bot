@@ -80,7 +80,12 @@ class InfoWebhook:
 
     @threaded("Sending error")
     def send_error(
-        self, task: str, image: ScreenShot, exception: Exception, *, mention: bool
+        self,
+        task: str,
+        exception: Exception,
+        image: Optional[ScreenShot] = None,
+        *,
+        mention: bool = False,
     ) -> None:
         """Posts an image of the current screenshot alongside current
         bed and the exception to discord for debugging purposes.
@@ -96,7 +101,7 @@ class InfoWebhook:
         embed = Embed(
             type="rich",
             title="Ran into a problem!",
-            description="Something went wrong! Attempting to unstuck..",
+            description="An unexpected error occurred!",
             color=0xF20A0A,
         )
 
@@ -104,6 +109,10 @@ class InfoWebhook:
         embed.add_field(name=f"Error:", value=exception)
 
         embed.set_image(url="attachment://image.png"),
+
+        if image is None:
+            image = self.screen.grab_screen((0, 0, 1920, 1080))
+
         image_pil = mss_to_pil(image)
 
         with BytesIO() as image_binary:

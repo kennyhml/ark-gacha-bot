@@ -34,6 +34,10 @@ class Unstucking:
         """Runs an analysis through different possible problems and attempts
         to fix them upon detection."""
         try:
+            self.screen._handle.activate()
+        except: pass
+        
+        try:
             self._escape_menu.open()
             self._escape_menu.sleep(3)
             self._escape_menu.close()
