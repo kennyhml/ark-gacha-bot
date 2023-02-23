@@ -85,7 +85,7 @@ class GachaBot:
                 self.tribelogs,
                 self.info_webhook,
             )
-            for i in range(self.settings.ytrap_beds)
+            for i in range(33, self.settings.ytrap_beds)
         ]
         return itertools.cycle(stations)
 

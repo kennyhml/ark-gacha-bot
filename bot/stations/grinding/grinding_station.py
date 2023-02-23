@@ -21,13 +21,13 @@ AUTO_TURRET_COST = {
     items.PASTE: 50,
     items.ELECTRONICS: 70,
     items.METAL_INGOT: 140,
-    items.POLYMER: 20,
+    items.ORGANIC_POLYMER: 20,
 }
 TURRET_COST = {
     items.PASTE: 200,
     items.ELECTRONICS: 270,
     items.METAL_INGOT: 540,
-    items.POLYMER: 70,
+    items.ORGANIC_POLYMER: 70,
 }
 
 # map common mistakes in the dedi OCR
@@ -220,14 +220,14 @@ class GrindingStation(Station):
                 continue
 
             if piece is items.MINER_HELMET:
-                self.grind(piece, [items.POLYMER, items.ELECTRONICS])
+                self.grind(piece, [items.ORGANIC_POLYMER, items.ELECTRONICS])
             else:
-                self.grind(piece, [items.POLYMER, items.SILICA_PEARL])
+                self.grind(piece, [items.ORGANIC_POLYMER, items.SILICA_PEARL])
 
             if not any_found:
-                self.put_into_exo_mek(items.POLYMER)
+                self.put_into_exo_mek(items.ORGANIC_POLYMER)
             else:
-                self._player.drop_all([items.POLYMER])
+                self._player.drop_all([items.ORGANIC_POLYMER])
             any_found = True
 
             # deposit the grinded items, turn back to gear vault
@@ -265,7 +265,7 @@ class GrindingStation(Station):
                 continue
 
             # grind the weapons, take the relevant mats
-            self.grind(weapon, [items.POLYMER, items.PASTE])
+            self.grind(weapon, [items.ORGANIC_POLYMER, items.PASTE])
             self.deposit(items.PASTE)
             self.turn_to(Stations.GEAR_VAULT)
         self._player.drop_all()

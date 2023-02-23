@@ -54,7 +54,7 @@ class CrystalStation(Station):
         BEHEMOTH_GATEWAY,
         BLACK_PEARL,
         DUST,
-        FAB,
+        FABRICATED_SNIPER,
         FLINT,
         FUNGAL_WOOD,
         GACHA_CRYSTAL,

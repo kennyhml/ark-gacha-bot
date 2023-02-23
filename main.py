@@ -1,7 +1,7 @@
 import time
 from threading import Thread
 
-from ark import State
+from ark import State, config
 from pynput import keyboard  # type: ignore[import]
 
 from bot.gacha_bot import GachaBot
