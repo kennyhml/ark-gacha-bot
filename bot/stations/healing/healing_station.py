@@ -1,6 +1,6 @@
 import time
 
-from ark import Player, TekSleepingPod, TribeLog, _tools, exceptions
+from ark import Player, TekSleepingPod, TribeLog, _helpers, exceptions
 from discord import Embed  # type: ignore[import]
 
 from ...tools import format_seconds
@@ -69,7 +69,7 @@ class HealingStation(Station):
             pass
 
         except exceptions.WheelError:
-            if not _tools.await_event(self._player.has_died, max_duration=20):
+            if not _helpers.await_event(self._player.has_died, max_duration=20):
                 raise
 
         embed = self._create_embed(round(time.time() - start))

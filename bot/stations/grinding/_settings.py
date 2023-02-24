@@ -10,12 +10,11 @@ import dacite
 class GrindingStationSettings:
     """Contains the settings of the crystal station"""
 
-
+    item_to_craft: str
 
     @staticmethod
     def load() -> GrindingStationSettings:
-        raise NotImplementedError
-        
+
         with open("settings/settings.json") as f:
-            data = json.load(f)["crystal"]
+            data = json.load(f)["grinding"]
         return dacite.from_dict(GrindingStationSettings, data)

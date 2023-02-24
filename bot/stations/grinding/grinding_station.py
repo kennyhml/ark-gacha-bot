@@ -1,34 +1,34 @@
 import time
 from itertools import cycle
 from math import floor
+from re import A
 from typing import Iterable
 
-from ark import (ArkWindow, Bed, Dinosaur, IndustrialGrinder, Player,
-                 Structure, TekDedicatedStorage, TribeLog, exceptions, items)
+import cv2  # type: ignore[import]
+from ark import (
+    ArkWindow,
+    Bed,
+    Dinosaur,
+    IndustrialGrinder,
+    Player,
+    Structure,
+    TekDedicatedStorage,
+    TribeLog,
+    exceptions,
+    items,
+    tools,
+)
 from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
 
-from ...tools import mss_to_pil
+from ...tools import format_seconds, mss_to_pil
 from ...webhooks import InfoWebhook
 from .._station import Station
 from ._exceptions import DedisNotDetermined
+from ._settings import GrindingStationSettings
 from ._stations import Stations
 from ._status import Status
-
-# map costs for turrets
-AUTO_TURRET_COST = {
-    items.PASTE: 50,
-    items.ELECTRONICS: 70,
-    items.METAL_INGOT: 140,
-    items.ORGANIC_POLYMER: 20,
-}
-TURRET_COST = {
-    items.PASTE: 200,
-    items.ELECTRONICS: 270,
-    items.METAL_INGOT: 540,
-    items.ORGANIC_POLYMER: 70,
-}
 
 # map common mistakes in the dedi OCR
 DEDI_NUMBER_MAPPING = {"l": "1", "i": "1", "I": "1", "|": "1", "O": "0"}
@@ -38,7 +38,7 @@ DEFAULT_MATS: dict[items.Item, int] = {
     items.SILICA_PEARL: 5211,
     items.PASTE: 2600,
     items.METAL_INGOT: 8757,
-    items.ELECTRONICS: 1773,
+    items.ELECTRONICS: 1100,
     items.CRYSTAL: 10000,
     items.HIDE: 20000,
 }
@@ -77,17 +77,36 @@ class GrindingStation(Station):
     _CRYSTAL_DEDI = (1245, 365, 560, 315)
     _HIDE_DEDI = (1240, 690, 613, 355)
 
+    _SUPPORTED_CRAFTABLES = {
+        items.HEAVY_AUTO_TURRET,
+        items.AUTO_TURRET,
+        items.METAL_FOUNDATION,
+        items.METAL_TRIANGLE,
+        items.METAL_GATE,
+        items.C4_DETONATOR,
+        items.ROCKET_LAUNCHER,
+        items.TEK_TURRET,
+    }
+
+    _CRAFTABLES_MAP = {item.name: item for item in _SUPPORTED_CRAFTABLES}
+
     def __init__(
         self,
         player: Player,
         tribelog: TribeLog,
         info_webhook: InfoWebhook,
     ) -> None:
+        self._name = "grinding"
         self._player = player
         self._tribelog = tribelog
         self._webhook = info_webhook
+        self.settings = GrindingStationSettings.load()
 
-        self._name = "grinding"
+        if self.settings.item_to_craft == "None":
+            self.item_to_craft = None
+        else:
+            self.item_to_craft = self._CRAFTABLES_MAP[self.settings.item_to_craft]
+
         self.bed = Bed("grinding")
         self.ready = False
         self.status = Status.WAITING_FOR_ITEMS
@@ -132,13 +151,12 @@ class GrindingStation(Station):
         if self.status == Status.AWAITING_EVALUTION:
             return True
 
-        if self.status == Status.QUEUING_ELECTRONICS:
-            # already grinded recently, check if electronics need to be queued
-            return self.electronics_finished()
-
-        if self.status == Status.AWAITING_CRAFT:
-            # we are expecting to craft turrets after the final electronic queue
-            return self.electronics_finished()
+        if self.status in [
+            Status.CRAFTING_SUBCOMPONENTS,
+            Status.AWAITING_CRAFT,
+            Status.AWAITING_PICKUP,
+        ]:
+            return self.crafting_finished()
 
         raise ValueError(
             f"Grinding Station failed to match current status '{self.status}'!"
@@ -150,42 +168,75 @@ class GrindingStation(Station):
         if self.status == Status.WAITING_FOR_ITEMS:
             self.grind_and_deposit()
 
-        if self.status == Status.AWAITING_EVALUTION:
+        elif self.status == Status.AWAITING_EVALUTION:
             self.determine_materials()
 
-        if self.status == Status.QUEUING_ELECTRONICS:
-            self.craft_electronics()
+        elif self.status == Status.CRAFTING_SUBCOMPONENTS:
+            self.do_next_craft()
 
-        if self.status == Status.AWAITING_CRAFT:
-            self.craft_turrets()
+        elif self.status == Status.AWAITING_CRAFT:
+            self.do_final_craft()
 
-        raise ValueError(
-            f"Grinding Station failed to match current status '{self.status}'!"
-        )
+        elif self.status == Status.AWAITING_PICKUP:
+            self.pickup_final_craft()
+
+        else:
+            raise ValueError(
+                f"Grinding Station failed to match current status '{self.status}'!"
+            )
 
     def grind_and_deposit(self) -> None:
         """Grinds the gear down, determines the amount of resources we have
         and calculates the optimal crafting."""
         self.spawn()
+        start = time.time()
 
-        # get all resources from grinding, turn off grinder when finished
         self.grind_armor()
         self.grind_weapons()
         self.empty_grinder(turn_off=True)
 
-        self.status = Status.AWAITING_EVALUTION
+        embed = self._create_grinding_finished_embed(round(time.time() - start))
+        self._webhook.send_embed(embed)
 
-    def determine_materials(self) -> None:
+        if self.item_to_craft is None:
+            self._transfer_dedi_wall()
+            self.ready = False
+        else:
+            self.status = Status.AWAITING_EVALUTION
+
+    def determine_materials(self, debug: bool = False) -> None:
+        assert self.item_to_craft is not None and self.item_to_craft.recipe is not None
+
         try:
-            available_mats = self.get_dedi_materials()
-        except DedisNotDetermined:
-            print("WARNING! Unable to determine dedis. Assuming default materials.")
+            available_mats = self.get_dedi_materials(debug)
+        except (DedisNotDetermined, ValueError) as e:
+            print(
+                f"CRITICAL! Failed to determine valid amounts!\n{e}\n"
+                "This could be caused by faulty item depositing settings, "
+                "please make sure to be within a valid range"
+            )
             available_mats = DEFAULT_MATS
+        available_mats[items.ORGANIC_POLYMER] = 5000
+        self.current_station = Stations.ELECTRONICS
+
+        for item in self.item_to_craft.recipe:
+            if item in available_mats:
+                continue
+
+            self.turn_to(Stations.EXO_MEK)
+            self.exo_mek.access()
+            self.exo_mek.inventory.search(item)
+            available_mats[item] = max(
+                0,
+                self.exo_mek.inventory.count(item) * item.stack_size
+                - (0.5 * item.stack_size),
+            )
+        self.exo_mek.inventory.close()
 
         self.compute_crafting_plan(available_mats)
-        self.status = Status.QUEUING_ELECTRONICS
-        embed = self.create_crafting_embed()
+        self.status = Status.CRAFTING_SUBCOMPONENTS
 
+        embed = self.create_crafting_embed()
         self._webhook.send_embed(embed)
 
     def grind_armor(self) -> None:
@@ -207,7 +258,7 @@ class GrindingStation(Station):
         ]
 
         # flag to determine if any items were grinded
-        any_found = False
+        amount_found = 0
         for piece in armor:
 
             # empty grinder before we grind miner helmets
@@ -224,11 +275,9 @@ class GrindingStation(Station):
             else:
                 self.grind(piece, [items.ORGANIC_POLYMER, items.SILICA_PEARL])
 
-            if not any_found:
+            if amount_found < 2:
                 self.put_into_exo_mek(items.ORGANIC_POLYMER)
-            else:
-                self._player.drop_all([items.ORGANIC_POLYMER])
-            any_found = True
+            amount_found += 1
 
             # deposit the grinded items, turn back to gear vault
             self.deposit(
@@ -239,7 +288,7 @@ class GrindingStation(Station):
             self.turn_to(Stations.GEAR_VAULT)
 
         self.vault.inventory.close()
-        if any_found:
+        if amount_found:
             self.drop_script_from_grinder(items.CRYSTAL)
 
     def grind_weapons(self) -> None:
@@ -355,9 +404,6 @@ class GrindingStation(Station):
         """
         # get the quickest path and the direction
         path, direction = self.find_quickest_way_to(target_station)
-        print(
-            f"Target {target_station}, currently at: {self.current_station}, path: {path, direction}"
-        )
         self._player.sleep(1)
 
         for station in path:
@@ -453,7 +499,7 @@ class GrindingStation(Station):
         self._player.sleep(0.5)
 
         # check if any items are within the vault
-        if not self.vault.inventory.has(item):
+        if not self.vault.inventory.has(item, is_searched=True):
             return False
 
         # take all (remember search filter is active), close vault
@@ -539,23 +585,25 @@ class GrindingStation(Station):
             The amount of the item to put into the exo mek
         """
         self.turn_to(Stations.from_item(item))
-        self.dedi.inventory.open()
+        self.dedi.open()
         self.dedi.inventory.transfer_all()
 
-        self.dedi.inventory.close()
+        self.dedi.close()
         self._player.sleep(1)
 
         # transfer the amount into the exo mek
         self.turn_to(Stations.EXO_MEK)
-        self.exo_mek.inventory.open()
+        self.exo_mek.access()
 
         if self.exo_mek.inventory.has(items.GACHA_CRYSTAL):
             # when travelling from the station before a bag can end up on the
             # bed, check if we opened one on accident.
             self._player.pick_up_bag()
-            self.exo_mek.inventory.open()
+            self.exo_mek.access()
 
-        self._player.inventory.transfer(item, amount, self.exo_mek.inventory)
+        self._player.inventory.transfer(
+            item, amount + item.stack_size, self.exo_mek.inventory
+        )
         self.exo_mek.inventory.close()
 
         # put remaining resources back into dedi
@@ -664,20 +712,30 @@ class GrindingStation(Station):
         Whether the amount is within a regular range.
         """
         expected = {
-            items.SILICA_PEARL: (6000, 60000),
+            items.SILICA_PEARL: (3000, 60000),
             items.PASTE: (7000, 180000),
             items.ELECTRONICS: (800, 10000),
-            items.METAL_INGOT: (9000, 60000),
+            items.METAL_INGOT: (5000, 60000),
         }
+        if self.item_to_craft is None:
+            return True
+
+        assert self.item_to_craft.recipe is not None
+
         # we dont care about crystal or hide
-        if item not in expected:
+        if item not in expected or (
+            item not in list(self.item_to_craft.recipe)
+            and not any(
+                subitem.recipe is not None for subitem in self.item_to_craft.recipe
+            )
+        ):
             return True
 
         # ensure the OCRd amount is within a f
         lower_range, upper_range = expected[item]
         return upper_range >= amount >= lower_range - 300
 
-    def get_dedi_materials(self) -> dict:
+    def get_dedi_materials(self, debug: bool = False) -> dict:
         """Tries to get the dedi materials up to 10 times. Will return a dict
         of the material and its amount on the first successful attempt.
 
@@ -699,69 +757,37 @@ class GrindingStation(Station):
             roi = img.crop(
                 (region[0], region[1], region[0] + region[2], region[1] + region[3])
             )
-            denoised_roi = self.screen.denoise_text(roi, (123, 233, 232), 22)
+            denoised_roi = self.screen.denoise_text(roi, (56, 232, 231), 22)
             amount: str = tes.image_to_string(
-                denoised_roi, config="-c tessedit_char_whitelist=0123456789liI|O --psm 6"
+                denoised_roi,
+                config="-c tessedit_char_whitelist=0123456789liI|O --psm 6",
             ).replace("\n", "")
 
             # replace common tesseract fuckups
             for char, new_char in DEDI_NUMBER_MAPPING.items():
                 amount = amount.replace(char, new_char)
+
+            if debug:
+                cv2.imshow(f"{item.name} - {amount}", denoised_roi)
+                cv2.waitKey(0)
             final_result = int(amount)
 
             # validate that the result is within a logical range
             if not self.amount_valid(item, final_result):
-                raise ValueError(
-                    f"Invalid amount of resources for {item.name}: {final_result}"
-                )
+                if item == items.PASTE:
+                    print(
+                        "An error occurred for cementing paste, but will be silenced."
+                    )
+                    final_result = 10000
+                else:
+                    raise ValueError(
+                        f"Invalid amount of resources for {item.name}: {final_result}"
+                    )
             print(f"Determined {item.name}: {final_result}")
             amounts[item] = int(final_result)
 
         # add material and its amount to our dict
         return amounts
-
-    def create_available_material_embed(
-        self, owned_mats: dict[items.Item, int]
-    ) -> Embed:
-        """Creates an embed to display the materials we have available to craft.
-
-        Parameters:
-        ----------
-        owned_mats :class:`dict`:
-            A dictionary containing each item and the total amount we have
-
-        Returns:
-        ----------
-        A `discord.Embed` displaying the items and amount.
-        """
-        formatted: dict = {}
-        desired_order = [
-            items.METAL_INGOT,
-            items.PASTE,
-            items.ELECTRONICS,
-            items.SILICA_PEARL,
-            items.HIDE,
-            items.CRYSTAL,
-        ]
-
-        for item, amount in owned_mats.items():
-            formatted[item] = f"{amount:_}x".replace("_", " ")
-        formatted = {k: formatted[k] for k in desired_order}
-
-        embed = Embed(
-            type="rich",
-            title="Finished grinding!",
-            description="Available materials:",
-            color=0x03DD74,
-        )
-
-        for item, amount in formatted.items():
-            embed.add_field(name=f"{item}:ㅤ", value=amount)
-
-        embed.set_thumbnail(url=self.GRINDER_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
-
-        return embed
 
     def compute_crafting_plan(self, owned_items: dict[items.Item, int]):
         """Receives the list of materials we own and figures out the most
@@ -779,92 +805,37 @@ class GrindingStation(Station):
         owned_items :class:`dict`:
             A dict containing each item and the amount we have available
         """
-        
-        # set our costs, no pearls for now
-        cost = {items.PASTE: 0, items.METAL_INGOT: 0, items.ELECTRONICS: 0}
-        # find how many turrets we can craft right away
-        lowest_1 = min(
-            owned_items[material] / TURRET_COST[material] for material in cost
+        assert self.item_to_craft is not None and self.item_to_craft.recipe is not None
+
+        amount, to_craft, total_cost = tools.compute_crafting_plan(
+            self.item_to_craft, owned_items
         )
 
-        # set the inital cost
-        phase_1 = {
-            items.PASTE: int(TURRET_COST[items.PASTE] * lowest_1),
-            items.METAL_INGOT: int(TURRET_COST[items.METAL_INGOT] * lowest_1),
-            items.ELECTRONICS: int(TURRET_COST[items.ELECTRONICS] * lowest_1),
-        }
-
-        # add the initial cost, remove it from the owned mats
-        for material in phase_1:
-            cost[material] += phase_1[material]
-            owned_items[material] -= phase_1[material]
-
-        # set new turret cost using pearls and more ingots instead, set
-        # pearl value
-        raw_turret_cost = {
-            items.PASTE: 200,
-            items.SILICA_PEARL: 270 * 3,
-            items.METAL_INGOT: 540 + 270,
-        }
-        cost[items.SILICA_PEARL] = 0
-
-        # once again get the amount of craftable turrets, create phase 2 cost
-        lowest_2 = min(
-            owned_items[material] / raw_turret_cost[material]
-            for material in raw_turret_cost
-        )
-        phase_2 = {
-            items.PASTE: int(raw_turret_cost[items.PASTE] * lowest_2),
-            items.METAL_INGOT: int(raw_turret_cost[items.METAL_INGOT] * lowest_2),
-            items.SILICA_PEARL: int(raw_turret_cost[items.SILICA_PEARL] * lowest_2),
-        }
-
-        # add each material to the total cost, electronics to craft is now
-        # pearls / 3
-        for material in phase_2:
-            cost[material] += phase_2[material]
-
-        # flatten some of the needed amounts to get the exact amounts required
-        cost[items.PASTE] -= cost[items.PASTE] % 200
-        cost[items.SILICA_PEARL] -= cost[items.SILICA_PEARL] % 3
-
-        # calculate the total electronics we will end up with to discard
-        # surplus
-        total_elec = cost[items.SILICA_PEARL] / 3 + cost[items.ELECTRONICS]
-        crafting_too_much = total_elec % 270
-        cost[items.SILICA_PEARL] -= round(crafting_too_much * 3)
-        cost[items.METAL_INGOT] -= round(crafting_too_much)
-
-        # dicard surplus metal, EXCLUDING the cost for electronics
-        cost[items.METAL_INGOT] -= (
-            round(cost[items.METAL_INGOT] - (cost[items.SILICA_PEARL] / 3)) % 540
-        )
-
-        # set session costs
-        self.electronics_to_craft = round(cost[items.SILICA_PEARL] / 3)
-        self.electronics_crafted = 0
-        self.session_turrets = floor(lowest_1 + lowest_2)
-        self.session_cost = cost
-        print(
-            f"Need to craft {self.electronics_to_craft} electronics for {self.session_turrets} Turrets"
-        )
+        self.session_crafts = amount
+        self.subcomponents_to_craft = to_craft
+        self.total_session_cost = total_cost
 
     def create_crafting_embed(self) -> Embed:
         """Sends an embed to the info webhook informing about the crafting
         plan that has been calculated for the ongoing session. Takes its data
         from the session class attributes."""
+        assert self.item_to_craft is not None and self.item_to_craft.recipe is not None
 
         # reformat the amounts to make it look nicer
-        formatted = {}
+        formatted: dict[items.Item, str] = {}
         desired_order = [
             items.METAL_INGOT,
             items.PASTE,
             items.ELECTRONICS,
             items.SILICA_PEARL,
+            items.CRYSTAL,
+            items.HIDE,
+            items.ORGANIC_POLYMER,
+            items.ELEMENT,
         ]
-        for resource in self.session_cost:
-            formatted[resource] = f"{self.session_cost[resource]:_}x".replace("_", " ")
-        formatted = {k: formatted[k] for k in desired_order}
+        for resource, amount in self.total_session_cost.items():
+            formatted[resource] = f"{amount:_}x".replace("_", " ")
+        formatted = {k: formatted[k] for k in desired_order if k in formatted}
 
         # create embed, black sidebar
         embed = Embed(
@@ -876,15 +847,16 @@ class GrindingStation(Station):
 
         # add each resource to the embed, heavies and electronics on the
         # righthand side
-        for resource, amount in formatted.items():
-            embed.add_field(name=f"{resource.name}:ㅤ", value=amount)
-            if resource == items.PASTE:
-                embed.add_field(
-                    name="Expected Result:",
-                    value=f"{self.session_turrets} Heavy Turrets",
-                )
+        for resource, quantity in formatted.items():
+            embed.add_field(name=f"{resource.name}:ㅤ", value=quantity)
+
         embed.add_field(
-            name="Electronics to craft:", value=f"{self.electronics_to_craft}x"
+            name="Expected Result:",
+            value=f"{self.session_crafts}x {self.item_to_craft.name}",
+        )
+
+        embed.add_field(
+            name="Subcomponents to craft:", value=f"{self.subcomponents_to_craft}"
         )
 
         # set exo mek image
@@ -892,40 +864,6 @@ class GrindingStation(Station):
         embed.set_footer(text="Ling Ling on top!")
 
         # send the embed
-        return embed
-
-    def create_electronics_embed(self, time_taken: int) -> Embed:
-        """Sends an embed to the info webhook informing that electronics
-        have been queued. Contains the time taken to queue the electronics
-        and how many have been crafted/how many to craft are left.
-
-        Parameters:
-        ------------
-        time_taken :class:`time`:
-            The timestamp when the queue function was started
-        """
-        # create embed, yellowsidebar
-        embed = Embed(
-            type="rich",
-            title="Queued electronics!",
-            color=0xFCFC2C,
-        )
-
-        # add contents
-        embed.add_field(
-            name=f"Time taken:",
-            value=f"{time_taken} seconds",
-        )
-        embed.add_field(
-            name="Crafted:",
-            value=f"{self.electronics_crafted}/{self.electronics_to_craft}",
-        )
-
-        # set electronics picture
-        embed.set_thumbnail(url=self.ELECTRONICS_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
-
-        # send to the webhook as Ling Ling
         return embed
 
     def create_embed(self, profit: int, time_taken: int) -> Embed:
@@ -942,18 +880,17 @@ class GrindingStation(Station):
         embed.set_footer(text="Ling Ling on top!")
         return embed
 
-    def electronics_finished(self) -> bool:
+    def crafting_finished(self) -> bool:
         """Checks if more than 2 minutes passed since the last electronic
         queue up."""
         try:
             time_diff = round(time.time() - self.last_crafted)
             return time_diff > 120
-
         except AttributeError:
             # last_crafted is not yet set, so no electronics are queued
             return True
 
-    def craft(self, item: items.Item, amount: int) -> None:
+    def craft(self, item: items.Item, amount: int, put_items: bool = True) -> None:
         """Turns to the exo mek and crafts the given amount of the given item.
 
         Parameters:
@@ -964,44 +901,27 @@ class GrindingStation(Station):
         amount :class:`int`:
             The amount to craft, will be A spammed if more than 50.
         """
-        if not self.exo_mek.inventory.is_open():
-            self.turn_to(Stations.EXO_MEK)
-            self.exo_mek.inventory.open()
+        assert item.recipe is not None
 
+        if put_items:
+            for material, per_craft in item.recipe.items():
+                if material is items.ORGANIC_POLYMER:
+                    continue
+
+                self.put_item_into_exo_mek(material, per_craft * amount)
+
+        self.turn_to(Stations.EXO_MEK)
+        self.exo_mek.access()
         self.exo_mek.inventory.open_tab("crafting")
         self.exo_mek.inventory.craft(item, amount)
         self.exo_mek.inventory.open_tab("inventory")
-        self.exo_mek.inventory.close()
-
-    def transfer_turret_resources(self) -> None:
-        """Transfers all resources needed for turrets into the exo mek.
-
-        Handles:
-        ----------
-        `NoItemsDepositedError` up to 3 times when failing to deposit the
-        remaining items by resyncing to the bed and trying again.
-        """
-
-        self.put_item_into_exo_mek(items.PASTE, self.session_cost[items.PASTE])
-
-        # subtract the amount of ingots used to craft electronics
-        self.put_item_into_exo_mek(
-            items.METAL_INGOT,
-            self.session_cost[items.METAL_INGOT] - self.electronics_to_craft,
-        )
-
-        # add the amount of electronics crafted to determine the total stacks
-        self.put_item_into_exo_mek(
-            items.ELECTRONICS,
-            self.session_cost[items.ELECTRONICS] + self.electronics_to_craft,
-        )
 
     def clear_up_exo_mek(self) -> None:
         """Clears the exo mek after a crafting session."""
         self.turn_to(Stations.VAULT)
-        self.vault.inventory.open()
+        self.vault.open()
         self._player.inventory.transfer_all(items.HEAVY_AUTO_TURRET)
-        self.vault.inventory.close()
+        self.vault.close()
 
         try:
             # clean up the remaining mats from exo mek
@@ -1019,7 +939,7 @@ class GrindingStation(Station):
 
         # get the non heavy mats, drop all on the rest (poly)
         self.turn_to(Stations.EXO_MEK)
-        self.exo_mek.inventory.open()
+        self.exo_mek.access()
         for item in [items.SILICA_PEARL, items.PASTE, items.ELECTRONICS]:
             self.exo_mek.inventory.transfer_all(item)
 
@@ -1030,44 +950,54 @@ class GrindingStation(Station):
         for item in [items.SILICA_PEARL, items.PASTE, items.ELECTRONICS]:
             self.deposit(item)
 
-    def craft_turrets(self) -> None:
+    def do_final_craft(self, spawn: bool = True) -> None:
         """Crafts the turrets after all electronics have been crafted.
         Posts the final result to discord as an embed displaying how
         many Heavies ended up crafting (as the result may vary from the
         excpected amount).
         """
-        # spawn and get the resources
-        self.spawn()
-        start = time.time()
-        try:
-            self.transfer_turret_resources()
+        assert self.item_to_craft is not None and self.item_to_craft.recipe is not None
 
-            # craft the turrets
-            self.craft(items.AUTO_TURRET, self.session_turrets)
-            self.craft(items.HEAVY_AUTO_TURRET, self.session_turrets + 3)
+        if spawn:
+            self.spawn()
 
-            # take out the turrets
-            self.exo_mek.inventory.open()
-            self.exo_mek.inventory.transfer_all(items.HEAVY_AUTO_TURRET)
-            self._player.sleep(1)
+        for item, amount_per_craft in self.item_to_craft.recipe.items():
+            if item in [items.ORGANIC_POLYMER, items.AUTO_TURRET, items.ELEMENT]:
+                continue
 
-            turrets_crafted = self._player.inventory.count(items.HEAVY_AUTO_TURRET)
-            self.exo_mek.inventory.close()
+            amount_needed = amount_per_craft * self.session_crafts
+            self.put_item_into_exo_mek(item, amount_needed)
 
-            # deposit turrets and clear up the exo mek
-            self.clear_up_exo_mek()
+        self.craft(self.item_to_craft, self.session_crafts, put_items=False)
+        if self.session_crafts < 50:
+            self._player.sleep(20)
+            self.pickup_final_craft(spawn=False)
 
-            total_time = round(time.time() - start)
+        self.last_crafted = time.time()
+        self.status = Status.AWAITING_PICKUP
 
-            embed = self.create_embed(turrets_crafted, total_time)
-            self._webhook.send_embed(embed)
+    def pickup_final_craft(self, spawn: bool = True) -> None:
+        assert self.item_to_craft is not None
 
-        finally:
-            self.transfer_dedi_wall()
-            self.status = Status.WAITING_FOR_ITEMS
-            self.ready = False
+        if spawn:
+            self.spawn()
 
-    def craft_electronics(self) -> None:
+        self.turn_to(Stations.EXO_MEK)
+
+        self.exo_mek.access()
+        self.exo_mek.inventory.transfer_all(self.item_to_craft)
+        self._player.sleep(1)
+
+        stacks_crafted = self._player.inventory.count(self.item_to_craft)
+        self.exo_mek.inventory.close()
+
+        embed = self._create_items_picked_up_embed(stacks_crafted)
+        self._webhook.send_embed(embed)
+
+        self.status = Status.WAITING_FOR_ITEMS
+        self.ready = False
+
+    def do_next_craft(self, spawn: bool = True) -> None:
         """Checks if we need to queue another 1000 electronics to reach the
         total needed amount. Returns `False` if we dont, else `True`.
 
@@ -1075,36 +1005,95 @@ class GrindingStation(Station):
         gacha bot function to either spawn and queue new electronics, or
         start crafting the turrets.
         """
-        # spawn at station
-        self.spawn()
-        start = time.time()
+        if spawn:
+            self.spawn()
 
-        if self.electronics_crafted + 1000 <= self.electronics_to_craft:
-            to_craft = 1000
-        else:
-            to_craft = self.electronics_to_craft - self.electronics_crafted
-        print(f"Need to craft {to_craft} more electronics...")
+        for item, amount in self.subcomponents_to_craft.items():
+            assert item.recipe is not None
+            if not amount:
+                continue
 
-        # get resources, craft 1000 electronics
-        self.put_item_into_exo_mek(items.METAL_INGOT, to_craft)
-        self.put_item_into_exo_mek(items.SILICA_PEARL, to_craft * 3)
-        self.craft(items.ELECTRONICS, to_craft)
+            craft_amount = min(amount, 1000)
+            self.craft(item, craft_amount)
+            self.subcomponents_to_craft[item] -= craft_amount
+            self.last_crafted = time.time()
+            break
 
-        # add the newly crafted electronics to the total, set new
-        # last crafted timestamp
-        self.electronics_crafted += to_craft
-        self.last_crafted = time.time()
-
-        if self.electronics_crafted >= self.electronics_to_craft:
-            self.status = Status.AWAITING_CRAFT
         self._player.drop_all()
+        self._webhook.send_embed(
+            self._create_components_queued_embed(item, craft_amount)
+        )
 
-        time_taken = round(time.time() - start)
+        if not any(amount_left for amount_left in self.subcomponents_to_craft.values()):
+            self.status = Status.AWAITING_CRAFT
+            try:
+                if amount < 50:
+                    self.do_final_craft(spawn=False)
+            except NameError:
+                self.do_final_craft(spawn=False)
+        elif amount < 50:
+            self._player.sleep(10)
+            self.do_next_craft(spawn=False)
 
-        embed = self.create_electronics_embed(time_taken)
-        self._webhook.send_embed(embed)
+    def _create_grinding_finished_embed(self, time_taken: int) -> Embed:
+        """Creates an embed to display the materials we have available to craft."""
+        embed = Embed(
+            type="rich",
+            title="Finished grinding!",
+            description="Grinding all gear in the gear vault completed.",
+            color=0x03DD74,
+        )
 
-    def transfer_dedi_wall(self) -> None:
+        embed.add_field(name="Time taken:", value=format_seconds(time_taken))
+        embed.add_field(name="Item to craft:", value=self.item_to_craft)
+
+        embed.set_thumbnail(url=self.GRINDER_AVATAR)
+        embed.set_footer(text="Ling Ling on top!")
+
+        return embed
+
+    def _create_items_picked_up_embed(self, stacks: int) -> Embed:
+        assert self.item_to_craft is not None
+
+        embed = Embed(
+            type="rich",
+            title="Finished grinding station!",
+            description="The final result has been picked up.",
+            color=0x000000,
+        )
+        total = self.item_to_craft.stack_size * stacks
+        if self.item_to_craft.stack_size > 1:
+            amount = f"{total} - {total + self.item_to_craft.stack_size}"
+        else:
+            amount = str(total)
+
+        embed.add_field(name="Item:", value=self.item_to_craft.name)
+        embed.add_field(name="Amount crafted:", value=amount)
+
+        embed.set_thumbnail(url=self.EXOMEK_AVATAR)
+        return embed
+
+    def _create_components_queued_embed(self, item: items.Item, amount: int) -> Embed:
+        embed = Embed(
+            type="rich",
+            title="Subcomponents have been queued!",
+            description="A chunk of subcomponents for the final craft has been queued up.",
+            color=0x000000,
+        )
+
+        embed.add_field(name="Component:", value=item.name)
+        embed.add_field(name="Amount queued:", value=amount)
+        embed.add_field(name="Amount left:", value=self.subcomponents_to_craft[item])
+
+        if item is items.ELECTRONICS:
+            embed.set_thumbnail(url=self.ELECTRONICS_AVATAR)
+        else:
+            embed.set_thumbnail(url=self.EXOMEK_AVATAR)
+
+        embed.set_footer(text="Ling Ling on top!")
+        return embed
+
+    def _transfer_dedi_wall(self) -> None:
         """Spawns at the grindingtransfer bed and transfers the materials
         left after crafting into the next dediwall, so that the ARB station
         can use the metal and it does not clog up the grinding dedis.

@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 
 from ark import (Bed, Player, Structure, Stryder, TekDedicatedStorage,
-                 TribeLog, _tools, exceptions)
+                 TribeLog, _helpers, exceptions)
 from ark.exceptions import DediNotInRangeError
 from ark.items import *
 from discord import Embed  # type: ignore[import]
@@ -238,7 +238,7 @@ class CrystalStation(Station):
         self._player.pick_up()
 
         # wait for the crytal to be picked up
-        if _tools.await_event(self._player.received_item, max_duration=3):
+        if _helpers.await_event(self._player.received_item, max_duration=3):
             return
 
         # did not pick a crystal, if its first collection we assume there is none
@@ -309,7 +309,7 @@ class CrystalStation(Station):
             self._first_pickup = False
 
         # open until no crystals left in inventory
-        while self._player.inventory.has(GACHA_CRYSTAL):
+        while self._player.inventory.has(GACHA_CRYSTAL, is_searched=True):
             self._player.spam_hotbar()
             self._player.pick_up()
 

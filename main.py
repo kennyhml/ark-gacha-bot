@@ -9,7 +9,6 @@ from bot.gacha_bot import GachaBot
 
 def main():
     bot = GachaBot()
-
     while State.running:
         bot.do_next_task()
 
