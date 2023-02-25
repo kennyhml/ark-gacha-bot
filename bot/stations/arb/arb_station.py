@@ -1,49 +1,23 @@
+import json
 import time
-from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable, Literal, Optional
+from typing import Any, Literal, Optional
 
 import pyautogui  # type: ignore[import]
+from ark import (Bed, ChemistryBench, Dinosaur, IndustrialForge, Player,
+                 TekDedicatedStorage, TribeLog, items)
 from discord import Embed  # type: ignore[import]
 
-from ark.beds import Bed, BedMap
-from ark.entities.dinosaurs import Dinosaur
-from ark.entities.player import Player
-from ark.exceptions import InvalidStatusError
-from ark.items import (
-    ARB,
-    CHARCOAL,
-    FLINT,
-    FUNGAL_WOOD,
-    GASOLINE,
-    GUNPOWDER,
-    METAL_INGOT,
-    SPARKPOWDER,
-    STONE,
-    Item,
-)
-from ark.structures.chemistry_bench import ChemistryBench
-from ark.structures.dedi_storage import TekDedicatedStorage
-from ark.structures.industrial_forge import IndustrialForge
-from ark.tribelog import TribeLog
-from bot.stations.arb.status import Status
-from bot.stations.grinding.grinding_station import EXOMEK_AVATAR
-from bot.stations._station import Station, StationData, StationStatistics
+from bot.stations._station import Station
+
+from ...webhooks import InfoWebhook
+from .._station import Station
+from ._status import Status
 
 FORGE_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/c5/Industrial_Forge.png/revision/latest/scale-to-width-down/228?cb=20151126023709"
 CHEMBENCH_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/9/9d/Chemistry_Bench.png/revision/latest/scale-to-width-down/228?cb=20160428045516"
 ARB_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/6/64/Advanced_Rifle_Bullet.png/revision/latest/scale-to-width-down/228?cb=20150615121742"
-
-
-@dataclass
-class ArbStatistics:
-    """Represents the stations statistics as dataclass.
-    Follows the `StationStatistics` protocol.
-    """
-
-    time_taken: int
-    refill_lap: bool
-    profit: dict[Item, int]
+EXOMEK_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/6/6d/Unassembled_Exo-Mek_%28Genesis_Part_2%29.png/revision/latest/scale-to-width-down/228?cb=20210603184626"
 
 
 class ARBStation(Station):
@@ -51,11 +25,6 @@ class ARBStation(Station):
     Is set ready whenever the wood at the forges hits near 30000, then (just like
     the grinding station) it uses a `Status` enum to determine the next steps
     until fully done, at which points it waits to get set ready again.
-
-    TODO:
-    Currently it waits 15 minutes for all the ARB to craft, could make the pickup
-    a seperate task, or do it at another time so that it can start cooking up
-    the next wood and sparkpowder while the ARB crafts.
 
     Parameters:
     -----------
@@ -70,49 +39,64 @@ class ARBStation(Station):
     """
 
     def __init__(
-        self, station_data: StationData, player: Player, tribelog: TribeLog
+        self,
+        player: Player,
+        tribelog: TribeLog,
+        info_webhook: InfoWebhook,
     ) -> None:
-        self.station_data = station_data
-        self.player = player
-        self.tribelog = tribelog
-        self.current_bed: int = 0
+        self._name = "ARB Station"
+        self._player = player
+        self._tribelog = tribelog
+        self._webhook = info_webhook
 
-        self._wood_in_dedi: int = 0
-        self._first_cooking: bool = True
+        with open("bot/_data/station_data.json") as f:
+            data: dict = json.load(f)["arb"]
 
-        self.status = Status.WAITING_FOR_WOOD
-        self.ready: property = False
+        self._wood_in_dedi: int = data["wood"]
+        print(f"Loaded ARB wood: {self._wood_in_dedi}")
+
+        self.status = data["status"]
+        print(f"Loaded ARB status: {self.status}")
+
+        if self.status == Status.COOKING_WOOD:
+            self._started_cooking_wood = datetime.strptime(data["cooking_start"][:-3], '%Y-%m-%d %H:%M:%S.%f')
+            print(f"Loaded start of cooking: {self._started_cooking_wood}")
+
+        self.ready = self._wood_in_dedi > 29900
+        print(f"Station is ready: {self.ready}")
+
         self.dedi = TekDedicatedStorage()
-        self.exo_mek = Dinosaur("Exo Mek", "exo_mek")
-        self.forge = IndustrialForge()
-        self.forge_bed = Bed("arb_cooking", self.station_data.beds[0].coords)
-        self.pickup_bed = Bed("arb_pickup", self.station_data.beds[0].coords)
         self.chembench = ChemistryBench()
+        self.forge = IndustrialForge()
+        self.exo_mek = Dinosaur("Exo Mek", "templates/exo_mek.png")
+        self.bed = Bed("arb_craft")
+        self.forge_bed = Bed("arb_cooking")
+        self.pickup_bed = Bed("arb_pickup")
 
-    @property
-    def ready(self) -> bool:
-        return self._ready
+        self.bench_turns = [
+            (self._player.turn_x_by, -80),
+            (self._player.turn_y_by, -70),
+            (self._player.turn_x_by, -50),
+            (self._player.turn_y_by, 70),
+            (self._player.turn_x_by, -50),
+            (self._player.turn_y_by, -70),
+        ]
 
-    @ready.setter
-    def ready(self, state: bool) -> None:
-        self._ready = state
+        self.bottom_bench_turns = [
+            (self._player.turn_x_by, -80),
+            (self._player.turn_x_by, -50),
+            (self._player.turn_x_by, -50),
+        ]
 
-    @property
-    def status(self) -> Status:
-        return self._status
+    @staticmethod
+    def _set_data(key: str, value: Any) -> None:
+        with open("bot/_data/station_data.json") as f:
+            data: dict = json.load(f)
 
-    @status.setter
-    def status(self, status: Status) -> None:
-        self._status = status
+        data["arb"][key] = value
 
-    def spawn(self) -> None:
-        """Override spawn method to wait 10 seconds because spawning at the
-        dedi sometimes the stamina bar can be mistaken with a dedi."""
-        bed_map = BedMap()
-        bed_map.travel_to(self.station_data.beds[0])
-        self.tribelog.check_tribelogs()
-        self.player.await_spawned()
-        self.player.sleep(10)
+        with open("bot/_data/station_data.json", "w") as f:
+            json.dump(data, f, indent=4, default=str)
 
     def add_wood(self, wood: int) -> None:
         """Called when wood is added to the dedi via the stryder on the
@@ -121,6 +105,8 @@ class ARBStation(Station):
         self._wood_in_dedi += wood
         if self._wood_in_dedi >= 29700:
             self.ready = True
+
+        self._set_data("wood", self._wood_in_dedi)
 
     def is_ready(self) -> bool:
         """Checks if the station is ready for the next step."""
@@ -142,171 +128,99 @@ class ARBStation(Station):
             # waiting for the ARB to finish crafting (approx 5k crafts)
             return self.arb_ready()
 
-        raise InvalidStatusError(f"{self.status} is not a valid status!")
+        raise ValueError(f"{self.status} is not a valid status!")
 
-    def complete(self) -> tuple[Embed, StationStatistics]:
+    def complete(self) -> None:
         """Completes the stations next step corresponding to its status."""
         if self.status == Status.WAITING_FOR_WOOD:
-            return self.fill_forges_craft_spark()
+            self.fill_forges_craft_spark()
 
-        if self.status == Status.COOKING_WOOD:
-            return self.craft_gunpowder()
+        elif self.status == Status.COOKING_WOOD:
+            self.craft_gunpowder()
 
-        if self.status == Status.WAITING_FOR_GUNPOWDER:
-            return self.craft_arb()
+        elif self.status == Status.WAITING_FOR_GUNPOWDER:
+            self.craft_arb()
 
-        if self.status == Status.WAITING_FOR_ARB:
-            return self.pick_up_arb()
+        elif self.status == Status.WAITING_FOR_ARB:
+            self.pick_up_arb()
 
-        raise InvalidStatusError(f"{self.status} is not a valid status!")
-
-    def create_embed(self, statistics: StationStatistics) -> Embed:
-        """Creates the final embed after all steps have been finished, displays
-        the ARB made and the time taken."""
-        embed = Embed(
-            type="rich",
-            title=f"Filled forges and crafted sparkpowder!",
-            color=0xFF5500,
-        )
-        embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{statistics.time_taken} seconds")
-        embed.add_field(name="ARB crafted:", value=f"{statistics.profit[ARB]}")
-
-        embed.set_thumbnail(url=ARB_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
-        return embed
-
-    def create_arb_queued_embed(self, statistics: ArbStatistics) -> Embed:
-        """Returns an embed displaying that ARB has been queued and how
-        long it took."""
-        embed = Embed(
-            type="rich",
-            title=f"Queued Advanced Rifle Bullets at {self.station_data.beds[0].name}!",
-            color=0xE4CEB8,
-        )
-        embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{statistics.time_taken} seconds")
-        embed.set_thumbnail(url=EXOMEK_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
-        return embed
-
-    def create_gunpowder_crafted_embed(self, statistics: ArbStatistics) -> Embed:
-        """Creates an embed that gunpowder has been queued, how long it took and
-        roughly how much is being crafted."""
-        embed = Embed(
-            type="rich",
-            title=f"Queued gunpowder at {self.station_data.beds[0].name}!",
-            color=0xFF5500,
-        )
-        embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{statistics.time_taken} seconds")
-        embed.add_field(
-            name="Gunpowder queued:", value=f"{statistics.profit[GUNPOWDER]}"
-        )
-
-        embed.set_thumbnail(url=CHEMBENCH_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
-        return embed
-
-    def create_forges_refilled_embed(self, statistics: ArbStatistics) -> Embed:
-        """Creates an embed displaying that the forge has been refilled and
-        how long it took. Also displays if the forges were emptied."""
-
-        embed = Embed(
-            type="rich",
-            title=f"Filled forges and crafted sparkpowder!",
-            color=0xFF5500,
-        )
-        embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{statistics.time_taken} seconds")
-        embed.add_field(name="Forges emptied:", value=f"{not self._first_cooking}")
-
-        embed.set_thumbnail(url=FORGE_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
-        return embed
+        else:
+            raise ValueError(f"{self.status} is not a valid status!")
 
     def gunpowder_ready(self) -> bool:
         """Checks if 5 minutes have passed since queuing gunpowder"""
-        time_diff = datetime.now() - self._started_crafting_gunpowder
-        print((5 * 60) - time_diff.total_seconds(), "seconds left on gunpowder...")
-        return time_diff.total_seconds() > (5 * 60)
-
+        try:
+            time_diff = datetime.now() - self._started_crafting_gunpowder
+            print(f"{(5 * 60) - time_diff.total_seconds()} seconds left on gunpowder...")
+            return time_diff.total_seconds() > (5 * 60)
+        except AttributeError:
+            return True
+        
     def arb_ready(self) -> bool:
         """Checks if 15 minutes have passed since queuing arb"""
-        time_diff = datetime.now() - self._started_crafting_arb
-        print((15 * 60) - time_diff.total_seconds(), "seconds left on arb...")
-        return time_diff.total_seconds() > (15 * 60)
-
+        try:
+            time_diff = datetime.now() - self._started_crafting_arb
+            print(f"{(3 * 60) - time_diff.total_seconds()} seconds left on arb...")
+            return time_diff.total_seconds() > (15 * 60)
+        except AttributeError:
+            return True
+        
     def charcoal_ready(self) -> bool:
         """Checks if 2h 45min have passed since filling the forges"""
         time_diff = datetime.now() - self._started_cooking_wood
-        print((170 * 60) - time_diff.total_seconds(), "seconds left on wood cooking...")
+        print(f"{(170 * 60) - time_diff.total_seconds()} seconds left on charcoal...")
         return time_diff.total_seconds() > (170 * 60)
-
-    def go_over_chembenches(self) -> list[tuple[Callable, int]]:
-        """Returns a list of actions to go over the chembenches"""
-        return [
-            (self.player.turn_x_by, -80),
-            (self.player.turn_y_by, -70),
-            (self.player.turn_x_by, -50),
-            (self.player.turn_y_by, 70),
-            (self.player.turn_x_by, -50),
-            (self.player.turn_y_by, -70),
-        ]
-
-    def go_over_bottom_chembenches(self) -> list[tuple[Callable, int]]:
-        """Returns a list of actions to go over the bottom chembenches"""
-        return [
-            (self.player.turn_x_by, -80),
-            (self.player.turn_x_by, -50),
-            (self.player.turn_x_by, -50),
-        ]
 
     def spawn_at_forges(self) -> None:
         """Spawns at the forge bed"""
-        bed_map = BedMap()
-        bed_map.travel_to(self.forge_bed)
-        self.tribelog.check_tribelogs()
-        self.player.await_spawned()
-        self.player.sleep(1)
+        self._player.prone()
+        self._player.look_down_hard()
+
+        self.forge_bed.spawn()
+        self._player.spawn_in()
 
     def take_gas_from_forge_dedi(self) -> None:
         """Takes the gas from its dedi at the forge bed"""
-        self.player.turn_y_by(40)
-        self.player.sleep(0.5)
+        self._player.turn_y_by(40)
+        self._player.sleep(0.5)
 
-        self.dedi.inventory.open()
+        self.dedi.open()
         self.dedi.inventory.withdraw_stacks(1)
-        self.dedi.inventory.close()
-        self.player.sleep(0.5)
-        self.player.turn_y_by(-40)
+        self.dedi.close()
+        self._player.sleep(0.5)
+        self._player.turn_y_by(-40)
 
     def take_fungal_wood(self) -> None:
         """Takes the fungal wood from the dedi above."""
-        self.player.look_up_hard()
-        self.dedi.inventory.open()
-        self.dedi.inventory.click_transfer_all()
-        self.dedi.inventory.close()
+        self._player.look_up_hard()
+        self._player.sleep(1)
 
-        self.player.sleep(0.3)
-        self.player.turn_y_by(160)
-        self.player.sleep(0.3)
-        self.player.turn_y_by(20)
+        self.dedi.open()
+        self.dedi.inventory.transfer_all()
+        self.dedi.close()
+
+        self._player.sleep(0.3)
+        self._player.turn_y_by(160, delay=0.5)
+        self._player.turn_y_by(20, delay=0.5)
 
     def transfer_gasoline(self, amount: int) -> None:
         """Transfers the given amount of gasoline, useful for
         precise amounts such as 11 per forge, or 1 per gunpowder craft
         """
-        self.player.inventory.search_for(GASOLINE)
-        self.player.inventory.select_first_slot()
-        self.player.sleep(1)
+        self._player.inventory.search(items.GASOLINE)
+        self._player.inventory.select_slot(0)
+        self._player.sleep(1)
 
         for _ in range(amount):
             pyautogui.click(clicks=2)
-        self.player.inventory.delete_search()
+        self._player.inventory.delete_search()
 
     def forges_put_gas_back(self) -> None:
         """Puts the gas back into its dedi at the cooking bed"""
-        self.dedi.attempt_deposit(GASOLINE, False)
-        self.player.look_up_hard()
-        self.player.sleep(1)
-        self.dedi.attempt_deposit(FUNGAL_WOOD, False)
+        self.dedi.deposit([items.GASOLINE], get_amount=False)
+        self._player.look_up_hard()
+        self._player.sleep(1)
+        self.dedi.deposit([items.FUNGAL_WOOD], get_amount=False)
 
     def empty_forges(self) -> None:
         """Empties the forges, empties each forge and puts the charcoal into the dedi."""
@@ -316,31 +230,35 @@ class ARBStation(Station):
 
         while right_turns < 4:
             # turn to the forge
-            self.player.turn_90_degrees("right", delay=1)
+            self._player.turn_90_degrees("right", delay=1)
             right_turns += 1
             if right_turns in known_empty:
                 continue
 
             self.forge.inventory.open()
-            if not self.forge.inventory.has_item(CHARCOAL):
+            if not self.forge.inventory.has(items.CHARCOAL):
                 known_empty.add(right_turns)
                 # forge does not have charcoal so go next
                 self.forge.inventory.close()
                 continue
 
             # forge has charcoal, take all charcoal and turn back to dedi
-            self.forge.inventory.take_all_items(CHARCOAL)
+            self.forge.inventory.transfer_all(items.GASOLINE)
+            self.forge.inventory.transfer_all(items.CHARCOAL)
             self.forge.inventory.close()
 
             for _ in range(right_turns):
-                self.player.turn_90_degrees("left", delay=1)
+                self._player.turn_90_degrees("left", delay=1)
             right_turns = 0
 
-            self.player.sleep(1)
+            self._player.sleep(1)
             # deposit charcoal
-            self.dedi.attempt_deposit(CHARCOAL, False)
+            self.dedi.deposit([items.CHARCOAL], get_amount=False)
+            
+        self._player.turn_y_by(60, delay=0.5)
+        self.dedi.deposit([items.GASOLINE], get_amount=False)
 
-    def fill_forges_craft_spark(self) -> tuple[Embed, ArbStatistics]:
+    def fill_forges_craft_spark(self) -> None:
         """Spawns at the forge bed and fills them with wood.
         Deposits 11 gasoline into each forge, and caps it with wood.
 
@@ -348,112 +266,106 @@ class ARBStation(Station):
         dedis. Sets the most recent wood cooking timestamp upon finishing.
         """
         start = time.time()
-        try:
-            # first cooking we empty the forges in case any charcoal
-            # was left from prior runs
-            if self._first_cooking:
-                self.empty_forges()
 
-            self.spawn_at_forges()
-            self.take_gas_from_forge_dedi()
-            self.take_fungal_wood()
+        self.empty_forges()
+        self.spawn_at_forges()
 
-            # fill each forge
-            for _ in range(3):
-                self.player.turn_90_degrees("right", delay=1)
-                self.forge.inventory.open()
-                self.transfer_gasoline(7)
-                self.player.inventory.transfer_all(self.forge.inventory, FUNGAL_WOOD)
-                self.forge.turn_on()
-                self.forge.inventory.close()
+        self.take_gas_from_forge_dedi()
+        self.take_fungal_wood()
 
-            # put the gas and wood back
-            self.player.turn_90_degrees("right")
-            self.player.turn_y_by(40)
-            self.forges_put_gas_back()
+        # fill each forge
+        for _ in range(3):
+            self._player.turn_90_degrees("right", delay=1)
+            self.forge.open()
+            self.transfer_gasoline(7)
+            self._player.inventory.transfer_all(items.FUNGAL_WOOD)
+            self.forge.turn_on()
+            self.forge.close()
 
-            # queue sparkpowder
-            self.craft_sparkpowder()
-            stats = ArbStatistics(round(time.time() - start), False, {})
-            return self.create_forges_refilled_embed(stats), stats
+        self._player.turn_90_degrees("right", delay=0.5)
+        self._player.turn_y_by(40, delay=0.5)
+        self.forges_put_gas_back()
 
-        finally:
-            self._started_cooking_wood: datetime = datetime.now()
-            self._first_cooking = False
-            self._wood_in_dedi = 0
-            self.ready = False
+        # queue sparkpowder
+        self.craft_sparkpowder()
+        embed = self.create_forges_refilled_embed(round(time.time() - start))
+        self._webhook.send_embed(embed)
+
+        self._started_cooking_wood = datetime.now()
+        self._wood_in_dedi -= 30000
+        self.ready = False
+
+        self._set_data("cooking_start", self._started_cooking_wood)
+        self._set_data("wood", self._wood_in_dedi)
 
     def access_gasoline(self, mode: Literal["take", "deposit"]) -> None:
         """Turns to the gasoline dedi from the original spawn position,
         can either take gas or deposit it. Finishes in the original spawn
         position."""
-        self.player.turn_x_by(-30)
-        self.player.turn_y_by(40)
-        self.player.sleep(1)
+        self._player.turn_x_by(-30, delay=0.3)
+        self._player.turn_y_by(40, delay=0.3)
+        self._player.sleep(1)
 
         if mode == "take":
-            self.dedi.inventory.open()
+            self.dedi.open()
             self.dedi.inventory.withdraw_stacks(1)
-            self.dedi.inventory.close()
+            self.dedi.close()
         else:
-            self.dedi.attempt_deposit(METAL_INGOT, False)
+            self.dedi.deposit([items.METAL_INGOT], get_amount=False)
 
-        self.player.sleep(0.5)
-        self.player.turn_y_by(-40)
-        self.player.turn_x_by(30)
+        self._player.sleep(0.5)
+        self._player.turn_y_by(-40, delay=0.3)
+        self._player.turn_x_by(30, delay=0.3)
 
     def access_stone(self, mode: Literal["take", "deposit"]) -> None:
         """Turns to the stone dedi from the original spawn position,
         can either take stone or deposit it. Finishes in the original spawn
         position."""
-        self.player.turn_x_by(30)
-        self.player.sleep(1)
+        self._player.turn_x_by(30, delay=1)
 
         if mode == "take":
-            self.dedi.inventory.open()
-            self.dedi.inventory.click_transfer_all()
-            self.dedi.inventory.close()
+            self.dedi.open()
+            self.dedi.inventory.transfer_all()
+            self.dedi.close()
         else:
-            self.dedi.attempt_deposit(METAL_INGOT, False)
+            self.dedi.deposit([items.STONE], get_amount=False)
 
-        self.player.sleep(0.5)
-        self.player.turn_x_by(-30)
+        self._player.sleep(0.5)
+        self._player.turn_x_by(-30, delay=0.3)
 
     def access_flint(self, mode: Literal["take", "deposit"]) -> None:
         """Turns to the flint dedi from the original spawn position,
         can either take flint or deposit it. Finishes in the original spawn
         position."""
-        self.player.turn_x_by(30)
-        self.player.turn_y_by(40)
-        self.player.sleep(1)
+        self._player.turn_x_by(30, delay=0.3)
+        self._player.turn_y_by(40, delay=1)
 
         if mode == "take":
-            self.dedi.inventory.open()
-            self.dedi.inventory.click_transfer_all()
-            self.dedi.inventory.close()
+            self.dedi.open()
+            self.dedi.inventory.transfer_all()
+            self.dedi.close()
         else:
-            self.dedi.attempt_deposit(METAL_INGOT, False)
+            self.dedi.deposit([items.FLINT], get_amount=False)
 
-        self.player.sleep(0.5)
-        self.player.turn_y_by(-40)
-        self.player.turn_x_by(-30)
+        self._player.sleep(0.5)
+        self._player.turn_y_by(-40, delay=0.3)
+        self._player.turn_x_by(-30, delay=0.3)
 
     def access_metal(self, mode: Literal["take", "deposit"]) -> None:
         """Turns to the metal dedi from the original spawn position,
         can either take metal or deposit it. Finishes in the original spawn
         position."""
-        self.player.turn_x_by(110)
-        self.player.sleep(1)
+        self._player.turn_x_by(110, delay=1)
 
         if mode == "take":
-            self.dedi.inventory.open()
-            self.dedi.inventory.click_transfer_all()
-            self.dedi.inventory.close()
+            self.dedi.open()
+            self.dedi.inventory.transfer_all()
+            self.dedi.close()
         else:
-            self.dedi.attempt_deposit(METAL_INGOT, False)
+            self.dedi.deposit([items.METAL_INGOT], get_amount=False)
 
-        self.player.sleep(0.5)
-        self.player.turn_x_by(-110)
+        self._player.sleep(0.5)
+        self._player.turn_x_by(-110, delay=0.3)
 
     def take_metal_queue_arb(self) -> None:
         """Takes metal and puts it into the exo mek, queues the ARB and
@@ -462,35 +374,38 @@ class ARBStation(Station):
         # take metal and turn to exo mek
         self.access_metal("take")
         for _ in range(2):
-            self.player.turn_90_degrees()
-        self.player.sleep(1)
+            self._player.turn_90_degrees(delay=1)
 
         # open the exo mek, search for ARB
-        self.exo_mek.inventory.open()
-        self.player.inventory.transfer_amount(METAL_INGOT, 5400, self.exo_mek.inventory)
-        self.exo_mek.inventory.open_craft()
-        self.exo_mek.inventory.search_for("advanced rifle")
+        self.exo_mek.access()
+        self._player.inventory.transfer(items.METAL_INGOT, 5400, self.exo_mek.inventory)
+        self.exo_mek.inventory.open_tab("crafting")
+
+        self.exo_mek.inventory.search(items.ARB)
 
         # craft 1k on each bp
         for slot in [(1292 + (i * 95), 296) for i in range(5)]:
-            self.player.click_at(slot)
+            self._player.click_at(slot)
             for _ in range(10):
-                self.player.press("a")
-                self.player.sleep(0.2)
+                self._player.press("a")
+                self._player.sleep(0.2)
 
         # close the exo mek
-        self.exo_mek.inventory.close_craft()
+        self.exo_mek.inventory.open_tab("inventory")
         self.exo_mek.inventory.close()
-        self.player.sleep(0.5)
+        self._player.sleep(0.5)
 
         # turn back to original position, put metal back
         for _ in range(2):
-            self.player.turn_90_degrees("left")
-        self.player.sleep(1)
+            self._player.turn_90_degrees("left", delay=1)
         self.access_metal("deposit")
 
     def fill_bottom_chembenches(
-        self, gas: bool, material: Item, amount: int, craft: Optional[Item] = None
+        self,
+        gas: bool,
+        material: items.Item,
+        amount: int,
+        craft: Optional[items.Item] = None,
     ) -> None:
         """Fills the bottom chem benches to the given amount with the given material.
         Fills it with 1 gas if passed, and crafts the given item
@@ -509,97 +424,107 @@ class ARBStation(Station):
         craft :class: [Optional]:
             The item to craft
         """
-        for func, arg in self.go_over_bottom_chembenches():
+        for func, arg in self.bottom_bench_turns:
             func(arg)
-            self.player.sleep(0.3)
+            self._player.sleep(0.3)
 
             # open the chembench, go through the actions
-            self.chembench.inventory.open()
+            self.chembench.open()
+            self.chembench.turn_off()
             if gas:
-                while not self.chembench.can_turn_on():
+                while not self.chembench.is_turned_off():
                     self.transfer_gasoline(1)
-                    self.player.sleep(1)
+                    self._player.sleep(1)
 
             if amount < 4000:
-                self.player.inventory.transfer_amount(
+                self._player.inventory.transfer(
                     material, amount, self.chembench.inventory
                 )
             else:
-                self.player.inventory.transfer_all(self.chembench.inventory)
+                self._player.inventory.transfer_all()
 
             # craft the given item
             if craft is not None:
                 self.chembench.turn_on()
-                self.chembench.inventory.open_craft()
+                self.chembench.inventory.open_tab("crafting")
                 self.chembench.inventory.craft(craft, 900)
-                self.chembench.inventory.close_craft()
+                self.chembench.inventory.open_tab("inventory")
 
             self.chembench.inventory.close()
-            self.player.sleep(0.3)
+            self._player.sleep(0.3)
 
         # reverse the turns to get back to the original position
-        for func, arg in reversed(self.go_over_bottom_chembenches()):
+        for func, arg in reversed(self.bottom_bench_turns):
             func(arg * -1)
-            self.player.sleep(0.3)
+            self._player.sleep(0.3)
 
     def craft_sparkpowder(self) -> None:
         """Spawns at the station and starts crafting sparkpowder"""
         self.spawn()
         self.access_gasoline("take")
         self.access_stone("take")
-        self.fill_bottom_chembenches(gas=True, material=STONE, amount=3300)
+
+        self.fill_bottom_chembenches(gas=True, material=items.STONE, amount=3300)
         self.access_stone("deposit")
         self.access_gasoline("deposit")
 
         self.access_flint("take")
         self.fill_bottom_chembenches(
-            gas=False, material=FLINT, amount=7700, craft=SPARKPOWDER
+            gas=False, material=items.FLINT, amount=7700, craft=items.SPARKPOWDER
         )
         self.access_flint("deposit")
         self.status = Status.COOKING_WOOD
+        self._set_data("status", "Cooking wood")
 
     def take_spark_out(self) -> None:
         """Scrolls down far enough to have a view on slot 51, so that we can determine
         we there is 50 slots left once slot 51 is free."""
-        self.chembench.inventory.select_first_slot()
-        pyautogui.scroll(-700)
-        self.player.sleep(1)
+        self.chembench.inventory.select_slot()
+        self.chembench.inventory.scroll("down", rows=2)
+        self._player.sleep(1)
 
         i = 0
-        while self.chembench.inventory.locate_template(
-            SPARKPOWDER.inventory_icon, region=(1420, 783, 110, 110), confidence=0.8
-        ):
-            self.chembench.inventory.select_first_slot()
+        while self._slot_51_has_spark():
+            self.chembench.inventory.select_slot(0)
             pyautogui.press("t")
             i += 1
-            self.player.sleep(i / 200)
+            self._player.sleep(i / 200)
+
+    def _slot_51_has_spark(self) -> bool:
+        return (
+            self.chembench.window.locate_template(
+                items.SPARKPOWDER.inventory_icon,
+                region=self.chembench.inventory.SLOTS[38],
+                confidence=0.7,
+                grayscale=True,
+            )
+            is not None
+        )
 
     def distribute_spark_evenly(self) -> None:
         """Distributes spark evenly over the chembenches, by taking out until 50 slots
         on the bottom chembench and putting the taken spark into the upper chem bench."""
-        for func, arg in self.go_over_bottom_chembenches():
-            func(arg)
-            self.player.sleep(0.3)
+        for func, arg in self.bottom_bench_turns:
+            func(arg, delay=0.3)
 
             # take until 50 slots from the bottom one
-            self.chembench.inventory.open()
+            self.chembench.open()
             self.take_spark_out()
-            self.chembench.inventory.close()
-            self.player.sleep(0.3)
+            self.chembench.close()
+            self._player.sleep(0.3)
 
             # turn to top one, put all taken spark into the upper one.
-            self.player.turn_y_by(-70)
-            self.player.sleep(0.3)
-            self.chembench.inventory.open()
-            self.player.inventory.transfer_all(self.chembench.inventory, SPARKPOWDER)
-            self.chembench.inventory.close()
-            self.player.sleep(0.3)
-            self.player.turn_y_by(70)
+            self._player.turn_y_by(-70, delay=0.3)
+            self.chembench.open()
+            self._player.inventory.transfer_all(items.SPARKPOWDER)
+            self.chembench.close()
+
+            self._player.sleep(0.3)
+            self._player.turn_y_by(70, delay=0.3)
 
         # reverse the turns to get back to original position
-        for func, arg in reversed(self.go_over_bottom_chembenches()):
-            func(arg * -1)
-            self.player.sleep(0.3)
+        for func, arg in reversed(self.bottom_bench_turns):
+            func(arg * -1, delay=0.5)
 
     def queue_gunpowder(self, transfer_mats: bool) -> None:
         """Queues gunpowder in every chembench, if transfer_mats is toggled
@@ -607,43 +532,41 @@ class ARBStation(Station):
         # get the gasoline if we need it
         if transfer_mats:
             self.access_gasoline("take")
-            self.player.sleep(1)
+            self._player.sleep(1)
 
-            self.dedi.inventory.open()
-            self.dedi.inventory.click_transfer_all()
-            self.dedi.inventory.close()
+            self.dedi.open()
+            self.dedi.inventory.transfer_all()
+            self.dedi.close()
 
-        for func, arg in self.go_over_chembenches():
-            func(arg)
-            self.player.sleep(0.3)
+        for func, arg in self.bench_turns:
+            func(arg, delay=0.5)
+            self.chembench.open()
 
-            self.chembench.inventory.open()
-            # transfer the materials
             if transfer_mats:
-                while not self.chembench.can_turn_on():
+                self.chembench.turn_off()
+                while not self.chembench.is_turned_off():
                     self.transfer_gasoline(1)
-                    self.player.sleep(1)
-                self.chembench.turn_on()
-                self.player.inventory.transfer_all(self.chembench.inventory, CHARCOAL)
+                    self._player.sleep(1)
 
-            # queu gunpowder
-            self.chembench.inventory.open_craft()
-            self.chembench.inventory.craft(GUNPOWDER, 1000)
-            self.chembench.inventory.close_craft()
-            self.chembench.inventory.close()
-            self.player.sleep(0.5)
+                self.chembench.turn_on()
+                self._player.inventory.transfer_all(items.CHARCOAL)
+
+            self.chembench.inventory.open_tab("crafting")
+            self.chembench.inventory.craft(items.GUNPOWDER, 1000)
+            self.chembench.inventory.open_tab("inventory")
+            self.chembench.close()
+            self._player.sleep(0.5)
 
         # reverse turns to get back to original position
-        for func, arg in reversed(self.go_over_chembenches()):
-            func(arg * -1)
-            self.player.sleep(0.3)
+        for func, arg in reversed(self.bench_turns):
+            func(arg * -1, delay=0.5)
 
         # put away the remaining charcoal
         if transfer_mats:
-            self.dedi.attempt_deposit(CHARCOAL, False)
+            self.dedi.deposit([items.CHARCOAL], get_amount=False)
             self.access_gasoline("deposit")
 
-    def craft_gunpowder(self) -> tuple[Embed, ArbStatistics]:
+    def craft_gunpowder(self) -> None:
         """Empties the forges, then spawns at the crafting bed, distributes
         sparkpowder evenly and queues gunpowder after. Returns an embed
         displaying the statistics, and the statistics object itself.
@@ -651,19 +574,18 @@ class ARBStation(Station):
         self.empty_forges()
         self.spawn()
         start = time.time()
-        try:
-            self.distribute_spark_evenly()
-            for i in range(2):
-                self.queue_gunpowder(transfer_mats=not i)
 
-            stats = ArbStatistics(
-                round(time.time() - start), False, {GUNPOWDER: 7500 * 6}
-            )
-            return self.create_gunpowder_crafted_embed(stats), stats
+        self.distribute_spark_evenly()
+        for i in range(2):
+            self.queue_gunpowder(transfer_mats=not i)
 
-        finally:
-            self.status = Status.WAITING_FOR_GUNPOWDER
-            self._started_crafting_gunpowder: datetime = datetime.now()
+        embed = self.create_gunpowder_crafted_embed(round(time.time() - start), 7500 * 6)
+        self._webhook.send_embed(embed)
+        
+        self.status = Status.WAITING_FOR_GUNPOWDER
+        self._started_crafting_gunpowder: datetime = datetime.now()
+
+        self._set_data("status", "Waiting for gunpowder")
 
     def empty_chembenches(self) -> None:
         """Empties the chembenches, because the player can only hold the
@@ -673,41 +595,37 @@ class ARBStation(Station):
 
         for i in range(2, 8, 2):
             # slice out the turns of the chembenches we need to access
-            for index, (func, arg) in enumerate(self.go_over_chembenches()[0:i]):
-                func(arg)
-                self.player.sleep(0.3)
+            for index, (func, arg) in enumerate(self.bench_turns[0:i]):
+                func(arg, delay=0.5)
 
                 # check if we already emptied the prior chembenches
                 if index >= i - 2:
-                    self.chembench.inventory.open()
-                    self.chembench.inventory.click_transfer_all()
+                    self.chembench.open()
+                    self.chembench.inventory.transfer_all()
                     self.chembench.turn_off()
-                    self.chembench.inventory.close()
-                    self.player.sleep(0.3)
+                    self.chembench.close()
 
             # reverse the turns to return back, once again sliced
-            for func, arg in reversed(self.go_over_chembenches()[0:i]):
-                func(arg * -1)
-                self.player.sleep(0.3)
+            for func, arg in reversed(self.bench_turns[0:i]):
+                func(arg * -1, delay=0.5)
 
             # turn to the exo mek to put the gunpowder in
             for _ in range(2):
-                self.player.turn_90_degrees("right", delay=1)
+                self._player.turn_90_degrees("right", delay=1)
 
-            self.player.sleep(1)
-            self.exo_mek.inventory.open()
-            self.player.inventory.transfer_all(self.exo_mek.inventory, GUNPOWDER)
+            self.exo_mek.access()
+            self._player.inventory.transfer_all(items.GUNPOWDER)
             self.exo_mek.inventory.close()
-            self.player.sleep(0.5)
+            self._player.sleep(0.5)
 
             # return to the start
             for _ in range(2):
-                self.player.turn_90_degrees("left", delay=1)
+                self._player.turn_90_degrees("left", delay=1)
 
         # drop all the items aside from charcoal (stone, flint, spark leftovers...)
-        self.player.empty_inventory()
+        self._player.drop_all()
 
-    def craft_arb(self) -> tuple[Embed, ArbStatistics]:
+    def craft_arb(self) -> None:
         """Spawns at the crafting bed, empties the chembenches to put the
         gunpowder into the exomek, then crafts ARB inside the exo mek.
 
@@ -719,26 +637,26 @@ class ARBStation(Station):
         """
         self.spawn()
         start = time.time()
-        try:
-            self.empty_chembenches()
-            self.take_metal_queue_arb()
 
-            stats = ArbStatistics(round(time.time() - start), False, {})
-            return self.create_arb_queued_embed(stats), stats
+        self.empty_chembenches()
+        self.take_metal_queue_arb()
 
-        finally:
-            self.status = Status.WAITING_FOR_ARB
-            self._started_crafting_arb: datetime = datetime.now()
+        embed = self.create_arb_queued_embed(round(time.time() - start))
+        self._webhook.send_embed(embed)
+
+        self.status = Status.WAITING_FOR_ARB
+        self._started_crafting_arb: datetime = datetime.now()
+        self._set_data("status", "Waiting for ARB")
 
     def travel_to_pickup_bed(self) -> None:
         """Travels to the arb pick up bed"""
-        bedmap = BedMap()
-        bedmap.travel_to(self.pickup_bed)
-        self.tribelog.check_tribelogs()
-        self.player.await_spawned()
-        self.player.sleep(1)
+        self._player.prone()
+        self._player.look_down_hard()
 
-    def pick_up_arb(self) -> tuple[Embed, ArbStatistics]:
+        self.pickup_bed.spawn()
+        self._player.spawn_in()
+
+    def pick_up_arb(self) -> None:
         """Picks up the ARB from the exo mek and puts it into the dedis.
         Returns an embed displaying the time taken and how much ARB
         was crafted.
@@ -749,28 +667,91 @@ class ARBStation(Station):
         """
         self.travel_to_pickup_bed()
         start = time.time()
-        profit: dict[Item, int] = {ARB: 0}
 
         try:
-            self.exo_mek.inventory.open()
-            self.exo_mek.inventory.take_all_items(ARB)
+            self.exo_mek.access()
+            self.exo_mek.inventory.transfer_all(items.ARB)
             self.exo_mek.inventory.sleep(5)
-            self.player.inventory.transfer_all(self.exo_mek.inventory, "blueprint")
+            self._player.inventory.transfer_all("blueprint")
             self.exo_mek.inventory.close()
-            self.player.sleep(5)
+            self._player.sleep(5)
 
             for i, turn in enumerate([80, 60, 80, -60]):
                 if i % 2 == 0:
-                    self.player.turn_x_by(turn)
+                    self._player.turn_x_by(turn, delay=0.3)
                 else:
-                    self.player.turn_y_by(turn)
+                    self._player.turn_y_by(turn, delay=0.3)
 
-                amount = self.dedi.attempt_deposit(ARB, determine_amount=True)
+                _, amount = self.dedi.deposit([items.ARB], get_amount=True)
                 if amount:
-                    profit[ARB] += amount[1]
+                    break
 
-            stats = ArbStatistics(round(time.time() - start), False, profit)
-            return self.create_embed(stats), stats
+            embed = self.create_embed(round(time.time() - start), amount)
+            self._webhook.send_embed(embed)
 
         finally:
             self.status = Status.WAITING_FOR_WOOD
+            self._set_data("status", "Waiting for wood")
+
+    def create_embed(self, time_taken: int, arb_profit: int) -> Embed:
+        """Creates the final embed after all steps have been finished, displays
+        the ARB made and the time taken."""
+        embed = Embed(
+            type="rich",
+            title=f"Filled forges and crafted sparkpowder!",
+            color=0xFF5500,
+        )
+        embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds")
+        embed.add_field(name="ARB crafted:", value=f"{arb_profit}")
+
+        embed.set_thumbnail(url=ARB_AVATAR)
+        embed.set_footer(text="Ling Ling on top!")
+        return embed
+
+    def create_arb_queued_embed(self, time_taken: int) -> Embed:
+        """Returns an embed displaying that ARB has been queued and how
+        long it took."""
+        embed = Embed(
+            type="rich",
+            title=f"Queued Advanced Rifle Bullets at {self._name}!",
+            color=0xE4CEB8,
+        )
+        embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds")
+        embed.set_thumbnail(url=EXOMEK_AVATAR)
+        embed.set_footer(text="Ling Ling on top!")
+        return embed
+
+    def create_gunpowder_crafted_embed(self, time_taken: int, crafted: int) -> Embed:
+        """Creates an embed that gunpowder has been queued, how long it took and
+        roughly how much is being crafted."""
+        embed = Embed(
+            type="rich",
+            title=f"Queued gunpowder at {self._name}!",
+            color=0xFF5500,
+        )
+        embed.add_field(
+            name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds"
+        )
+        embed.add_field(name="Gunpowder queued:", value=crafted)
+
+        embed.set_thumbnail(url=CHEMBENCH_AVATAR)
+        embed.set_footer(text="Ling Ling on top!")
+        return embed
+
+    def create_forges_refilled_embed(self, time_taken: int) -> Embed:
+        """Creates an embed displaying that the forge has been refilled and
+        how long it took. Also displays if the forges were emptied."""
+
+        embed = Embed(
+            type="rich",
+            title=f"Filled forges and crafted sparkpowder!",
+            color=0xFF5500,
+        )
+        embed.add_field(
+            name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds"
+        )
+        embed.add_field(name="Forges emptied:", value=True)
+
+        embed.set_thumbnail(url=FORGE_AVATAR)
+        embed.set_footer(text="Ling Ling on top!")
+        return embed

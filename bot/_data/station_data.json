@@ -1,0 +1,16 @@
+{
+    "arb": {
+        "status": "Cooking wood",
+        "wood": 6,
+        "cooking_start": "2023-02-25 13:33:57.972541"
+    },
+    "meat": {
+        "last_completed": 0
+    },
+    "berries": {
+        "mejoberry": 0,
+        "tintoberry": 0,
+        "narcoberry": 0,
+        "azulberry": 0
+    }
+}
