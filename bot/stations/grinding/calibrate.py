@@ -10,6 +10,12 @@ def main():
 
     do_turns = input("Do you want to calibrate the turns? y/n\n>>>").lower() == "y"
     do_dedis = input("Do you want to calibrate the dedi ocr? y/n\n>>>").lower() == "y"
+    do_dedi_transfer = (
+        input("Do you want to calibrate dedi_transfer? y/n\n>>>").lower() == "y"
+    )
+    do_vault_transfer = (
+        input("Do you want to calibrate vault_transfer? y/n\n>>>").lower() == "y"
+    )
 
     with open("settings/settings.json") as f:
         data = json.load(f)
@@ -56,7 +62,17 @@ def main():
         except AttributeError:
             # the error from passing webhook as a string, silence
             pass
+
+    if do_dedi_transfer:
+        grinding._transfer_dedi_wall()
+        print("Finished calibrating dedi transfer.")
+
+    if do_vault_transfer:
+        grinding._transfer_vault()
+        print("Finished calibrating vault transfer.")
+
     print("Calibration complete.")
+
 
 if __name__ == "__main__":
     main()

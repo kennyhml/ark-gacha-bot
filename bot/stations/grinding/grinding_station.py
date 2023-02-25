@@ -5,22 +5,13 @@ from re import A
 from typing import Iterable
 
 import cv2  # type: ignore[import]
-from ark import (
-    ArkWindow,
-    Bed,
-    Dinosaur,
-    IndustrialGrinder,
-    Player,
-    Structure,
-    TekDedicatedStorage,
-    TribeLog,
-    exceptions,
-    items,
-    tools,
-)
+from ark import (ArkWindow, Bed, Dinosaur, IndustrialGrinder, Player,
+                 Structure, TekDedicatedStorage, TribeLog, exceptions, items,
+                 tools)
 from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
-from pytesseract import pytesseract as tes  # type: ignore[import]
+from pytesseract import pytesseract as tes # type: ignore[import]
+from torch import inverse  # type: ignore[import]
 
 from ...tools import format_seconds, mss_to_pil
 from ...webhooks import InfoWebhook
@@ -226,6 +217,8 @@ class GrindingStation(Station):
             self.turn_to(Stations.EXO_MEK)
             self.exo_mek.access()
             self.exo_mek.inventory.search(item)
+            self.exo_mek.sleep(0.3)
+
             available_mats[item] = max(
                 0,
                 self.exo_mek.inventory.count(item) * item.stack_size
@@ -548,10 +541,13 @@ class GrindingStation(Station):
         # drop all on the remaining items
         self.turn_to(Stations.GRINDER)
         self.grinder.inventory.open()
+        for item in [items.FIBER, items.STONE, items.ANGLER_GEL, items.WOOD]:
+            self.grinder.inventory.search(item)
+            self.grinder.sleep(0.3)
 
-        self.grinder.inventory.transfer_all(items.FIBER)
-        self.grinder.inventory.transfer_all(items.ANGLER_GEL)
-        self.grinder.inventory.transfer_all(items.WOOD)
+            if self.grinder.inventory.has(item, is_searched=True):
+                self.grinder.inventory.transfer_all(item)
+
         self._player.inventory.drop_all()
 
         # turn off grinder if requestes and close it
@@ -885,7 +881,7 @@ class GrindingStation(Station):
         queue up."""
         try:
             time_diff = round(time.time() - self.last_crafted)
-            return time_diff > 120
+            return time_diff > 200
         except AttributeError:
             # last_crafted is not yet set, so no electronics are queued
             return True
@@ -920,7 +916,7 @@ class GrindingStation(Station):
         """Clears the exo mek after a crafting session."""
         self.turn_to(Stations.VAULT)
         self.vault.open()
-        self._player.inventory.transfer_all(items.HEAVY_AUTO_TURRET)
+        self._player.inventory.transfer_all(self.item_to_craft)
         self.vault.close()
 
         try:
@@ -943,7 +939,7 @@ class GrindingStation(Station):
         for item in [items.SILICA_PEARL, items.PASTE, items.ELECTRONICS]:
             self.exo_mek.inventory.transfer_all(item)
 
-        self.exo_mek.inventory.drop_all()
+        self.exo_mek.inventory.drop_all([items.ORGANIC_POLYMER])
         self.exo_mek.inventory.close()
 
         # deposit the lightweight mats
@@ -993,6 +989,11 @@ class GrindingStation(Station):
 
         embed = self._create_items_picked_up_embed(stacks_crafted)
         self._webhook.send_embed(embed)
+
+        self.clear_up_exo_mek()
+
+        self._transfer_vault()
+        self._transfer_dedi_wall()
 
         self.status = Status.WAITING_FOR_ITEMS
         self.ready = False
@@ -1101,6 +1102,8 @@ class GrindingStation(Station):
         Im sure theres a cleaner way to do this but it works.
         """
         bed = Bed("dedi_transfer")
+        self._player.look_down_hard()
+        self._player.prone()
         bed.spawn()
         self._tribelog.check_tribelogs()
         self._player.spawn_in()
@@ -1146,3 +1149,22 @@ class GrindingStation(Station):
         self.dedi.deposit([items.METAL_INGOT], get_amount=False)
         self._player.turn_y_by(-50, delay=0.5)
         self.dedi.deposit([items.ELECTRONICS], get_amount=False)
+
+    def _transfer_vault(self) -> None:
+        bed = Bed("vault_transfer")
+        self._player.look_down_hard()
+        self._player.prone()
+        bed.spawn()
+        self._player.spawn_in()
+        
+        self.vault.open()
+        self.vault.inventory.transfer_all()
+        self.vault.close()
+
+        for turn in [-100, -50, -55, -50]:
+            self._player.turn_x_by(turn, delay=0.5)
+
+            self.vault.open()
+            self._player.inventory.transfer_all()
+            self.vault.close()
+            self._player.sleep(0.5)
