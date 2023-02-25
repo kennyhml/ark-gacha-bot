@@ -2,11 +2,11 @@
     "main": {
         "account_name": "rawr",
         "game_launcher": "Epic",
-        "gen2": true,
-        "ytrap_beds": 32,
-        "ytrap_prefix": "spidert1seed",
+        "gen2": false,
+        "ytrap_beds": 52,
+        "ytrap_prefix": "seed",
         "crystal_beds": 1,
-        "crystal_prefix": "spidert1crystal",
+        "crystal_prefix": "crystal",
         "ytrap_station": true,
         "grinding_station": true,
         "arb_station": false,
@@ -25,7 +25,7 @@
         "webhook_gacha": "",
         "webhook_logs": "",
         "webhook_state": "",
-        "state_message_id": "1077483503765168189",
+        "state_message_id": "1078004041038168104",
         "timer_pop": 30
     },
     "ytrap": {
@@ -61,6 +61,46 @@
         "meat_prefix": "automeat"
     },
     "healing": {
-        "pod_name": "spidert1heal"
+        "pod_name": "gacha heal"
+    },
+    "grinding": {
+        "item_to_craft": "Tek Turret",
+        "text_rgb": [56, 232, 231],
+        "pearls_region": [
+            25,
+            350,
+            510,
+            355
+        ],
+        "paste_region": [
+            17,
+            697,
+            560,
+            370
+        ],
+        "electronics_region": [
+            593,
+            390,
+            590,
+            303
+        ],
+        "ingots_region": [
+            570,
+            730,
+            640,
+            305
+        ],
+        "crystal_region": [
+            1245,
+            365,
+            560,
+            315
+        ],
+        "hide_region": [
+            1240,
+            690,
+            613,
+            355
+        ]
     }
 }

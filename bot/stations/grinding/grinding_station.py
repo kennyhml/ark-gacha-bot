@@ -10,7 +10,7 @@ from ark import (ArkWindow, Bed, Dinosaur, IndustrialGrinder, Player,
                  tools)
 from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
-from pytesseract import pytesseract as tes # type: ignore[import]
+from pytesseract import pytesseract as tes  # type: ignore[import]
 from torch import inverse  # type: ignore[import]
 
 from ...tools import format_seconds, mss_to_pil
@@ -60,14 +60,6 @@ class GrindingStation(Station):
         The tribelog object to check tribelogs when spawning
 
     """
-
-    _PEARLS_DEDI = (25, 350, 510, 355)
-    _PASTE_DEDI = (17, 697, 560, 370)
-    _ELECTRONICS_DEDI = (593, 390, 590, 303)
-    _INGOT_DEDI = (570, 730, 640, 305)
-    _CRYSTAL_DEDI = (1245, 365, 560, 315)
-    _HIDE_DEDI = (1240, 690, 613, 355)
-
     _SUPPORTED_CRAFTABLES = {
         items.HEAVY_AUTO_TURRET,
         items.AUTO_TURRET,
@@ -739,12 +731,12 @@ class GrindingStation(Station):
         """
 
         dedi_to_region = {
-            items.SILICA_PEARL: self._PEARLS_DEDI,
-            items.PASTE: self._PASTE_DEDI,
-            items.ELECTRONICS: self._ELECTRONICS_DEDI,
-            items.METAL_INGOT: self._INGOT_DEDI,
-            items.CRYSTAL: self._CRYSTAL_DEDI,
-            items.HIDE: self._HIDE_DEDI,
+            items.SILICA_PEARL: self.settings.pearls_region,
+            items.PASTE: self.settings.paste_region,
+            items.ELECTRONICS: self.settings.electronics_region,
+            items.METAL_INGOT: self.settings.ingots_region,
+            items.CRYSTAL: self.settings.crystal_region,
+            items.HIDE: self.settings.hide_region,
         }
 
         img = self.get_dedi_screenshot(True)
@@ -753,7 +745,7 @@ class GrindingStation(Station):
             roi = img.crop(
                 (region[0], region[1], region[0] + region[2], region[1] + region[3])
             )
-            denoised_roi = self.screen.denoise_text(roi, (56, 232, 231), 22)
+            denoised_roi = self.screen.denoise_text(roi, self.settings.text_rgb, 22)
             amount: str = tes.image_to_string(
                 denoised_roi,
                 config="-c tessedit_char_whitelist=0123456789liI|O --psm 6",
@@ -1156,7 +1148,7 @@ class GrindingStation(Station):
         self._player.prone()
         bed.spawn()
         self._player.spawn_in()
-        
+
         self.vault.open()
         self.vault.inventory.transfer_all()
         self.vault.close()
