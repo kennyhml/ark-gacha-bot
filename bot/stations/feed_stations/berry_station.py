@@ -1,58 +1,43 @@
+import json
 import time
-from dataclasses import dataclass
+from datetime import datetime
 
-from discord import Embed  # type: ignore[import]
+from ark import items
+from discord import Embed  # type:ignore[import]
 
+from .._crop_plot_helper import do_crop_plot_stack
+from .feed_station import FeedStation
 
-
-from ark import TribeLog
-from ark import SpawnScreen
-from ark.entities import Player
-from ark.items import MEJOBERRY, Item
-from ark import Structure
-from bot.stations.feed_stations import FeedStation
-
-MEJOBERRY_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/0/00/Mejoberry.png/revision/latest/scale-to-width-down/228?cb=20160219215159"
-
-
-@dataclass
-class BerryStatistics:
-
-    time_taken: int
-    refill_lap: bool
-    profit: dict[Item, int]
 
 class BerryFeedStation(FeedStation):
     """Handles the auto berry station. The purpose of the station is to
     take mejoberries from crop plots to raise dinos in its area, or to
     pile up on berries for use elsewhere. on 500% greenhouse effect it
     takes 5 hours to fully regenerate.
-
-    Parameters:
-    -----------
-    bed :class:`Bed`:
-        The bed object of the station to travel to
     """
 
-    def __init__(
-        self, station_data, player: Player, tribelog: TribeLog
-    ) -> None:
-        super().__init__(station_data, player, tribelog)
-        self.bed_map = BedMap()
-        self.crop_plot = Structure("Tek Crop Plot", "tek_crop_plot")
+    MEJOBERRY_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/0/00/Mejoberry.png/revision/latest/scale-to-width-down/228?cb=20160219215159"
 
-    def is_ready(self) -> bool:
-        return False
-
-    def do_crop_plots(self) -> None:
+    def do_crop_plots(self, got_pellets: bool) -> None:
         """Does the crop plot stack, finishes facing the last stack"""
-        direction = "left" if self.gacha_is_right() else "right"
 
-        for _ in range(2):
-            self.player.turn_90_degrees(direction)
-            self.player.do_precise_crop_plot_stack(MEJOBERRY, refill_pellets=True)
+        for turn in range(2):
+            if turn or got_pellets:
+                self._player.turn_90_degrees(
+                    "left" if self.gacha_is_right() else "right"
+                )
 
-    def create_embed(self, statistics: StatStatistics) -> Embed:
+            do_crop_plot_stack(
+                self._player,
+                self._stacks[turn],
+                items.MEJOBERRY,
+                [-130, *[-17] * 5, 50, -17],
+                [],
+                precise=True,
+                refill=got_pellets,
+            )
+
+    def create_embed(self, time_taken: int) -> Embed:
         """Creates a `discord.Embed` from the stations statistics.
 
         The embed contains info about what station was finished and how
@@ -69,29 +54,35 @@ class BerryFeedStation(FeedStation):
         """
         embed = Embed(
             type="rich",
-            title=f"Finished berry station {self.station_data.beds[self.current_bed].name}!",
+            title=f"Finished berry station {self.name}!",
             color=0xFC97E8,
         )
 
-        embed.add_field(name="Time taken:ㅤ", value=f"{statistics.time_taken} seconds")
+        embed.add_field(name="Time taken:ㅤ", value=f"{time_taken} seconds")
 
-        embed.set_thumbnail(url=MEJOBERRY_AVATAR)
+        embed.set_thumbnail(url=self.MEJOBERRY_AVATAR)
         embed.set_footer(text="Ling Ling on top!")
         return embed
 
-    def complete(self) -> tuple[Embed, StationStatistics]:
+    def complete(self) -> None:
         """Runs the feed station."""
         self.spawn()
         start = time.time()
 
         try:
-            self.get_pellets(25)
-            self.do_crop_plots()
-            self.fill_troughs(MEJOBERRY)
-            stats = BerryStatistics(round(time.time() - start), False, {})
-            return self.create_embed(stats), stats
+            took_pellets = self.check_get_pellets()
+            self.do_crop_plots(took_pellets)
+            self.fill_troughs(items.MEJOBERRY)
+
+            self._webhook.send_embed(self.create_embed(round(time.time() - start)))
 
         finally:
-            self.increment_bed_counter()
+            self.last_completed = datetime.now()
 
+            with open("bot/_data/station_data.json") as f:
+                data: dict = json.load(f)
 
+            data["mejoberry"]["last_completed"] = self.last_completed
+
+            with open("bot/_data/station_data.json", "w") as f:
+                json.dump(data, f, indent=4, default=str)

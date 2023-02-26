@@ -1,17 +1,13 @@
+import json
 import time
-from dataclasses import dataclass
 from datetime import datetime
 
+from ark import Bed, Dinosaur, Player, TribeLog, exceptions, items
 from discord import Embed  # type: ignore[import]
 
-
-from ark import SpawnScreen, Dinosaur, Player, Structure, TribeLog
-
-from ark.exceptions import InventoryNotAccessibleError
-from ark.items import PELLET, RAW_MEAT, SPOILED_MEAT, Item
-from bot.stations.feed_stations import FeedStation
-RAW_MEAT_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/e/e9/Raw_Meat.png/revision/latest/scale-to-width-down/228?cb=20150704150605"
-TRANSFER_PELLETS_BACK = 15
+from ...webhooks import InfoWebhook
+from .._crop_plot_helper import do_crop_plot_stack
+from .feed_station import FeedStation
 
 
 class MeatFeedStation(FeedStation):
@@ -34,42 +30,40 @@ class MeatFeedStation(FeedStation):
 
     """
 
-    def __init__(
-        self, station_data, player: Player, tribelog: TribeLog
-    ) -> None:
-        super().__init__(station_data, player, tribelog)
-        self.dire_bear = Dinosaur("Dire Bear", "dire_bear")
-        self.bed_map = BedMap()
-        self.crop_plot = Structure("Tek Crop Plot", "tek_crop_plot")
+    RAW_MEAT_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/e/e9/Raw_Meat.png/revision/latest/scale-to-width-down/228?cb=20150704150605"
 
-    def is_ready(self) -> bool:
-        """Checks whether the station is ready by comparing the station
-        datas' interval to the last emptied datetime.
-        """
-        # currently disabled because honestly nobody raises anyways
-        return False 
-        
+    def __init__(
+        self,
+        name: str,
+        player: Player,
+        tribelog: TribeLog,
+        webhook: InfoWebhook,
+        interval: int,
+    ) -> None:
+        super().__init__(name, player, tribelog, webhook, interval)
+        self.bear = Dinosaur("Dire Bear", "templates/dire_bear.png")
+        self._load_last_completion("meat")
+
     def travel_to_trough_bed(self) -> None:
         """Travels to the stations secondary bed, that has a `b` in front
         of its numeric suffix created by the beds `create_secondary` method.
         """
-        new_bed = self.station_data.beds[self.current_bed].create_secondary("b")
+        name = self.bed.name
+        new_bed = Bed(name[:-2] + "b" + name[-2:])
 
-        self.bed_map.travel_to(new_bed)
-        self.tribelog.check_tribelogs()
-        self.player.await_spawned()
-        self.player.sleep(1)
+        self._player.prone()
+        self._player.look_down_hard()
+
+        new_bed.spawn()
+        self._player.spawn_in()
 
     def approach_dire_bear(self) -> None:
         """Approaches the direbear by pressing 'w' until we can see the
         'Ride' text.
-
-        TODO: Add error handling etc when the bear could not be reached.
-
         """
         counter = 0
-        while not self.dire_bear.can_ride():
-            self.player.walk("w", 0.1)
+        while not self.bear.can_ride():
+            self._player.walk("w", 0.1)
             counter += 1
             if counter > 8:
                 return
@@ -77,80 +71,84 @@ class MeatFeedStation(FeedStation):
     def get_meat(self) -> None:
         """Mounts the direbear, hits the meatplant 20 times and dismounts."""
         self.approach_dire_bear()
-        self.dire_bear.mount()
-        self.player.turn_y_by(160)
+        self.bear.mount()
+        self._player.turn_y_by(160)
 
         for _ in range(20):
-            self.dire_bear.attack("left")
-            self.dire_bear.sleep(0.7)
+            self.bear.attack("left")
+            self.bear.sleep(0.7)
 
-        self.player.sleep(5)
-        self.dire_bear.dismount()
+        self._player.sleep(5)
+        self.bear.dismount()
 
     def walk_to_spawn(self) -> None:
         """Looks down on the ground and walks into the direction the bed should be
         at."""
-        self.player.look_down_hard()
+        self._player.look_down_hard()
         direction = "a" if self.gacha_is_right() else "d"
 
-        while not self.bed_map.can_be_accessed():
-            self.player.walk(direction, 0.2)
-
-    def crop_plots_need_pellets(self) -> bool:
-        """Opens the crop plot and checks how many pellets are in it,
-        returns a boolean determining if the crop plots need a pellet refill."""
-        self.crop_plot.inventory.open()
-        pellets_amount = self.crop_plot.inventory.count_item(PELLET)
-        self.crop_plot.inventory.close()
-
-        return pellets_amount <= 10
+        while not self.bed.interface.can_be_accessed():
+            self._player.walk(direction, 0.2)
 
     def refill_crop_plots(self) -> None:
         """Refills the crop plots with pellets."""
-        direction = "left" if self.gacha_is_right() else "right"
-        self.player.turn_90_degrees(direction)
-        self.player.do_precise_crop_plot_stack(refill_pellets=True, max_index=6)
-        self.player.empty_inventory()
+        self._player.turn_90_degrees("left" if self.gacha_is_right() else "right")
+        self._player.crouch()
+        
+        do_crop_plot_stack(
+            self._player,
+            self._stacks[0],
+            None,
+            [-130, *[-17] * 5, 50, -17],
+            [],
+            precise=True,
+            refill=True,
+        )
+        self._player.drop_all()
 
     def take_meat_from_bear(self) -> int:
         """Takes the raw meat from the dire bear above.
         Returns how much meat was taken from the bear
         """
         direction = "a" if self.gacha_is_right() else "d"
-        self.player.walk(direction, 0.5)
-        self.player.look_up_hard()
-        direction = "right" if self.gacha_is_right() else "left"
-        self.player.turn_90_degrees(direction, delay=0.5)
+        self._player.walk(direction, 0.5)
+        self._player.look_up_hard()
+        self._player.turn_90_degrees(
+            "right" if self.gacha_is_right() else "left", delay=0.5
+        )
 
         attempt = 0
-        while not self.dire_bear.can_access():
-            self.player.turn_y_by(6)
-            self.player.sleep(0.5)
+        while not self.bear.can_access():
+            self._player.turn_y_by(6)
+            self._player.sleep(0.5)
             attempt += 1
             if attempt > 20:
-                raise InventoryNotAccessibleError
+                raise exceptions.InventoryNotAccessibleError
 
-        self.dire_bear.inventory.open()
-        self.dire_bear.inventory.take_all_items(RAW_MEAT)
-        self.player.inventory.await_items_added()
-        self.player.sleep(0.5)
-        meat = self.player.inventory.get_amount_transferred(RAW_MEAT, "add")
+        self.bear.access()
+        self.bear.inventory.transfer_all(items.RAW_MEAT)
+        self._player.inventory.await_items_added(items.RAW_MEAT)
+        self._player.sleep(0.5)
+        meat = self._player.inventory.get_amount_transferred(items.RAW_MEAT, "add")
 
-        self.dire_bear.inventory.click_drop_all()
-        self.dire_bear.inventory.close()
+        self.bear.inventory.drop_all()
+        self.bear.inventory.close()
 
-        self.player.sleep(1)
-        self.player.look_down_hard()
-        self.bed_map.lay_down()
+        self._player.sleep(1)
+        self._player.look_down_hard()
+
+        self.bed.lay_down()
+        self._player.sleep(1)
+        self.bed.get_up()
 
         if self.gacha_is_right():
             for _ in range(2):
-                self.player.sleep(0.5)
-                self.player.turn_90_degrees("left")
-        self.player.sleep(1)
+                self._player.sleep(0.5)
+                self._player.turn_90_degrees("left")
+        self._player.sleep(1)
         return meat
 
-    def create_embed(self, statistics) -> Embed:
+    def create_embed(self, time_taken: int, meat_profit: int, refilled: bool) -> Embed:
         """Creates a `discord.Embed` from the stations statistics.
 
         The embed contains info about what station was finished and how
@@ -167,43 +165,47 @@ class MeatFeedStation(FeedStation):
         """
         embed = Embed(
             type="rich",
-            title=f"Finished meat station {self.station_data.beds[self.current_bed].name}!",
+            title=f"Finished meat station {self._name}!",
             color=0xFC97E8,
         )
 
-        embed.add_field(name="Time taken:ㅤ", value=f"{statistics.time_taken} seconds")
-        embed.add_field(
-            name="Meat deposited:ㅤ", value=f"~{statistics.profit[RAW_MEAT]}"
-        )
-        embed.add_field(name="Pellets refilled", value=statistics.refill_lap)
+        embed.add_field(name="Time taken:ㅤ", value=f"{time_taken} seconds")
+        embed.add_field(name="Meat deposited:ㅤ", value=f"~{meat_profit}")
+        embed.add_field(name="Pellets refilled", value=refilled)
 
-        embed.set_thumbnail(url=RAW_MEAT_AVATAR)
+        embed.set_thumbnail(url=self.RAW_MEAT_AVATAR)
         embed.set_footer(text="Ling Ling on top!")
         return embed
 
-    def complete(self) -> tuple[Embed]:
+    def complete(self) -> None:
         """Completes the station, returns an embed displaying the
         statistics, and the statistics object itself."""
-        self.spawn()
-        start = time.time()
         try:
+            self.spawn()
+            start = time.time()
             self.get_meat()
             self.walk_to_spawn()
             self.travel_to_trough_bed()
-            need_refill = self.crop_plots_need_pellets()
+
+            need_refill = self.check_get_pellets()
             if need_refill:
-                self.get_pellets(transfer_rows_back=10)
                 self.refill_crop_plots()
 
             meat_harvested = self.take_meat_from_bear()
-            self.fill_troughs(RAW_MEAT, popcorn=SPOILED_MEAT)
+            self.fill_troughs(items.RAW_MEAT, popcorn=items.SPOILED_MEAT)
 
-            stats = MeatStatistics(
-                round(time.time() - start),
-                need_refill,
-                profit={RAW_MEAT: meat_harvested},
+            self._webhook.send_embed(
+                self.create_embed(
+                    round(time.time() - start), meat_harvested, need_refill
+                )
             )
-            return self.create_embed(stats), stats
+            self.last_completed = datetime.now()
 
         finally:
-            self.increment_bed_counter()
+            with open("bot/_data/station_data.json") as f:
+                data: dict = json.load(f)
+
+            data["meat"]["last_completed"] = self.last_completed
+
+            with open("bot/_data/station_data.json", "w") as f:
+                json.dump(data, f, indent=4, default=str)

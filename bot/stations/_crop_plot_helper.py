@@ -1,3 +1,4 @@
+from typing import Optional
 from ark import Player, TekCropPlot, exceptions, items
 
 from ..tools import threaded
@@ -6,7 +7,7 @@ from ..tools import threaded
 def do_crop_plot_stack(
     player: Player,
     stack: list[TekCropPlot],
-    item: items.Item,
+    item: Optional[items.Item],
     turns: list[int],
     dead: list[TekCropPlot],
     *,
@@ -36,7 +37,7 @@ def do_crop_plot_stack(
 def take_and_refill(
     player: Player,
     crop_plot: TekCropPlot,
-    item: items.Item,
+    item: Optional[items.Item],
     dead: list[TekCropPlot],
     *,
     refill: bool,
@@ -58,10 +59,9 @@ def take_and_refill(
     if not crop_plot.inventory.has(items.YTRAP_SEED):
         dead.append(crop_plot)
 
-    if crop_plot.inventory.has(item):
+    if item and crop_plot.inventory.has(item):
         crop_plot.inventory.search(item, delete_prior=False)
         crop_plot.inventory.transfer_all()
-
 
     if refill:
         player.inventory.transfer_all()

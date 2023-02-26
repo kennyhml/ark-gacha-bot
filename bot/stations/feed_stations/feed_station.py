@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from ark import Bed, Gacha, Player, Structure, TribeLog, items
+from ark import Bed, Gacha, Player, Structure, TekCropPlot, TribeLog, items
 
 from bot.stations._station import Station
 
@@ -44,6 +44,11 @@ class FeedStation(Station):
         self.trough = Structure("Tek Trough", "templates/tek_trough.png")
         self.gacha = Gacha(name)
 
+        self._stacks = [
+            [TekCropPlot(f"Crop Plot {stack+ 1}:{idx+1}") for idx in range(8)]
+            for stack in range(2)
+        ]
+
         self.case_01_05_09 = [
             (self._player.turn_x_by, 80),
             (self._player.turn_y_by, -40),
@@ -81,7 +86,7 @@ class FeedStation(Station):
         ]
 
     def _load_last_completion(self, key: str) -> None:
-        with open("bot/_data/station_data") as f:
+        with open("bot/_data/station_data.json") as f:
             data: dict = json.load(f)[key]
 
         self.last_completed = datetime.strptime(
@@ -93,7 +98,7 @@ class FeedStation(Station):
         spawns given the beds numeric suffix."""
         return int(self.bed.name[-2:]) % 2 == 0
 
-    def get_pellets(self, transfer_rows_back: int = 6) -> None:
+    def check_get_pellets(self) -> bool:
         """Takes the pellets from the gacha.
 
         Parameters:
@@ -102,6 +107,12 @@ class FeedStation(Station):
             The amount of pellet rows we want to transfer back into the gacha,
             to avoid capping due to pellet overflow.
         """
+        crop_plot =  self._stacks[0][5]
+        crop_plot.open()
+        if crop_plot.inventory.count(items.PELLET) > 10:
+            return False
+        crop_plot.close()
+        self._player.sleep(0.5)
 
         self._player.turn_90_degrees(
             "right" if self.gacha_is_right() else "left", delay=1
@@ -118,6 +129,7 @@ class FeedStation(Station):
             self._player.inventory.transfer_top_row()
         self.gacha.inventory.close()
         self._player.sleep(1)
+        return True
 
     def get_trough_turns(self) -> list:
         """Gets the optimized trough turns given the stations bed for the
@@ -176,7 +188,9 @@ class FeedStation(Station):
         self.trough.inventory.close()
         self._player.sleep(0.3)
 
-    def fill_troughs(self, item: items.Item, popcorn: Optional[items.Item] = None) -> None:
+    def fill_troughs(
+        self, item: items.Item, popcorn: Optional[items.Item] = None
+    ) -> None:
         """Fills all the troughs with the passed item. Stops when
         a `NoItemsLeftError` is raised.
 
