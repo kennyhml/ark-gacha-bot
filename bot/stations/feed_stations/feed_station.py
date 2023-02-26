@@ -1,13 +1,13 @@
-
+import json
 from datetime import datetime
-from typing import Callable, Optional, Sequence
+from typing import Optional
 
-import numpy as np
-from ark import TribeLog
-from ark.entities import Dinosaur, Player
-from ark.items import PELLET, Item
+from ark import Bed, Gacha, Player, Structure, TribeLog, items
 
 from bot.stations._station import Station
+
+from ...webhooks import InfoWebhook
+from .._station import Station
 
 
 class FeedStation(Station):
@@ -26,26 +26,72 @@ class FeedStation(Station):
     """
 
     def __init__(
-        self, station_data, player: Player, tribelog: TribeLog
+        self,
+        name: str,
+        player: Player,
+        tribelog: TribeLog,
+        webhook: InfoWebhook,
+        interval: int,
     ) -> None:
 
-        self.station_data = station_data
-        self.player = player
-        self.tribelog = tribelog
+        self._name = name
+        self._player = player
+        self._tribelog = tribelog
+        self._webhook = webhook
+        self.interval = interval
 
-        self.trough = Structure("Tek Trough", "tek_trough")
-        self.gacha = Dinosaur("Gacha", "gacha")
-        self.current_bed = 0
-        self.check_npy_path()
+        self.bed = Bed(name)
+        self.trough = Structure("Tek Trough", "templates/tek_trough.png")
+        self.gacha = Gacha(name)
 
-    def check_npy_path(self) -> None:
-        if not self.station_data.npy_path:
-            raise InvalidNpyPathError(f"A feed Station needs a '.npy' file path!")
+        self.case_01_05_09 = [
+            (self._player.turn_x_by, 80),
+            (self._player.turn_y_by, -40),
+            self._player.crouch,
+            (self._player.turn_x_by, 40),
+            self._player.crouch,
+            (self._player.turn_y_by, 40),
+            (self._player.turn_x_by, 50),
+            self._player.crouch,
+            (self._player.turn_y_by, -40),
+        ]
+
+        self.case_00_02_04 = [
+            (self._player.turn_x_by, -80),
+            (self._player.turn_y_by, -40),
+            self._player.crouch,
+            (self._player.turn_x_by, -40),
+            self._player.crouch,
+            (self._player.turn_y_by, 40),
+            (self._player.turn_x_by, -50),
+            self._player.crouch,
+            (self._player.turn_y_by, -40),
+        ]
+
+        self.case_other = [
+            (self._player.turn_x_by, 90),
+            (self._player.turn_y_by, -40),
+            self._player.crouch,
+            (self._player.turn_x_by, 40),
+            self._player.crouch,
+            (self._player.turn_y_by, 40),
+            (self._player.turn_x_by, 50),
+            self._player.crouch,
+            (self._player.turn_y_by, -40),
+        ]
+
+    def _load_last_completion(self, key: str) -> None:
+        with open("bot/_data/station_data") as f:
+            data: dict = json.load(f)[key]
+
+        self.last_completed = datetime.strptime(
+            data["last_completed"][:-3], "%Y-%m-%d %H:%M:%S.%f"
+        )
 
     def gacha_is_right(self) -> bool:
         """Checks whether the gacha is on the righthand side when the player
         spawns given the beds numeric suffix."""
-        return int(self.station_data.beds[self.current_bed].name[-2:]) % 2 == 0
+        return int(self.bed.name[-2:]) % 2 == 0
 
     def get_pellets(self, transfer_rows_back: int = 6) -> None:
         """Takes the pellets from the gacha.
@@ -57,61 +103,23 @@ class FeedStation(Station):
             to avoid capping due to pellet overflow.
         """
 
-        direction = "right" if self.gacha_is_right() else "left"
-        self.player.turn_90_degrees(direction, delay=1)
+        self._player.turn_90_degrees(
+            "right" if self.gacha_is_right() else "left", delay=1
+        )
 
         # open the gacha, default_key=False because the inventory will not
         # be opened pressing 'F' due to the catwalk, however pressing 'E'
         # works, just need to make sure the gacha does not have a saddle equipped
         self.gacha.inventory.open(default_key=False)
-        self.gacha.inventory.take_all_items(PELLET)
-        self.player.inventory.await_items_added()
+        self.gacha.inventory.transfer_all(items.PELLET)
+        self._player.inventory.await_items_added(items.PELLET)
 
-        # transfer some pellets back in
-        self.player.inventory.take_pellets(transfer_back=transfer_rows_back)
+        for _ in range(6):
+            self._player.inventory.transfer_top_row()
         self.gacha.inventory.close()
-        self.player.sleep(1)
+        self._player.sleep(1)
 
-    def case_01_05_09(self) -> Sequence[tuple[Callable, int] | Callable]:
-        return [
-            (self.player.turn_x_by, 80),
-            (self.player.turn_y_by, -40),
-            self.player.crouch,
-            (self.player.turn_x_by, 40),
-            self.player.crouch,
-            (self.player.turn_y_by, 40),
-            (self.player.turn_x_by, 50),
-            self.player.crouch,
-            (self.player.turn_y_by, -40),
-        ]
-
-    def case_00_02_04(self) -> Sequence[tuple[Callable, int] | Callable]:
-        return [
-            (self.player.turn_x_by, -80),
-            (self.player.turn_y_by, -40),
-            self.player.crouch,
-            (self.player.turn_x_by, -40),
-            self.player.crouch,
-            (self.player.turn_y_by, 40),
-            (self.player.turn_x_by, -50),
-            self.player.crouch,
-            (self.player.turn_y_by, -40),
-        ]
-
-    def case_other(self) -> Sequence[tuple[Callable, int] | Callable]:
-        return [
-            (self.player.turn_x_by, 90),
-            (self.player.turn_y_by, -40),
-            self.player.crouch,
-            (self.player.turn_x_by, 40),
-            self.player.crouch,
-            (self.player.turn_y_by, 40),
-            (self.player.turn_x_by, 50),
-            self.player.crouch,
-            (self.player.turn_y_by, -40),
-        ]
-
-    def get_trough_turns(self) -> Sequence[tuple[Callable, int] | Callable]:
+    def get_trough_turns(self) -> list:
         """Gets the optimized trough turns given the stations bed for the
         respective bed.
 
@@ -124,18 +132,20 @@ class FeedStation(Station):
         >>> [(turn_x, 80), (turn_y, -40), crouch]
         """
         # get the beds suffix
-        bed_suffix = self.station_data.beds[self.current_bed].name[-2:]
+        bed_suffix = self.bed.name[-2:]
 
         # check for the correct remainder
         if int(bed_suffix) % 4 == 1:
-            return self.case_01_05_09()
+            return self.case_01_05_09
 
         elif int(bed_suffix) % 2 == 0:
-            return self.case_00_02_04()
+            return self.case_00_02_04
 
-        return self.case_other()
+        return self.case_other
 
-    def fill_trough(self, item: Item, popcorn: Optional[Item] = None) -> None:
+    def fill_trough(
+        self, item: items.Item, popcorn: Optional[items.Item] = None
+    ) -> None:
         """Opens the trough the player is looking at and deposits the given
         item. If no items are left after depositing, an Exception is raised.
 
@@ -151,22 +161,22 @@ class FeedStation(Station):
         """
         # open trough and transfer berries, add delays to make sure we only check
         # for berries in the inventory once they actually transferred.
-        self.trough.inventory.open()
+        self.trough.open()
         if popcorn:
-            self.trough.inventory.popcorn(popcorn)
+            self.trough.inventory.drop(popcorn)
 
-        self.player.inventory.transfer_all(self.trough.inventory)
-        self.player.sleep(0.5)
+        self._player.inventory.transfer_all()
+        self._player.sleep(0.5)
 
         # check for berries left in our inventory
-        if not self.player.inventory.has_item(item):
+        if not self._player.inventory.has(item):
             self.trough.inventory.close()
-            raise NoItemsLeftError(f"No {item} left to transfer!")
+            raise LookupError(f"No {item} left to transfer!")
 
         self.trough.inventory.close()
-        self.player.sleep(0.3)
+        self._player.sleep(0.3)
 
-    def fill_troughs(self, item: Item, popcorn: Optional[Item] = None) -> None:
+    def fill_troughs(self, item: items.Item, popcorn: Optional[items.Item] = None) -> None:
         """Fills all the troughs with the passed item. Stops when
         a `NoItemsLeftError` is raised.
 
@@ -176,11 +186,11 @@ class FeedStation(Station):
             The item to put into the troughs
         """
         # prepare to fill troughs
-        self.player.crouch()
-        self.player.look_down_hard()
-        self.player.sleep(0.2)
-        self.player.turn_y_by(-150)
-        self.player.sleep(1)
+        self._player.crouch()
+        self._player.look_down_hard()
+        self._player.sleep(0.2)
+        self._player.turn_y_by(-150)
+        self._player.sleep(1)
 
         for action in self.get_trough_turns():
             if isinstance(action, tuple):
@@ -188,24 +198,9 @@ class FeedStation(Station):
                 func(arg)
             else:
                 action()
-            self.player.sleep(0.3)
+            self._player.sleep(0.3)
 
             try:
                 self.fill_trough(item, popcorn)
-            except NoItemsLeftError:
+            except LookupError:
                 return
-
-    def increment_bed_counter(self) -> None:
-        if self.current_bed < len(self.station_data.beds) - 1:
-            self.current_bed += 1
-            return
-
-        # all station beds completed
-        self.current_bed = 0
-        time = datetime.now()
-        self.station_data.last_completed = time
-        if self.station_data.npy_path:
-            np_format = np.array(
-                [time.year, time.month, time.day, time.hour, time.minute]
-            )
-            np.save(self.station_data.npy_path, np_format)

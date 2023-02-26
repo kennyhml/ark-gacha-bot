@@ -5,12 +5,10 @@
         "cooking_start": "2023-02-26 11:12:53.755640"
     },
     "meat": {
-        "last_completed": 0
+        "last_completed": ""
     },
-    "berries": {
-        "mejoberry": 0,
-        "tintoberry": 0,
-        "narcoberry": 0,
-        "azulberry": 0
+    "mejoberry": {
+        "last_completed": ""
     }
+
 }

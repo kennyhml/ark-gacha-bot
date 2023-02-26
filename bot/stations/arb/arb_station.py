@@ -1,20 +1,11 @@
 import json
 import time
-from calendar import formatstring
 from datetime import datetime
 from typing import Any, Literal, Optional
 
 import pyautogui  # type: ignore[import]
-from ark import (
-    Bed,
-    ChemistryBench,
-    Dinosaur,
-    IndustrialForge,
-    Player,
-    TekDedicatedStorage,
-    TribeLog,
-    items,
-)
+from ark import (Bed, ChemistryBench, Dinosaur, IndustrialForge, Player,
+                 TekDedicatedStorage, TribeLog, items)
 from discord import Embed  # type: ignore[import]
 
 from bot.stations._station import Station
@@ -167,7 +158,7 @@ class ARBStation(Station):
             )
             time_left = max(0, (5 * 60) - time_diff)
             if not time_left:
-                print("Gunpowder is ready.")
+                print("Gunpowder has finished crafting.")
                 return True
 
             print(f"{format_seconds(time_left)} left on gunpowder...")
@@ -183,7 +174,7 @@ class ARBStation(Station):
             )
             time_left = max(0, (15 * 60) - time_diff)
             if not time_left:
-                print("ARB is ready.")
+                print("ARB has finished crafting.")
                 return True
 
             print(f"{format_seconds(time_left)} left on ARB...")
@@ -196,7 +187,7 @@ class ARBStation(Station):
         time_diff = round((datetime.now() - self._started_cooking_wood).total_seconds())
         time_left = max(0, (170 * 60) - time_diff)
         if not time_left:
-            print("Charcoal is ready.")
+            print("Charcoal has finished burning.")
             return True
 
         print(f"{format_seconds(time_left)} left on charcoal...")

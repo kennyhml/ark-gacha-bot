@@ -1,7 +1,5 @@
 import time
 from itertools import cycle
-from math import floor
-from re import A
 from typing import Iterable
 
 import cv2  # type: ignore[import]
@@ -11,7 +9,6 @@ from ark import (ArkWindow, Bed, Dinosaur, IndustrialGrinder, Player,
 from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
-from torch import inverse  # type: ignore[import]
 
 from ...tools import format_seconds, mss_to_pil
 from ...webhooks import InfoWebhook
@@ -871,11 +868,16 @@ class GrindingStation(Station):
     def crafting_finished(self) -> bool:
         """Checks if more than 2 minutes passed since the last electronic
         queue up."""
+
         try:
             time_diff = round(time.time() - self.last_crafted)
-            return time_diff > 200
+            time_left = max(0, (3 * 60) - time_diff)
+            if not time_left:
+                print("Grinding station has finished crafting.")
+                return True
+            print(f"{format_seconds(time_left)} left on crafting components..")
+            return False
         except AttributeError:
-            # last_crafted is not yet set, so no electronics are queued
             return True
 
     def craft(self, item: items.Item, amount: int, put_items: bool = True) -> None:
@@ -914,9 +916,7 @@ class GrindingStation(Station):
         try:
             # clean up the remaining mats from exo mek
             self.turn_to(Stations.EXO_MEK)
-            self._player.do_drop_script(
-                items.METAL_INGOT, self.exo_mek.inventory
-            )
+            self._player.do_drop_script(items.METAL_INGOT, self.exo_mek.inventory)
             self._player.turn_y_by(-163)
             self.deposit(items.METAL_INGOT)
 
@@ -958,7 +958,8 @@ class GrindingStation(Station):
 
         self.craft(self.item_to_craft, self.session_crafts, put_items=False)
         if self.session_crafts < 50:
-            self._player.sleep(20)
+            while self.exo_mek.inventory.is_crafting():
+                self._player.sleep(0.3)
             self.pickup_final_craft(spawn=False)
         else:
             self.last_crafted = time.time()

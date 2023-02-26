@@ -14,14 +14,6 @@ RAW_MEAT_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedi
 TRANSFER_PELLETS_BACK = 15
 
 
-@dataclass
-class MeatStatistics:
-
-    time_taken: int
-    refill_lap: bool
-    profit: dict[Item, int]
-
-
 class MeatFeedStation(FeedStation):
     """Handles the auto meat station. The purpose of the station is to
     harvest meat plants using direbears to raise dinos in its area or let
