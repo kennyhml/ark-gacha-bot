@@ -553,7 +553,7 @@ class GrindingStation(Station):
         """
         # drop script the items out
         self.turn_to(Stations.GRINDER)
-        self._player.do_drop_script(item, self.grinder)
+        self._player.do_drop_script(item, self.grinder.inventory)
         self._player.turn_y_by(-163)
 
         # deposit the items, turn back to gear vault
@@ -915,7 +915,7 @@ class GrindingStation(Station):
             # clean up the remaining mats from exo mek
             self.turn_to(Stations.EXO_MEK)
             self._player.do_drop_script(
-                items.METAL_INGOT, self.exo_mek  # type:ignore[arg-type]
+                items.METAL_INGOT, self.exo_mek.inventory
             )
             self._player.turn_y_by(-163)
             self.deposit(items.METAL_INGOT)
@@ -960,9 +960,9 @@ class GrindingStation(Station):
         if self.session_crafts < 50:
             self._player.sleep(20)
             self.pickup_final_craft(spawn=False)
-
-        self.last_crafted = time.time()
-        self.status = Status.AWAITING_PICKUP
+        else:
+            self.last_crafted = time.time()
+            self.status = Status.AWAITING_PICKUP
 
     def pickup_final_craft(self, spawn: bool = True) -> None:
         assert self.item_to_craft is not None

@@ -8,6 +8,7 @@ def do_crop_plot_stack(
     stack: list[TekCropPlot],
     item: items.Item,
     turns: list[int],
+    dead: list[TekCropPlot],
     *,
     refill: bool,
     precise: bool
@@ -25,7 +26,7 @@ def do_crop_plot_stack(
             stand_up()
 
         player.turn_y_by(turn_value, delay=0.3)
-        if not take_and_refill(player, crop_plot, item, refill=refill, precise=precise):
+        if not take_and_refill(player, crop_plot, item, dead, refill=refill, precise=precise):
             fails += 1
             if fails >= 2:
                 raise exceptions.InventoryNotAccessibleError
@@ -36,6 +37,7 @@ def take_and_refill(
     player: Player,
     crop_plot: TekCropPlot,
     item: items.Item,
+    dead: list[TekCropPlot],
     *,
     refill: bool,
     precise: bool
@@ -53,9 +55,13 @@ def take_and_refill(
         crop_plot.action_wheel.deactivate()
         return False
 
+    if not crop_plot.inventory.has(items.YTRAP_SEED):
+        dead.append(crop_plot)
+
     if crop_plot.inventory.has(item):
         crop_plot.inventory.search(item, delete_prior=False)
         crop_plot.inventory.transfer_all()
+
 
     if refill:
         player.inventory.transfer_all()
@@ -68,7 +74,7 @@ def _adjust_for_crop_plot(
     player: Player, crop_plot: TekCropPlot
 ) -> None:
     try:
-        expected_idx = int(crop_plot.name.split(":")[1][:2].strip())
+        expected_idx = int(crop_plot.name.split(":")[1])
         crop_plot_idx = crop_plot.inventory.get_folder_index()
     except exceptions.UnknownFolderIndexError:
         return

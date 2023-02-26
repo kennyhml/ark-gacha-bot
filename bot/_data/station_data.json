@@ -1,8 +1,8 @@
 {
     "arb": {
         "status": "Cooking wood",
-        "wood": 6,
-        "cooking_start": "2023-02-25 13:33:57.972541"
+        "wood": 130000,
+        "cooking_start": "2023-02-26 11:12:53.755640"
     },
     "meat": {
         "last_completed": 0

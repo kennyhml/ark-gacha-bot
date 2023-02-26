@@ -75,7 +75,7 @@ class YTrapStation(Station):
         self.total_completions = 0
         self._stacks = [
             [
-                TekCropPlot(f"Crop Plot {stack+ 1}:{idx+1} at {name}")
+                TekCropPlot(f"Crop Plot {stack+ 1}:{idx+1}")
                 for idx in range(self.settings.plots_per_stack)
             ]
             for stack in range(self.settings.plot_stacks)
@@ -97,7 +97,7 @@ class YTrapStation(Station):
         """Gets the fill level of the station, i.e if every crop splot has
         10/20 pellets, the fill level is 0.5 or 50%"""
         plots = list(itertools.chain(*self._stacks))
-        max_pellets = len(plots) * 20
+        max_pellets = len(plots) * 19
         total_pellets = sum(
             [plot.inventory.contents.get(items.PELLET.name, 0) for plot in plots]
         )
@@ -109,6 +109,7 @@ class YTrapStation(Station):
         """
         self.spawn()
         start = time.time()
+        dead_crop_plots: list[TekCropPlot] = []
 
         self.refill = (
             self.pellet_coverage < self.settings.min_pellet_coverage
@@ -130,6 +131,7 @@ class YTrapStation(Station):
                     stack,
                     items.Y_TRAP,
                     self.settings.crop_plot_turns,
+                    dead_crop_plots,
                     refill=self.refill,
                     precise=self.settings.mode == "precise"
                     or (self.settings.mode == "precise on refill" and self.refill),
@@ -139,11 +141,12 @@ class YTrapStation(Station):
             self._player.turn_90_degrees(delay=1)
 
         added_traps = self._load_gacha()
-
         YTrapStation.total_ytraps_collected += added_traps
         self.total_completions += 1
 
-        embed = self._create_embed(round(time.time() - start), added_traps)
+        embed = self._create_embed(
+            round(time.time() - start), added_traps, dead_crop_plots
+        )
         self._webhook.send_embed(embed)
 
     def _take_pellets_from_gacha(self) -> None:
@@ -237,7 +240,9 @@ class YTrapStation(Station):
 
         return result if result else "Station works as expected."
 
-    def _create_embed(self, time_taken: int, ytraps: int) -> Embed:
+    def _create_embed(
+        self, time_taken: int, ytraps: int, dead: list[TekCropPlot]
+    ) -> Embed:
         """Creates a `discord.Embed` from the stations statistics.
 
         The embed contains info about what station was finished, if the time
@@ -263,6 +268,15 @@ class YTrapStation(Station):
         embed.add_field(name="Time taken:", value=f"{time_taken} seconds")
         embed.add_field(name="Y-Traps:", value=ytraps)
         embed.add_field(name="Pellets:", value=f"{round(self.pellet_coverage * 100)}%")
+
+        if dead:
+            embed.add_field(
+                name="Dead crop plots:",
+                value="\n".join(
+                    f"Stack {plot.name.split(':')[0][-1]}, index {plot.name.split(':')[1]}"
+                    for plot in dead
+                ),
+            )
 
         embed.set_thumbnail(url=self.Y_TRAP_AVATAR)
         embed.set_footer(text="Ling Ling on top!")

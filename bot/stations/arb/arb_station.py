@@ -1,15 +1,25 @@
 import json
 import time
+from calendar import formatstring
 from datetime import datetime
 from typing import Any, Literal, Optional
 
 import pyautogui  # type: ignore[import]
-from ark import (Bed, ChemistryBench, Dinosaur, IndustrialForge, Player,
-                 TekDedicatedStorage, TribeLog, items)
+from ark import (
+    Bed,
+    ChemistryBench,
+    Dinosaur,
+    IndustrialForge,
+    Player,
+    TekDedicatedStorage,
+    TribeLog,
+    items,
+)
 from discord import Embed  # type: ignore[import]
 
 from bot.stations._station import Station
 
+from ...tools import format_seconds
 from ...webhooks import InfoWebhook
 from .._station import Station
 from ._status import Status
@@ -59,7 +69,9 @@ class ARBStation(Station):
         print(f"Loaded ARB status: {self.status}")
 
         if self.status == Status.COOKING_WOOD:
-            self._started_cooking_wood = datetime.strptime(data["cooking_start"][:-3], '%Y-%m-%d %H:%M:%S.%f')
+            self._started_cooking_wood = datetime.strptime(
+                data["cooking_start"][:-3], "%Y-%m-%d %H:%M:%S.%f"
+            )
             print(f"Loaded start of cooking: {self._started_cooking_wood}")
 
         self.ready = self._wood_in_dedi > 29900
@@ -87,26 +99,6 @@ class ARBStation(Station):
             (self._player.turn_x_by, -50),
             (self._player.turn_x_by, -50),
         ]
-
-    @staticmethod
-    def _set_data(key: str, value: Any) -> None:
-        with open("bot/_data/station_data.json") as f:
-            data: dict = json.load(f)
-
-        data["arb"][key] = value
-
-        with open("bot/_data/station_data.json", "w") as f:
-            json.dump(data, f, indent=4, default=str)
-
-    def add_wood(self, wood: int) -> None:
-        """Called when wood is added to the dedi via the stryder on the
-        crystal station. Once more than 29700 wood has been added the
-        station is ready to refill the forges."""
-        self._wood_in_dedi += wood
-        if self._wood_in_dedi >= 29700:
-            self.ready = True
-
-        self._set_data("wood", self._wood_in_dedi)
 
     def is_ready(self) -> bool:
         """Checks if the station is ready for the next step."""
@@ -147,29 +139,68 @@ class ARBStation(Station):
         else:
             raise ValueError(f"{self.status} is not a valid status!")
 
+    @staticmethod
+    def _set_data(key: str, value: Any) -> None:
+        with open("bot/_data/station_data.json") as f:
+            data: dict = json.load(f)
+
+        data["arb"][key] = value
+
+        with open("bot/_data/station_data.json", "w") as f:
+            json.dump(data, f, indent=4, default=str)
+
+    def add_wood(self, wood: int) -> None:
+        """Called when wood is added to the dedi via the stryder on the
+        crystal station. Once more than 29700 wood has been added the
+        station is ready to refill the forges."""
+        self._wood_in_dedi += wood
+        if self._wood_in_dedi >= 29700:
+            self.ready = True
+
+        self._set_data("wood", self._wood_in_dedi)
+
     def gunpowder_ready(self) -> bool:
         """Checks if 5 minutes have passed since queuing gunpowder"""
         try:
-            time_diff = datetime.now() - self._started_crafting_gunpowder
-            print(f"{(5 * 60) - time_diff.total_seconds()} seconds left on gunpowder...")
-            return time_diff.total_seconds() > (5 * 60)
+            time_diff = round(
+                (datetime.now() - self._started_crafting_gunpowder).total_seconds()
+            )
+            time_left = max(0, (5 * 60) - time_diff)
+            if not time_left:
+                print("Gunpowder is ready.")
+                return True
+
+            print(f"{format_seconds(time_left)} left on gunpowder...")
+            return False
         except AttributeError:
             return True
-        
+
     def arb_ready(self) -> bool:
         """Checks if 15 minutes have passed since queuing arb"""
         try:
-            time_diff = datetime.now() - self._started_crafting_arb
-            print(f"{(3 * 60) - time_diff.total_seconds()} seconds left on arb...")
-            return time_diff.total_seconds() > (15 * 60)
+            time_diff = round(
+                (datetime.now() - self._started_crafting_arb).total_seconds()
+            )
+            time_left = max(0, (15 * 60) - time_diff)
+            if not time_left:
+                print("ARB is ready.")
+                return True
+
+            print(f"{format_seconds(time_left)} left on ARB...")
+            return False
         except AttributeError:
             return True
-        
+
     def charcoal_ready(self) -> bool:
         """Checks if 2h 45min have passed since filling the forges"""
-        time_diff = datetime.now() - self._started_cooking_wood
-        print(f"{(170 * 60) - time_diff.total_seconds()} seconds left on charcoal...")
-        return time_diff.total_seconds() > (170 * 60)
+        time_diff = round((datetime.now() - self._started_cooking_wood).total_seconds())
+        time_left = max(0, (170 * 60) - time_diff)
+        if not time_left:
+            print("Charcoal is ready.")
+            return True
+
+        print(f"{format_seconds(time_left)} left on charcoal...")
+        return False
 
     def spawn_at_forges(self) -> None:
         """Spawns at the forge bed"""
@@ -243,7 +274,9 @@ class ARBStation(Station):
                 continue
 
             # forge has charcoal, take all charcoal and turn back to dedi
-            self.forge.inventory.transfer_all(items.GASOLINE)
+            if self.forge.inventory.has(items.GASOLINE):
+                self.forge.inventory.transfer_all(items.GASOLINE)
+
             self.forge.inventory.transfer_all(items.CHARCOAL)
             self.forge.inventory.close()
 
@@ -254,7 +287,7 @@ class ARBStation(Station):
             self._player.sleep(1)
             # deposit charcoal
             self.dedi.deposit([items.CHARCOAL], get_amount=False)
-            
+
         self._player.turn_y_by(60, delay=0.5)
         self.dedi.deposit([items.GASOLINE], get_amount=False)
 
@@ -461,6 +494,8 @@ class ARBStation(Station):
     def craft_sparkpowder(self) -> None:
         """Spawns at the station and starts crafting sparkpowder"""
         self.spawn()
+        self.empty_out_chembenches()
+
         self.access_gasoline("take")
         self.access_stone("take")
 
@@ -526,6 +561,21 @@ class ARBStation(Station):
         for func, arg in reversed(self.bottom_bench_turns):
             func(arg * -1, delay=0.5)
 
+    def empty_out_chembenches(self) -> None:
+
+        for func, arg in self.bench_turns:
+            func(arg, delay=0.7)
+
+            self.chembench.open()
+            self.chembench.inventory.transfer_all()
+            self._player.inventory.drop_all()
+            self.chembench.close()
+
+            self._player.sleep(0.7)
+        for func, arg in reversed(self.bench_turns):
+            func(arg * -1, delay=0.7)
+
+
     def queue_gunpowder(self, transfer_mats: bool) -> None:
         """Queues gunpowder in every chembench, if transfer_mats is toggled
         it first takes gasoline and puts one gasoline into each chembench."""
@@ -579,9 +629,11 @@ class ARBStation(Station):
         for i in range(2):
             self.queue_gunpowder(transfer_mats=not i)
 
-        embed = self.create_gunpowder_crafted_embed(round(time.time() - start), 7500 * 6)
+        embed = self.create_gunpowder_crafted_embed(
+            round(time.time() - start), 7500 * 6
+        )
         self._webhook.send_embed(embed)
-        
+
         self.status = Status.WAITING_FOR_GUNPOWDER
         self._started_crafting_gunpowder: datetime = datetime.now()
 
@@ -729,9 +781,7 @@ class ARBStation(Station):
             title=f"Queued gunpowder at {self._name}!",
             color=0xFF5500,
         )
-        embed.add_field(
-            name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds"
-        )
+        embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds")
         embed.add_field(name="Gunpowder queued:", value=crafted)
 
         embed.set_thumbnail(url=CHEMBENCH_AVATAR)
@@ -747,9 +797,7 @@ class ARBStation(Station):
             title=f"Filled forges and crafted sparkpowder!",
             color=0xFF5500,
         )
-        embed.add_field(
-            name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds"
-        )
+        embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds")
         embed.add_field(name="Forges emptied:", value=True)
 
         embed.set_thumbnail(url=FORGE_AVATAR)
