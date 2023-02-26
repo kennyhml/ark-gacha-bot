@@ -41,7 +41,7 @@ class MeatFeedStation(FeedStation):
         interval: int,
     ) -> None:
         super().__init__(name, player, tribelog, webhook, interval)
-        self.bear = Dinosaur("Dire Bear", "templates/dire_bear.png")
+        self.bear = Dinosaur("Dire Bear", "assets/templates/dire_bear.png")
         self._load_last_completion("meat")
 
     def travel_to_trough_bed(self) -> None:

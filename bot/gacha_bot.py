@@ -8,13 +8,9 @@ from ark import Player, Server, TribeLog, UserSettings, exceptions
 from bot.recovery import Unstucking
 
 from .settings import TowerSettings
-from .stations import (
-    CrystalStation,
-    GrindingStation,
-    HealingStation,
-    Station,
-    YTrapStation,
-)
+from .stations import (ARBStation, BerryFeedStation, CrystalStation,
+                       GrindingStation, HealingStation, MeatFeedStation,
+                       Station, YTrapStation)
 from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook
 
 
@@ -54,8 +50,10 @@ class GachaBot:
         ]
 
         grinding = GrindingStation(self.player, self.tribelogs, self.info_webhook)
+        arb = ARBStation(self.player, self.tribelogs, self.info_webhook)
+
         ytraps = self._create_ytrap_stations()
-        crystal = self._create_crystal_stations(grinding)
+        crystal = self._create_crystal_stations(grinding, arb)
 
         if self.settings.ytrap_station:
             stations.extend(crystal)
@@ -64,7 +62,7 @@ class GachaBot:
             stations.append(grinding)
 
         if self.settings.arb_station:
-            ...
+            stations.append(arb)
 
         if self.settings.meat_station:
             ...
@@ -85,7 +83,7 @@ class GachaBot:
                 self.tribelogs,
                 self.info_webhook,
             )
-            for i in range(33, self.settings.ytrap_beds)
+            for i in range(self.settings.ytrap_beds)
         ]
         return itertools.cycle(stations)
 

@@ -94,8 +94,8 @@ class GrindingStation(Station):
 
         self.grinder = IndustrialGrinder()
         self.dedi = TekDedicatedStorage()
-        self.vault = Structure("Vault", "templates/vault_capped.png")
-        self.exo_mek = Dinosaur("Exo Mek", "templates/exo_mek.png")
+        self.vault = Structure("Vault", "assets/templates/vault_capped.png")
+        self.exo_mek = Dinosaur("Exo Mek", "assets/templates/exo_mek.png")
         self.screen = ArkWindow()
 
         self.STATION_MAPPING: dict[str, tuple | list] = {
@@ -594,53 +594,6 @@ class GrindingStation(Station):
         # put remaining resources back into dedi
         self.turn_to(Stations.from_item(item))
         self.dedi.deposit([item], get_amount=False)
-
-    def find_dedi(self, item: items.Item, img: Image.Image) -> tuple:
-        """Returns the position of the items dedi within the Image."""
-        return self.dedi.window.locate_in_image(
-            f"templates/{item.search_name}_dedi.png",
-            img,
-            confidence=0.6,
-            grayscale=True,
-        )
-
-    def find_all_dedi_positions(
-        self, image: Image.Image
-    ) -> dict[items.Item, Image.Image] | None:
-        """Finds the position of all dedi texts within the given image.
-
-        Parameters:
-        ----------
-        image :class:`Image.Image`:
-            A PIL Image representing a screenshot of all dedis with non bugged items.
-
-        Returns:
-        ---------
-        A dict containing each resource with its corresponding dedi text image.
-        """
-        images = {}
-        for dedi in (
-            items.SILICA_PEARL,
-            items.PASTE,
-            items.METAL_INGOT,
-            items.ELECTRONICS,
-            items.CRYSTAL,
-            items.HIDE,
-        ):
-            region = self.find_dedi(dedi, image)
-            if not region:
-                print(f"Failed to find dedi: {dedi.name}")
-                return None
-
-            # convert bc grab screen is retarded + extend boundaries
-            region = int(region[0] - 80), int(region[1] + region[3] + 5), 350, 130
-
-            # open it as PIL Image, crop out the calculated region of interest
-            images[dedi] = image.crop(
-                (region[0], region[1], region[0] + region[2], region[1] + region[3])
-            )
-
-        return images
 
     def get_dedi_screenshot(self, spawn: bool = True) -> Image.Image:
         """Grabs a screenshot of the dedi wall to later determine the

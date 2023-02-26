@@ -41,7 +41,7 @@ class FeedStation(Station):
         self.interval = interval
 
         self.bed = Bed(name)
-        self.trough = Structure("Tek Trough", "templates/tek_trough.png")
+        self.trough = Structure("Tek Trough", "assets/templates/tek_trough.png")
         self.gacha = Gacha(name)
 
         self._stacks = [

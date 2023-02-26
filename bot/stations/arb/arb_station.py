@@ -71,7 +71,7 @@ class ARBStation(Station):
         self.dedi = TekDedicatedStorage()
         self.chembench = ChemistryBench()
         self.forge = IndustrialForge()
-        self.exo_mek = Dinosaur("Exo Mek", "templates/exo_mek.png")
+        self.exo_mek = Dinosaur("Exo Mek", "assets/templates/exo_mek.png")
         self.bed = Bed("arb_craft")
         self.forge_bed = Bed("arb_cooking")
         self.pickup_bed = Bed("arb_pickup")

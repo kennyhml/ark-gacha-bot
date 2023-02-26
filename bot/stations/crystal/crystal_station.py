@@ -1,8 +1,16 @@
 import time
 from datetime import datetime
 
-from ark import (Bed, Player, Structure, Stryder, TekDedicatedStorage,
-                 TribeLog, _helpers, exceptions)
+from ark import (
+    Bed,
+    Player,
+    Structure,
+    Stryder,
+    TekDedicatedStorage,
+    TribeLog,
+    _helpers,
+    exceptions,
+)
 from ark.exceptions import DediNotInRangeError
 from ark.items import *
 from discord import Embed  # type: ignore[import]
@@ -10,8 +18,8 @@ from discord import Embed  # type: ignore[import]
 from ...exceptions import NoCrystalAddedError
 from ...webhooks import InfoWebhook, TimerWebhook
 from .._station import Station
+from ..arb import ARBStation
 from ..grinding import GrindingStation
-# from ..arb import ARBStation
 from ..ytrap import YTrapStation
 from ._settings import CrystalStationSettings
 
@@ -75,7 +83,7 @@ class CrystalStation(Station):
         info_webhook: InfoWebhook,
         timer_webhook: TimerWebhook,
         grinding_station: GrindingStation,
-        arb_station,
+        arb_station: ARBStation,
         *,
         gen2: bool,
     ) -> None:
@@ -91,7 +99,7 @@ class CrystalStation(Station):
         self.dedi = TekDedicatedStorage()
         self.stryder = Stryder()
         self.vault = Structure(
-            "Vault", "templates/vault.png", capacity="templates/vault_capped.png"
+            "Vault", "assets/templates/vault.png", capacity="assets/templates/vault_capped.png"
         )
         self.gen2 = gen2
 
@@ -136,7 +144,7 @@ class CrystalStation(Station):
 
             if self.settings.stryder_depositing:
                 resources_deposited = self.deposit_into_stryder()
-                # self._arb_station.add_wood(resources_deposited[FUNGAL_WOOD])
+                self._arb_station.add_wood(resources_deposited[FUNGAL_WOOD])
             else:
                 resources_deposited = self.deposit_dedis()
 

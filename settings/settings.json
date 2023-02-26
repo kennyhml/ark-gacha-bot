@@ -3,7 +3,7 @@
         "account_name": "rawr",
         "game_launcher": "Epic",
         "gen2": false,
-        "ytrap_beds": 52,
+        "ytrap_beds": 40,
         "ytrap_prefix": "seed",
         "crystal_beds": 1,
         "crystal_prefix": "crystal",
@@ -29,12 +29,12 @@
         "timer_pop": 30
     },
     "ytrap": {
-        "mode": "normal",
+        "mode": "precise on refill",
         "turn_direction": "right",
         "plot_stacks": 3,
-        "plots_per_stack": 10,
+        "plots_per_stack": 8,
         "min_pellet_coverage": 0.8,
-        "crop_plot_turns": "[-130, *[-17] * 5, 50, -17, -17, -17]"
+        "crop_plot_turns": "[-130, *[-17] * 5, 50, -17]"
     },
     "crystal": {
         "crystal_interval": 5,
@@ -64,7 +64,7 @@
         "pod_name": "gacha heal"
     },
     "grinding": {
-        "item_to_craft": "Tek Turret",
+        "item_to_craft": "Heavy Auto Turret",
         "text_rgb": [56, 232, 231],
         "pearls_region": [
             25,

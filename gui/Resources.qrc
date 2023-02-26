@@ -1,10 +1,16 @@
 <RCC>
-  <qresource prefix="png">
-    <file>ARBStationOne.png</file>
-    <file>GrindingStationONe.png</file>
-    <file>GrindingStationThree.png</file>
-    <file>GrindingStationTwo.png</file>
-    <file>StryderDepositingTwo.png</file>
-    <file>StryderDepositingOne.png</file>
+  <qresource prefix="/">
+    <file>../assets/gui/arb.png</file>
+    <file>../assets/gui/discord.png</file>
+    <file>../assets/gui/dust.png</file>
+    <file>../assets/gui/gacha_crystal.png</file>
+    <file>../assets/gui/grinder.png</file>
+    <file>../assets/gui/ytrap.png</file>
+    <file>../assets/gui/lbackground.png</file>
+    <file>../assets/gui/settings.png</file>
+    <file>../assets/gui/general.png</file>
+    <file>../assets/gui/discord.png</file>
+    <file>../assets/gui/raw_meat.png</file>
+    <file>../assets/gui/mejoberry.png</file>
   </qresource>
 </RCC>
