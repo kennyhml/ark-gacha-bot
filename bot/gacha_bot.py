@@ -1,3 +1,4 @@
+import ctypes
 import itertools
 import json
 import traceback
@@ -8,16 +9,9 @@ from ark import Player, Server, TribeLog, UserSettings, exceptions
 from bot.recovery import Unstucking
 
 from .settings import TowerSettings
-from .stations import (
-    ARBStation,
-    BerryFeedStation,
-    CrystalStation,
-    GrindingStation,
-    HealingStation,
-    MeatFeedStation,
-    Station,
-    YTrapStation,
-)
+from .stations import (ARBStation, BerryFeedStation, CrystalStation,
+                       GrindingStation, HealingStation, MeatFeedStation,
+                       Station, YTrapStation)
 from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook
 
 
@@ -166,3 +160,39 @@ class GachaBot:
         unstucking.unstuck()
         if not unstucking.reconnected:
             return
+
+    def _validate_game_settings(self) -> None:
+        s = self.ark_settings
+
+        expected_settings = {
+            s.hide_item_names: (False, "Show item names"),
+            s.show_item_tooltips: (False, "Show item tooltips"),
+            s.auto_chatbox: (False, "Auto chatbox"),
+            s.toggle_hud: (False, "Toggle HUD"),
+            s.menu_transitions: (False, "Menu transitions"),
+            s.reverse_logs: (True, "Reverse tribelogs"),
+            s.folder_view: (False, "Local folder view"),
+            s.sort_type: (1, "Local sort type"),
+            s.remote_sort_type: (1, "Remote sort type"),
+            s.remote_show_engrams: (False, "Remote show engrams"),
+            s.remote_hide_unlearned_engrams: (True, "Remote hide unlearned engrams"),
+        }
+        incorrect = [
+            setting
+            for setting, value in expected_settings.items()
+            if setting != value[0]
+        ]
+        if not incorrect:
+            return
+
+        ctypes.windll.user32.MessageBoxW(
+            None,
+            "Incorrect configurations:\n"
+            "\n".join(
+                f"{expected_settings[setting][1]}: expected {expected_settings[setting][0]}, got {setting}"
+                for setting in incorrect
+            ),
+            f"ARK Setting assertion found non matching values!",
+            0x1000,
+        )
+        

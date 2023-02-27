@@ -5,12 +5,12 @@ from typing import Literal
 import psutil  # type: ignore[import]
 import pyautogui  # type: ignore[import]
 import pygetwindow  # type: ignore[import]
-from ark import (ArkWindow, Console, EscapeMenu, MainMenu, Server, SessionList,
-                 exceptions, Player)
+from ark import (ArkWindow, Console, EscapeMenu, MainMenu, Player, Server,
+                 SessionList, exceptions)
 from ark.server import server_query
 
 from .webhooks import InfoWebhook
-from discord import Embed
+
 
 class Unstucking:
     """Handles stuck cases for server crashes, bot errors or game crashes."""
