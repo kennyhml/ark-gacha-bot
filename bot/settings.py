@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from typing import Literal
 
 import dacite
 
@@ -9,7 +10,7 @@ import dacite
 @dataclass
 class TowerSettings:
     account_name: str
-    game_launcher: str
+    game_launcher: Literal["steam", "epic"]
     gen2: bool
 
     ytrap_beds: int

@@ -75,8 +75,10 @@ class InfoWebhook:
             message = f"<{self._user_id}>"
         else:
             message = ""
-
-        self._hook.send(content=message, embed=embed, file=file)
+        try:
+            self._hook.send(content=message, embed=embed, file=file)
+        except Exception:
+            print("Failed to send embed.")
 
     @threaded("Sending error")
     def send_error(
@@ -125,5 +127,7 @@ class InfoWebhook:
             message = f"<{self._user_id}>"
         else:
             message = ""
-
-        self._hook.send(content=message, embed=embed, file=file)
+        try:
+            self._hook.send(content=message, embed=embed, file=file)
+        except Exception:
+            print("Failed to send embed.")

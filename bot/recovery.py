@@ -6,11 +6,11 @@ import psutil  # type: ignore[import]
 import pyautogui  # type: ignore[import]
 import pygetwindow  # type: ignore[import]
 from ark import (ArkWindow, Console, EscapeMenu, MainMenu, Server, SessionList,
-                 exceptions)
+                 exceptions, Player)
 from ark.server import server_query
 
 from .webhooks import InfoWebhook
-
+from discord import Embed
 
 class Unstucking:
     """Handles stuck cases for server crashes, bot errors or game crashes."""
@@ -18,6 +18,7 @@ class Unstucking:
     def __init__(
         self,
         server: Server,
+        player: Player,
         launcher: Literal["steam", "epic"],
         info_webhook: InfoWebhook,
     ) -> None:
@@ -26,6 +27,7 @@ class Unstucking:
         self._escape_menu = EscapeMenu()
         self._server = server
         self._launcher = launcher
+        self._player = player
         self.webhook = info_webhook
         self.reconnected = False
         self.screen = ArkWindow()
@@ -33,10 +35,6 @@ class Unstucking:
     def unstuck(self) -> None:
         """Runs an analysis through different possible problems and attempts
         to fix them upon detection."""
-        try:
-            self.screen._handle.activate()
-        except: pass
-        
         try:
             self._escape_menu.open()
             self._escape_menu.click("right")
@@ -47,19 +45,22 @@ class Unstucking:
             return
 
         if self.game_crashed():
+            self.webhook.send_error("Unstucking", "Game Crashed!", mention=True)
             pyautogui.press("esc")
             time.sleep(30)
             self.restart()
             self.reconnect()
-
+        
         elif not self.process_active():
+            self.webhook.send_error("Unstucking", "Game Crashed!", mention=True)
             self.restart()
             self.reconnect()
-
+        
         elif self._main_menu.player_disconnected() or self._main_menu.is_open():
+            self.webhook.send_error("Unstucking", "Disconnected!", mention=True)
             pyautogui.press("esc")
             self.reconnect()
-
+    
     def restart(self) -> None:
         """Restarts the game for epic only, waits for the main menu to load.
         Refreshes window boundaries once launched."""
@@ -77,11 +78,10 @@ class Unstucking:
         self.reconnected = True
 
         self._session_list.open()
-
         server_query.query(self._server)
         if self._server.status == "Down":
             self.webhook.send_error(
-                "None",
+                "Unstucking",
                 self.screen.grab_screen((0, 0, 1920, 1080)),
                 ConnectionError(f"{self._server.name} has crashed!"),
                 mention=True,
@@ -92,8 +92,7 @@ class Unstucking:
             time.sleep(15)
 
         self._session_list.connect(self._server)
-
-        time.sleep(30)
+        self._player.spawn_in()
         Console().set_gamma()
 
     def process_active(self) -> bool:

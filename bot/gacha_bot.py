@@ -8,9 +8,16 @@ from ark import Player, Server, TribeLog, UserSettings, exceptions
 from bot.recovery import Unstucking
 
 from .settings import TowerSettings
-from .stations import (ARBStation, BerryFeedStation, CrystalStation,
-                       GrindingStation, HealingStation, MeatFeedStation,
-                       Station, YTrapStation)
+from .stations import (
+    ARBStation,
+    BerryFeedStation,
+    CrystalStation,
+    GrindingStation,
+    HealingStation,
+    MeatFeedStation,
+    Station,
+    YTrapStation,
+)
 from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook
 
 
@@ -125,26 +132,37 @@ class GachaBot:
         and checks for the first one to be ready.
         """
         try:
-            for station in self.stations:
-                if isinstance(station, Station):
-                    if not station.is_ready():
-                        continue
-                    task = station
+            task = self._find_next_task()
+            print(f"Found next task: '{task.name}'")
+            task.complete()
 
-                elif isinstance(station, itertools.cycle):
-                    task = next(station)
-
-                task.complete()
-                break
+        except exceptions.BedNotFoundError as e:
+            self.info_webhook.send_error(
+                f"Failed to travel to '{task}'", e, mention=True
+            )
 
         except exceptions.TerminatedError:
             pass
 
-        except exceptions.BedNotFoundError as e:
-            # no point trying to unstuck, if we were stuck the bed
-            # menu would not be open to begin with.
-            self.info_webhook.send_error(f"Travelling to '{task}'", e)
-
         except Exception as e:
             print(traceback.format_exc())
-            Unstucking(self.server, "epic", self.info_webhook).unstuck()
+            self._unstuck()
+
+    def _find_next_task(self) -> Station:
+        for station in self.stations:
+            if isinstance(station, Station):
+                if station.is_ready():
+                    return station
+
+            elif isinstance(station, itertools.cycle):
+                return next(station)
+
+        raise LookupError("Could not find a ready station!")
+
+    def _unstuck(self) -> None:
+        unstucking = Unstucking(
+            self.server, self.player, self.settings.game_launcher, self.info_webhook
+        )
+        unstucking.unstuck()
+        if not unstucking.reconnected:
+            return

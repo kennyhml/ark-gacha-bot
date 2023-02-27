@@ -16,7 +16,6 @@ def main():
 def on__key_press(key):
     """Connets inputs from listener thread to their corresponding function"""
     if key == keyboard.Key.f1:
-        # make sure bot is not already active
         if not (State.paused or State.running):
             print("Started!")
             State.running = True
@@ -45,7 +44,7 @@ if __name__ == "__main__":
     State.paused = False
 
     listener = keyboard.Listener(on_press=on__key_press)
-    listener.start()  # start listener thread
+    listener.start()
 
     while True:
         time.sleep(1000)
