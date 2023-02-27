@@ -1,7 +1,7 @@
 import json
 import time
 
-from ark import TribeLog
+from ark import State, TribeLog
 from ark.server import Server, server_query
 from discord import Webhook  # type:ignore[import]
 from discord import RequestsWebhookAdapter, WebhookMessage
@@ -94,11 +94,14 @@ class TimerWebhook:
     def start_timer_loop(self) -> None:
         assert TimerWebhook.ORIGINAL_MESSAGE is not None
 
-        while self.timer_loop_running:
+        while self.timer_loop_running and State.running:
             start = time.perf_counter()
-            self._hook.edit_message(
-                self.ORIGINAL_MESSAGE, content=self._build_message()
-            )
+            try:
+                self._hook.edit_message(
+                    self.ORIGINAL_MESSAGE, content=self._build_message()
+                )
+            except ConnectionError:
+                pass
             time_taken = (time.perf_counter() - start)
             if self._timer is None:
                 continue
@@ -114,5 +117,3 @@ class TimerWebhook:
             if self._timer <= self._timer_pop:
                 self._timer = (15 * 60) + 10
                 self.timer_popped = True
-
-        self.handshake = True
