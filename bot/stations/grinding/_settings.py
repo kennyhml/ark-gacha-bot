@@ -26,7 +26,7 @@ class GrindingStationSettings:
             data: dict = json.load(f)["grinding"]
 
         for k, v in data.items():
-            if isinstance(v, list):
-                data[k] = tuple(v)
-
+            if k == "text_rgb" or "region" in k:
+                data[k] = eval(v)
+        
         return dacite.from_dict(GrindingStationSettings, data)

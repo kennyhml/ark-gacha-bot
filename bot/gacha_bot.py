@@ -1,10 +1,11 @@
 import ctypes
 import itertools
 import json
+import os
 import traceback
 from typing import Iterable
 
-from ark import Player, Server, TribeLog, UserSettings, exceptions
+from ark import Player, Server, TribeLog, UserSettings, config, exceptions
 
 from bot.recovery import Unstucking
 
@@ -29,6 +30,7 @@ class GachaBot:
     def __init__(self) -> None:
         print("Bot started, initializing gacha bot...")
         self.settings = TowerSettings.load()
+        self._set_environment()
 
         self.ark_settings = UserSettings.load()
         self._validate_game_settings()
@@ -38,7 +40,7 @@ class GachaBot:
 
         with open("settings/settings.json") as f:
             self.player = Player(**json.load(f)["player"])
-            
+
         self.stations = self.create_stations()
         print("Initialization successful.")
 
@@ -102,7 +104,7 @@ class GachaBot:
                 self.timer_webhook,
                 grinding,
                 arb,
-                gen2=self.settings.gen2,
+                gen2=self.settings.map == "Genesis 2",
             )
             for i in range(self.settings.crystal_beds)
         ]
@@ -199,4 +201,11 @@ class GachaBot:
             0x1000,
         )
         raise ConfigError("Invalid ark settings.")
-
+    
+    def _set_environment(self) -> None:
+        for path in [self.settings.ark_path, self.settings.tesseract_path]:
+            if not os.path.exists(path):
+                raise ConfigError(f"CONFIG ERROR! {path} does not exist.")
+            
+        config.ARK_PATH = self.settings.ark_path
+        config.TESSERACT_PATH = self.settings.tesseract_path

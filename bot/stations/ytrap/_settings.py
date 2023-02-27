@@ -22,5 +22,6 @@ class YTrapStationSettings:
     def load() -> YTrapStationSettings:
         with open("settings/settings.json") as f:
             data = json.load(f)["ytrap"]
+            
         data["crop_plot_turns"] = eval(data["crop_plot_turns"])
         return dacite.from_dict(YTrapStationSettings, data)

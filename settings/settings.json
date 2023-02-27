@@ -1,10 +1,10 @@
 {
     "main": {
-        "account_name": "rawr",
-        "game_launcher": "epic",
+        "account_name": "Kenny",
+        "game_launcher": "Epic",
         "ark_path": "F:/ARKSurvivalEvolved",
         "tesseract_path": "C:/Program Files/Tesseract-OCR/tesseract.exe",
-        "gen2": false,
+        "map": "Other",
         "ytrap_beds": 40,
         "ytrap_prefix": "seed",
         "crystal_beds": 1,
@@ -35,74 +35,38 @@
         "turn_direction": "right",
         "plot_stacks": 3,
         "plots_per_stack": 8,
-        "min_pellet_coverage": 0.8,
+        "min_pellet_coverage": 20,
         "crop_plot_turns": "[-130, *[-17] * 5, 50, -17]"
     },
     "crystal": {
         "crystal_interval": 5,
         "stryder_depositing": true,
-        "drop_items": [
-            "prim"
-        ],
-        "keep_items": [
-            "riot",
-            "fab",
-            "pump",
-            "ass",
-            "mining",
-            "wood"
-        ],
-        "min_ytraps_collected": 0
+        "drop_items": "['prim']",
+        "keep_items": "['riot', 'fab', 'pump', 'ass', 'mining', 'wood']",
+        "min_ytraps_collected": 1000,
+        "vault_above": false
     },
     "berry": {
         "berry_beds": 4,
-        "berry_prefix": "autoberry"
+        "berry_prefix": "autoberry",
+        "berry_interval": 300
     },
     "meat": {
         "meat_beds": 4,
-        "meat_prefix": "automeat"
+        "meat_prefix": "automeat",
+        "meat_interval": 120
     },
     "healing": {
-        "pod_name": "gacha heal"
+        "pod_name": "Gacha Heal"
     },
     "grinding": {
         "item_to_craft": "Heavy Auto Turret",
-        "text_rgb": [56, 232, 231],
-        "pearls_region": [
-            25,
-            350,
-            510,
-            355
-        ],
-        "paste_region": [
-            17,
-            697,
-            560,
-            370
-        ],
-        "electronics_region": [
-            593,
-            390,
-            590,
-            303
-        ],
-        "ingots_region": [
-            570,
-            730,
-            640,
-            305
-        ],
-        "crystal_region": [
-            1245,
-            365,
-            560,
-            315
-        ],
-        "hide_region": [
-            1240,
-            690,
-            613,
-            355
-        ]
+        "text_rgb": " (56, 232, 231)",
+        "pearls_region": "(25,350,510,355)",
+        "paste_region": "(17,697,560,370)",
+        "electronics_region": "(593,390,590,303)",
+        "ingots_region": "(570,730,640,305)",
+        "crystal_region": "(1245,365,560,315)",
+        "hide_region": "(1240,690,613,355)"
     }
 }

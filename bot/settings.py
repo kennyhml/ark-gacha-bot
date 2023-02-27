@@ -10,8 +10,10 @@ import dacite
 @dataclass
 class TowerSettings:
     account_name: str
-    game_launcher: Literal["steam", "epic"]
-    gen2: bool
+    game_launcher: Literal["Steam", "Epic"]
+    ark_path: str
+    tesseract_path: str
+    map: Literal["Genesis 2", "Aberration", "Other"]
 
     ytrap_beds: int
     ytrap_prefix: str

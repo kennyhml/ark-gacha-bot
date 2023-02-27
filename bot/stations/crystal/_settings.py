@@ -20,4 +20,9 @@ class CrystalStationSettings:
     def load() -> CrystalStationSettings:
         with open("settings/settings.json") as f:
             data = json.load(f)["crystal"]
+
+        for k, v in data.items():
+            if "items" in k:
+                data[k] = eval(v)
+
         return dacite.from_dict(CrystalStationSettings, data)

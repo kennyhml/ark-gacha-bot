@@ -54,7 +54,7 @@
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>../../../.designer/Images/background_2.png</pixmap>
+     <pixmap resource="resources.qrc">:/assets/gui/settings.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
@@ -76,7 +76,7 @@
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>../../../.designer/Images/settings1.png</pixmap>
+     <pixmap resource="resources.qrc">:/assets/gui/settings.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>false</bool>
@@ -101,7 +101,7 @@
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="ytrap_station">
+   <widget class="QPushButton" name="ytrap_stations">
     <property name="geometry">
      <rect>
       <x>-20</x>
@@ -158,7 +158,7 @@ Line#line{
      </size>
     </property>
    </widget>
-   <widget class="QPushButton" name="grinding_station">
+   <widget class="QPushButton" name="grinding">
     <property name="geometry">
      <rect>
       <x>-20</x>
@@ -272,7 +272,7 @@ Line#line{
      </size>
     </property>
    </widget>
-   <widget class="QPushButton" name="buttons_discord">
+   <widget class="QPushButton" name="discord_settings">
     <property name="geometry">
      <rect>
       <x>-20</x>
@@ -329,7 +329,7 @@ Line#line{
      </size>
     </property>
    </widget>
-   <widget class="QPushButton" name="buttons_rotation">
+   <widget class="QPushButton" name="feed_station">
     <property name="geometry">
      <rect>
       <x>-20</x>
@@ -531,7 +531,7 @@ Line#line{
      <string>Mode</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="buttons_alt_cycler">
+   <widget class="QPushButton" name="general_config">
     <property name="geometry">
      <rect>
       <x>-20</x>
@@ -649,17 +649,17 @@ Line#line{
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>-10</y>
+      <y>-30</y>
       <width>531</width>
       <height>651</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgba(0,0,0);
-color: rgba(0, 255, 255)</string>
+     <string notr="true">background-color: rgb(0,0,0);
+color: rgb(0, 255, 255)</string>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>5</number>
     </property>
     <property name="tabBarAutoHide">
      <bool>false</bool>
@@ -757,7 +757,7 @@ border: None
        <string>Launcher:</string>
       </property>
      </widget>
-     <widget class="QComboBox" name="comboBox_2">
+     <widget class="QComboBox" name="game_launcher">
       <property name="geometry">
        <rect>
         <x>280</x>
@@ -819,7 +819,7 @@ background-color: rgb(30, 30, 30)
        <string>Recovery pod:</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="account_name_2">
+     <widget class="QLineEdit" name="pod_name">
       <property name="geometry">
        <rect>
         <x>150</x>
@@ -860,7 +860,7 @@ border: None
        </font>
       </property>
       <property name="text">
-       <string>General configurations</string>
+       <string>General Configuration</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -894,13 +894,13 @@ border: None
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Player Health:</string>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBox">
+     <widget class="QSpinBox" name="health">
       <property name="geometry">
        <rect>
         <x>120</x>
@@ -943,13 +943,13 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Player Food:</string>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBox_2">
+     <widget class="QSpinBox" name="food">
       <property name="geometry">
        <rect>
         <x>120</x>
@@ -977,7 +977,7 @@ background-color: rgb(30, 30, 30);</string>
        <number>10</number>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBox_3">
+     <widget class="QSpinBox" name="weight">
       <property name="geometry">
        <rect>
         <x>120</x>
@@ -1020,13 +1020,13 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Player Weight</string>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBox_4">
+     <widget class="QSpinBox" name="water">
       <property name="geometry">
        <rect>
         <x>120</x>
@@ -1069,13 +1069,13 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Player Water:</string>
       </property>
      </widget>
-     <widget class="QComboBox" name="selected_character">
+     <widget class="QComboBox" name="map">
       <property name="geometry">
        <rect>
         <x>150</x>
@@ -1143,7 +1143,7 @@ background-color: rgb(30, 30, 30)
        </property>
       </item>
      </widget>
-     <widget class="QPushButton" name="copy_preset">
+     <widget class="QPushButton" name="reset_local_data">
       <property name="geometry">
        <rect>
         <x>270</x>
@@ -1179,7 +1179,7 @@ QPushButton {
        <string>Reset local data</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="copy_preset_2">
+     <widget class="QPushButton" name="verify_ark_settings">
       <property name="geometry">
        <rect>
         <x>140</x>
@@ -1215,7 +1215,7 @@ QPushButton {
        <string>Verify Ark Settings</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="copy_preset_3">
+     <widget class="QPushButton" name="show_ark_settings">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -1272,7 +1272,7 @@ QPushButton {
        <string>Ark folder path:</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="account_name_3">
+     <widget class="QLineEdit" name="ark_path">
       <property name="geometry">
        <rect>
         <x>150</x>
@@ -1298,7 +1298,7 @@ border: None
        <string>F:\ARKSurvivalEvolved</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="account_name_4">
+     <widget class="QLineEdit" name="tesseract_path">
       <property name="geometry">
        <rect>
         <x>150</x>
@@ -1345,12 +1345,12 @@ border: None
        <string>Tesseract path:</string>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBox_8">
+     <widget class="QSpinBox" name="timer_pop">
       <property name="geometry">
        <rect>
         <x>290</x>
         <y>255</y>
-        <width>61</width>
+        <width>51</width>
         <height>22</height>
        </rect>
       </property>
@@ -1381,7 +1381,7 @@ background-color: rgb(30, 30, 30);</string>
        <rect>
         <x>200</x>
         <y>250</y>
-        <width>101</width>
+        <width>91</width>
         <height>31</height>
        </rect>
       </property>
@@ -1391,7 +1391,7 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Timer pop:</string>
@@ -1427,7 +1427,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>60</y>
+        <y>90</y>
         <width>71</width>
         <height>31</height>
        </rect>
@@ -1444,11 +1444,11 @@ background-color: rgb(30, 30, 30);</string>
        <string>Mode:</string>
       </property>
      </widget>
-     <widget class="QComboBox" name="selected_character_2">
+     <widget class="QComboBox" name="mode">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>90</y>
+        <y>120</y>
         <width>111</width>
         <height>21</height>
        </rect>
@@ -1517,11 +1517,11 @@ background-color: rgb(30, 30, 30)
        </property>
       </item>
      </widget>
-     <widget class="QComboBox" name="selected_character_3">
+     <widget class="QComboBox" name="turn_direction">
       <property name="geometry">
        <rect>
         <x>140</x>
-        <y>90</y>
+        <y>120</y>
         <width>71</width>
         <height>21</height>
        </rect>
@@ -1584,7 +1584,7 @@ background-color: rgb(30, 30, 30)
       <property name="geometry">
        <rect>
         <x>140</x>
-        <y>60</y>
+        <y>90</y>
         <width>71</width>
         <height>31</height>
        </rect>
@@ -1601,11 +1601,11 @@ background-color: rgb(30, 30, 30)
        <string>Turn:</string>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBox_5">
+     <widget class="QSpinBox" name="plot_stacks">
       <property name="geometry">
        <rect>
         <x>150</x>
-        <y>145</y>
+        <y>160</y>
         <width>61</width>
         <height>22</height>
        </rect>
@@ -1633,7 +1633,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>140</y>
+        <y>155</y>
         <width>141</width>
         <height>31</height>
        </rect>
@@ -1644,17 +1644,17 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Crop Plot stacks:</string>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBox_6">
+     <widget class="QSpinBox" name="plots_per_stack">
       <property name="geometry">
        <rect>
         <x>310</x>
-        <y>145</y>
+        <y>160</y>
         <width>61</width>
         <height>22</height>
        </rect>
@@ -1685,7 +1685,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>220</x>
-        <y>140</y>
+        <y>155</y>
         <width>81</width>
         <height>31</height>
        </rect>
@@ -1696,7 +1696,7 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Per Stack:</string>
@@ -1706,7 +1706,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>190</y>
+        <y>200</y>
         <width>201</width>
         <height>31</height>
        </rect>
@@ -1717,17 +1717,17 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Minimum pellet coverage:</string>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBox_7">
+     <widget class="QSpinBox" name="min_pellet_coverage">
       <property name="geometry">
        <rect>
         <x>220</x>
-        <y>195</y>
+        <y>205</y>
         <width>51</width>
         <height>22</height>
        </rect>
@@ -1758,7 +1758,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>280</x>
-        <y>190</y>
+        <y>200</y>
         <width>91</width>
         <height>31</height>
        </rect>
@@ -1769,7 +1769,7 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>%</string>
@@ -1790,13 +1790,13 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Crop Plot Turns (Requires pythonic syntax):</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="account_name_5">
+     <widget class="QLineEdit" name="crop_plot_turns">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -1828,17 +1828,137 @@ border: None
         <x>10</x>
         <y>320</y>
         <width>361</width>
-        <height>141</height>
+        <height>151</height>
        </rect>
       </property>
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;Turn values are not related to your ingame sensitivity. To customize the turns, please follow pythons &lt;/span&gt;&lt;a href=&quot;https://docs.python.org/3/tutorial/datastructures.html#more-on-lists&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline; color:#0000ff;&quot;&gt;list&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt; syntax, as the entered values will only be evaluated as such.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;This simply allows quicker creation, for instance instead of writing out -17 five times, it can be written as &lt;/span&gt;&lt;span style=&quot; font-family:'Consolas','Courier New','monospace'; font-size:9pt; color:#00ff00;&quot;&gt;[*[-17] * 5]&lt;/span&gt;&lt;span style=&quot; font-family:'Consolas','Courier New','monospace'; font-size:9pt; color:#00aaff;&quot;&gt;. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'Consolas','Courier New','monospace'; font-size:10pt; color:#ff0000;&quot;&gt;The amount of turns must match the amount of crop plots!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;Turn values are not related to your ingame sensitivity. To customize the turns, please follow pythons &lt;/span&gt;&lt;a href=&quot;https://docs.python.org/3/tutorial/datastructures.html#more-on-lists&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;list&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt; syntax, as the entered values will only be evaluated as such.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;This simply allows quicker creation, for instance instead of writing out -17 five times, it can be written as &lt;/span&gt;&lt;span style=&quot; font-family:'Consolas','Courier New','monospace'; font-size:9pt; color:#00ff00;&quot;&gt;[*[-17] * 5]&lt;/span&gt;&lt;span style=&quot; font-family:'Consolas','Courier New','monospace'; font-size:9pt; color:#00aaff;&quot;&gt;. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'Consolas','Courier New','monospace'; font-size:10pt; color:#ff0000;&quot;&gt;The amount of turns must match the amount of crop plots!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
       </property>
      </widget>
      <widget class="QCheckBox" name="checkBox">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>120</y>
+        <width>141</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Find dead plots</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_41">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>50</y>
+        <width>91</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Bed prefix:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ytrap_prefix">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>55</y>
+        <width>111</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="placeholderText">
+       <string>gachaseed</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_42">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>50</y>
+        <width>51</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Beds:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="ytrap_beds">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>54</y>
+        <width>61</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>4</number>
+      </property>
+      <property name="maximum">
+       <number>100</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>16</number>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="ytrap_station">
       <property name="geometry">
        <rect>
         <x>230</x>
@@ -1853,7 +1973,10 @@ border: None
        </font>
       </property>
       <property name="text">
-       <string>Find dead plots</string>
+       <string>Enabled</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
       </property>
      </widget>
     </widget>
@@ -1886,7 +2009,7 @@ border: None
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>60</y>
+        <y>100</y>
         <width>141</width>
         <height>31</height>
        </rect>
@@ -1897,17 +2020,17 @@ border: None
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Collection interval:</string>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBox_9">
+     <widget class="QSpinBox" name="crystal_interval">
       <property name="geometry">
        <rect>
         <x>160</x>
-        <y>66</y>
+        <y>106</y>
         <width>51</width>
         <height>22</height>
        </rect>
@@ -1935,7 +2058,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>220</x>
-        <y>60</y>
+        <y>100</y>
         <width>141</width>
         <height>31</height>
        </rect>
@@ -1946,7 +2069,7 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>minutes.</string>
@@ -1956,7 +2079,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>110</y>
+        <y>145</y>
         <width>221</width>
         <height>31</height>
        </rect>
@@ -1967,17 +2090,17 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
        <string>Minimum YTraps deposited:</string>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBox_10">
+     <widget class="QSpinBox" name="min_ytraps_collected">
       <property name="geometry">
        <rect>
         <x>230</x>
-        <y>115</y>
+        <y>150</y>
         <width>71</width>
         <height>22</height>
        </rect>
@@ -2004,13 +2127,13 @@ background-color: rgb(30, 30, 30);</string>
        <number>2000</number>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_2">
+     <widget class="QCheckBox" name="stryder_depositing">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>170</y>
+        <y>200</y>
         <width>171</width>
-        <height>16</height>
+        <height>21</height>
        </rect>
       </property>
       <property name="font">
@@ -2022,13 +2145,13 @@ background-color: rgb(30, 30, 30);</string>
        <string>Deposit into Stryder</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_3">
+     <widget class="QCheckBox" name="vault_above">
       <property name="geometry">
        <rect>
-        <x>210</x>
-        <y>170</y>
+        <x>200</x>
+        <y>200</y>
         <width>141</width>
-        <height>17</height>
+        <height>21</height>
        </rect>
       </property>
       <property name="font">
@@ -2040,11 +2163,11 @@ background-color: rgb(30, 30, 30);</string>
        <string>Vault above</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="account_name_6">
+     <widget class="QLineEdit" name="keep_items">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>250</y>
+        <y>260</y>
         <width>361</width>
         <height>21</height>
        </rect>
@@ -2070,8 +2193,8 @@ border: None
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>210</y>
-        <width>141</width>
+        <y>230</y>
+        <width>271</width>
         <height>31</height>
        </rect>
       </property>
@@ -2081,10 +2204,175 @@ border: None
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgba(255, 255, 255)</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
-       <string>Keep items:</string>
+       <string>Keep (follows pythonic list syntax):</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_28">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>290</y>
+        <width>271</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Drop (follows pythonic list syntax):</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="drop_items">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>320</y>
+        <width>361</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>[&quot;prim&quot;, &quot;ram&quot;]</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_88">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>340</y>
+        <width>361</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;Each term will be searched and transferred / dropped, when adding or removing terms please follow pythons &lt;/span&gt;&lt;a href=&quot;https://docs.python.org/3/tutorial/datastructures.html#more-on-lists&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline; color:#0000ff;&quot;&gt;list&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt; syntax, as the entered values will only be evaluated as such.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;When choosing what to keep, be mindful of materials required for the structure you are crafting, i.e not keeping miner helmets when crafting heavies would be stupid.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="crystal_beds">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>54</y>
+        <width>61</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>4</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>4</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_43">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>50</y>
+        <width>91</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Bed prefix:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="crystal_prefix">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>55</y>
+        <width>111</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="placeholderText">
+       <string>crystal</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_44">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>50</y>
+        <width>51</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Beds:</string>
       </property>
      </widget>
     </widget>
@@ -2092,33 +2380,1358 @@ border: None
      <attribute name="title">
       <string>GRIND</string>
      </attribute>
+     <widget class="QLabel" name="label_29">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>391</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>20</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Grinding Configuration</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="item_to_craft">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>66</y>
+        <width>171</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Segoe UI Variable Display Light</family>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="contextMenuPolicy">
+       <enum>Qt::DefaultContextMenu</enum>
+      </property>
+      <property name="toolTip">
+       <string>Create, rename and delete presets!</string>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QComboBox{
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30)
+
+}</string>
+      </property>
+      <property name="inputMethodHints">
+       <set>Qt::ImhNone</set>
+      </property>
+      <property name="editable">
+       <bool>false</bool>
+      </property>
+      <property name="maxVisibleItems">
+       <number>12</number>
+      </property>
+      <property name="insertPolicy">
+       <enum>QComboBox::InsertAtBottom</enum>
+      </property>
+      <property name="frame">
+       <bool>false</bool>
+      </property>
+      <item>
+       <property name="text">
+        <string>None</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Heavy Auto Turret</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Tek Turret</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Auto Turret</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>C4 Remote Detonator</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Rocket Launcher</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Metal Gate</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Metal Triangle Foundation</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Metal Foundation</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QLabel" name="label_30">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>101</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Craft item:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="text_rgb">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>116</y>
+        <width>161</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="placeholderText">
+       <string>(56, 232, 231)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_31">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>110</y>
+        <width>101</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Text RGB:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_32">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>145</y>
+        <width>111</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Pearls region:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="pearls_region">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>150</y>
+        <width>171</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="placeholderText">
+       <string>(25, 350, 510, 355)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_33">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>175</y>
+        <width>111</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Paste region:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="paste_region">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>180</y>
+        <width>171</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>(17, 697, 560, 370)</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="electronics_region">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>210</y>
+        <width>171</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>(593, 390, 590, 303)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_34">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>205</y>
+        <width>111</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Electr. region:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ingots_region">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>240</y>
+        <width>171</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>(570, 730, 640, 305)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_35">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>235</y>
+        <width>111</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Ingots region:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="crystal_region">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>270</y>
+        <width>171</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>(1245, 365, 560, 315)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_36">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>265</y>
+        <width>111</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Crystal region:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="hide_region">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>300</y>
+        <width>171</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>(1240, 690, 613, 355)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_37">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>295</y>
+        <width>111</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Hide region:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_89">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>330</y>
+        <width>361</width>
+        <height>141</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;The regions are relevant for determining the amount of materials within the respective dedi. You can test whether your regions are fine by using the grinding calibrate option and then check the open-cv window for each dedi.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;To change the region, take a fullscreen image of your game with the view on the dedis, then open it in paint and select the region, the box is displayed in the bottom left corner.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="grinding_station">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>68</y>
+        <width>141</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Enabled</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_5">
      <attribute name="title">
       <string>ARB</string>
      </attribute>
+     <widget class="QLabel" name="label_38">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>391</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>20</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>ARB/Bullet Configuration</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_40">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>120</y>
+        <width>391</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 0, 0)</string>
+      </property>
+      <property name="text">
+       <string>Will have the option to craft other gunpowder stuff / not use arb bps</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="arb_station">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>141</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Enabled</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_6">
      <attribute name="title">
       <string>FEED</string>
      </attribute>
+     <widget class="QLabel" name="label_45">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>391</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>20</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Feeding Configuration</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_46">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>85</y>
+        <width>51</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Beds:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="meat_beds">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>89</y>
+        <width>61</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>16</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>4</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_47">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>85</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Meat bed prefix:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="meat_prefix">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>90</y>
+        <width>111</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>automeat</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_48">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>206</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Berry bed prefix:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="berry_prefix">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>211</y>
+        <width>111</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>autoberry</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="berry_beds">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>210</y>
+        <width>61</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>16</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>4</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_49">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>206</y>
+        <width>51</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Beds:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_50">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Meat interval:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="meat_interval">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>136</y>
+        <width>71</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>30</number>
+      </property>
+      <property name="maximum">
+       <number>4320</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_51">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>130</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>minutes.</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_52">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>250</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>minutes.</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="berry_interval">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>256</y>
+        <width>71</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>300</number>
+      </property>
+      <property name="maximum">
+       <number>4320</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_53">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>250</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Berry interval:</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="meat_station">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>131</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Enabled</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="berry_station">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>180</y>
+        <width>131</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Enabled</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab">
      <attribute name="title">
       <string>DISCORD</string>
      </attribute>
+     <widget class="QLabel" name="label_54">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>391</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>20</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Discord Configuration</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_55">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>55</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>User ID:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="user_id">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>60</y>
+        <width>231</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>529805265252646914</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_56">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>95</y>
+        <width>131</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Info webhook:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="webhook_gacha">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>100</y>
+        <width>231</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>https://discord.com/api/webhooks</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_58">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>135</y>
+        <width>131</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Alert webhook:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="webhook_alert">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>140</y>
+        <width>231</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>https://discord.com/api/webhooks</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_59">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>175</y>
+        <width>131</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Logs webhook:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="webhook_logs">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>180</y>
+        <width>231</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>https://discord.com/api/webhooks</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_60">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>220</y>
+        <width>131</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Timer webhook:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="webhook_state">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>225</y>
+        <width>231</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>https://discord.com/api/webhooks</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_61">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>285</y>
+        <width>161</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Timer message ID:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="state_message_id">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>290</y>
+        <width>181</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>1078004041038168104</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_90">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>330</y>
+        <width>361</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;Webhooks are not optional, please make sure you enter them. You can use the same channel for every hook, but I &lt;/span&gt;&lt;span style=&quot; font-size:10pt; font-weight:600; color:#00aaff;&quot;&gt;strongly&lt;/span&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt; recommend against doing so, assign them to designated channels.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;If a discord user ID is entered, it will be @ed when the bot runs into an error.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
     </widget>
    </widget>
    <zorder>LeftBackground</zorder>
    <zorder>label_4</zorder>
    <zorder>label_8</zorder>
-   <zorder>ytrap_station</zorder>
-   <zorder>grinding_station</zorder>
+   <zorder>ytrap_stations</zorder>
+   <zorder>grinding</zorder>
    <zorder>bullets_station</zorder>
-   <zorder>buttons_discord</zorder>
-   <zorder>buttons_rotation</zorder>
+   <zorder>discord_settings</zorder>
+   <zorder>feed_station</zorder>
    <zorder>label_57</zorder>
-   <zorder>buttons_alt_cycler</zorder>
+   <zorder>general_config</zorder>
    <zorder>crystal_station</zorder>
    <zorder>tabWidget</zorder>
   </widget>

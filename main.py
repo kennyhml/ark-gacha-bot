@@ -7,6 +7,7 @@ from pynput import keyboard  # type: ignore[import]
 
 from bot.exceptions import ConfigError
 from bot.gacha_bot import GachaBot
+from gui.main_ui import MainUi
 
 
 def main():
@@ -54,5 +55,5 @@ if __name__ == "__main__":
     listener = keyboard.Listener(on_press=on__key_press)
     listener.start()
 
-    while True:
-        time.sleep(1000)
+    ui = MainUi()
+    ui.display()

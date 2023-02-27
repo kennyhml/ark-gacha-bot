@@ -19,7 +19,7 @@ class Unstucking:
         self,
         server: Server,
         player: Player,
-        launcher: Literal["steam", "epic"],
+        launcher: Literal["Steam", "Epic"],
         info_webhook: InfoWebhook,
     ) -> None:
         self._main_menu = MainMenu()
@@ -64,7 +64,7 @@ class Unstucking:
     def restart(self) -> None:
         """Restarts the game for epic only, waits for the main menu to load.
         Refreshes window boundaries once launched."""
-        if self._launcher == "epic":
+        if self._launcher == "Epic":
             webbrowser.open_new(
                 "com.epicgames.launcher://apps/ark%3A743e47ee84ac49a1a49f4781da70e0d0%3Aaafc587fbf654758802c8e41e4fb3255?action=launch&silent=true"
             )
