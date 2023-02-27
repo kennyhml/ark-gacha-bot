@@ -251,6 +251,7 @@ class ARBStation(Station):
         known_empty: set[int] = set()
 
         while right_turns < 4:
+            self._player.sleep(1)
             # turn to the forge
             self._player.turn_90_degrees("right", delay=1)
             right_turns += 1
@@ -305,6 +306,7 @@ class ARBStation(Station):
             self._player.inventory.transfer_all(items.FUNGAL_WOOD)
             self.forge.turn_on()
             self.forge.close()
+            self._player.sleep(1.5)
 
         self._player.turn_90_degrees("right", delay=0.5)
         self._player.turn_y_by(40, delay=0.5)
@@ -561,8 +563,8 @@ class ARBStation(Station):
             self.chembench.inventory.transfer_all()
             self._player.inventory.drop_all()
             self.chembench.close()
+            self._player.sleep(1)
 
-            self._player.sleep(0.7)
         for func, arg in reversed(self.bench_turns):
             func(arg * -1, delay=0.7)
 
@@ -596,7 +598,7 @@ class ARBStation(Station):
             self.chembench.inventory.craft(items.GUNPOWDER, 1000)
             self.chembench.inventory.open_tab("inventory")
             self.chembench.close()
-            self._player.sleep(0.5)
+            self._player.sleep(1)
 
         # reverse turns to get back to original position
         for func, arg in reversed(self.bench_turns):
@@ -639,7 +641,7 @@ class ARBStation(Station):
         for i in range(2, 8, 2):
             # slice out the turns of the chembenches we need to access
             for index, (func, arg) in enumerate(self.bench_turns[0:i]):
-                func(arg, delay=0.5)
+                func(arg, delay=0.7)
 
                 # check if we already emptied the prior chembenches
                 if index >= i - 2:
@@ -647,6 +649,7 @@ class ARBStation(Station):
                     self.chembench.inventory.transfer_all()
                     self.chembench.turn_off()
                     self.chembench.close()
+                    self._player.sleep(1)
 
             # reverse the turns to return back, once again sliced
             for func, arg in reversed(self.bench_turns[0:i]):
@@ -659,7 +662,7 @@ class ARBStation(Station):
             self.exo_mek.access()
             self._player.inventory.transfer_all(items.GUNPOWDER)
             self.exo_mek.inventory.close()
-            self._player.sleep(0.5)
+            self._player.sleep(1)
 
             # return to the start
             for _ in range(2):
