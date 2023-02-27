@@ -1,7 +1,9 @@
 {
     "main": {
         "account_name": "rawr",
-        "game_launcher": "Epic",
+        "game_launcher": "epic",
+        "ark_path": "F:/ARKSurvivalEvolved",
+        "tesseract_path": "C:/Program Files/Tesseract-OCR/tesseract.exe",
         "gen2": false,
         "ytrap_beds": 40,
         "ytrap_prefix": "seed",
@@ -9,7 +11,7 @@
         "crystal_prefix": "crystal",
         "ytrap_station": true,
         "grinding_station": true,
-        "arb_station": false,
+        "arb_station": true,
         "berry_station": false,
         "meat_station": true
     },
@@ -29,7 +31,7 @@
         "timer_pop": 30
     },
     "ytrap": {
-        "mode": "precise on refill",
+        "mode": "precise refill",
         "turn_direction": "right",
         "plot_stacks": 3,
         "plots_per_stack": 8,

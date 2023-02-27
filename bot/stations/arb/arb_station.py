@@ -597,6 +597,7 @@ class ARBStation(Station):
             self.chembench.inventory.open_tab("crafting")
             self.chembench.inventory.craft(items.GUNPOWDER, 1000)
             self.chembench.inventory.open_tab("inventory")
+            self._player.sleep(0.5)
             self.chembench.close()
             self._player.sleep(1)
 

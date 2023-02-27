@@ -4,3 +4,6 @@ class StationError(Exception):
 
 class NoCrystalAddedError(StationError):
     """Raised when no crystal is added at the crystal station"""
+
+class ConfigError(Exception):
+    """Raised when a setting was incorrect."""

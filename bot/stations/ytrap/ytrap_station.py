@@ -134,7 +134,7 @@ class YTrapStation(Station):
                     dead_crop_plots,
                     refill=self.refill,
                     precise=self.settings.mode == "precise"
-                    or (self.settings.mode == "precise on refill" and self.refill),
+                    or (self.settings.mode == "precise refill" and self.refill),
                 )
 
         for _ in range(4 - len(self._stacks)):

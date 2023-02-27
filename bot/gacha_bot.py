@@ -8,6 +8,7 @@ from ark import Player, Server, TribeLog, UserSettings, exceptions
 
 from bot.recovery import Unstucking
 
+from .exceptions import ConfigError
 from .settings import TowerSettings
 from .stations import (ARBStation, BerryFeedStation, CrystalStation,
                        GrindingStation, HealingStation, MeatFeedStation,
@@ -28,14 +29,17 @@ class GachaBot:
     def __init__(self) -> None:
         print("Bot started, initializing gacha bot...")
         self.settings = TowerSettings.load()
+
         self.ark_settings = UserSettings.load()
+        self._validate_game_settings()
+
         self.server = Server(self.ark_settings.last_server)
         self.create_webhooks()
 
         with open("settings/settings.json") as f:
             self.player = Player(**json.load(f)["player"])
+            
         self.stations = self.create_stations()
-
         print("Initialization successful.")
 
     def create_stations(self) -> list[Station | Iterable[YTrapStation]]:
@@ -115,10 +119,8 @@ class GachaBot:
             self.timer_webhook = TimerWebhook(
                 settings.webhook_state, self.server, self.tribelogs, settings.timer_pop
             )
-
         except Exception as e:
-            print(f"Failed to create one or more webhooks!\n{e}")
-            raise
+            raise ConfigError(f"Failed to create one or more webhooks!\n{e}")
 
     def do_next_task(self) -> None:
         """Gacha bots main call method, call repeatedly to keep doing the
@@ -165,34 +167,36 @@ class GachaBot:
         s = self.ark_settings
 
         expected_settings = {
-            s.hide_item_names: (False, "Show item names"),
-            s.show_item_tooltips: (False, "Show item tooltips"),
-            s.auto_chatbox: (False, "Auto chatbox"),
-            s.toggle_hud: (False, "Toggle HUD"),
-            s.menu_transitions: (False, "Menu transitions"),
-            s.reverse_logs: (True, "Reverse tribelogs"),
-            s.folder_view: (False, "Local folder view"),
-            s.sort_type: (1, "Local sort type"),
-            s.remote_sort_type: (1, "Remote sort type"),
-            s.remote_show_engrams: (False, "Remote show engrams"),
-            s.remote_hide_unlearned_engrams: (True, "Remote hide unlearned engrams"),
+            "Hide item names": (True, s.hide_item_names),
+            "Show item tooltips": (False, s.show_item_tooltips),
+            "Auto chatbox": (False, s.auto_chatbox),
+            "Toggle HUD": (False, s.toggle_hud),
+            "Disable Menu Transitions": (True, s.disable_menu_transitions),
+            "Reverse tribelogs": (True, s.reverse_logs),
+            "Local show all items": (True, s.local_show_all_items),
+            "Remote show all items": (True, s.remote_show_all_items),
+            "Local sort type": (1, s.sort_type),
+            "Remote sort type": (1, s.remote_sort_type),
+            "Remote show engrams": (False, s.remote_show_engrams),
+            "Remote hide unlearned engrams": (True, s.remote_hide_unlearned_engrams),
         }
         incorrect = [
             setting
             for setting, value in expected_settings.items()
-            if setting != value[0]
+            if value[0] != value[1]
         ]
         if not incorrect:
             return
+        errors = "\n".join(
+            f"{setting}: expected {expected_settings[setting][0]}, got {expected_settings[setting][1]}"
+            for setting in incorrect
+        )
 
         ctypes.windll.user32.MessageBoxW(
             None,
-            "Incorrect configurations:\n"
-            "\n".join(
-                f"{expected_settings[setting][1]}: expected {expected_settings[setting][0]}, got {setting}"
-                for setting in incorrect
-            ),
+            f"Incorrect configurations:\n\n{errors}\n\nPlease fix these mismatches and try again.",
             f"ARK Setting assertion found non matching values!",
             0x1000,
         )
-        
+        raise ConfigError("Invalid ark settings.")
+

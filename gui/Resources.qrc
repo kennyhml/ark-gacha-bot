@@ -12,5 +12,8 @@
     <file>../assets/gui/discord.png</file>
     <file>../assets/gui/raw_meat.png</file>
     <file>../assets/gui/mejoberry.png</file>
+    <file>../assets/gui/dropdown.png</file>
+    <file>../assets/gui/dropup.png</file>
+    <file>../assets/gui/background1.png</file>
   </qresource>
 </RCC>
