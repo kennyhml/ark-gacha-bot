@@ -1,4 +1,4 @@
-import time
+from gui.main_ui import MainUi
 from threading import Thread
 
 import pyautogui as pg  # type: ignore[import]
@@ -7,7 +7,6 @@ from pynput import keyboard  # type: ignore[import]
 
 from bot.exceptions import ConfigError
 from bot.gacha_bot import GachaBot
-from gui.main_ui import MainUi
 
 
 def main():
@@ -17,12 +16,12 @@ def main():
         print(f"Terminating due to config mismatch.\n{e}")
         pg.press("F3")
         return
-    
+
     while State.running:
         bot.do_next_task()
 
 
-def on__key_press(key):
+def on_key_press(key):
     """Connets inputs from listener thread to their corresponding function"""
     if key == keyboard.Key.f1:
         if not (State.paused or State.running):
@@ -52,8 +51,10 @@ if __name__ == "__main__":
     State.running = False
     State.paused = False
 
-    listener = keyboard.Listener(on_press=on__key_press)
+    listener = keyboard.Listener(on_press=on_key_press)
     listener.start()
+
+    print("F1 - Start Script\n" "F3 - Terminate Script\n" "F5 - Pause/Resume Script")
 
     ui = MainUi()
     ui.display()

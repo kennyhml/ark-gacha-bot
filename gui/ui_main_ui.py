@@ -24,8 +24,8 @@ class Ui_Form(object):
         if not Form.objectName():
             Form.setObjectName(u"Form")
         Form.resize(652, 473)
-        Form.setMinimumSize(QSize(0, 0))
-        Form.setMaximumSize(QSize(103000, 61900))
+        Form.setMinimumSize(QSize(652, 473))
+        Form.setMaximumSize(QSize(652, 473))
         Form.setStyleSheet(u"")
         self.MainUi = QWidget(Form)
         self.MainUi.setObjectName(u"MainUi")

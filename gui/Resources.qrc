@@ -8,12 +8,8 @@
     <file>../assets/gui/ytrap.png</file>
     <file>../assets/gui/lbackground.png</file>
     <file>../assets/gui/settings.png</file>
-    <file>../assets/gui/general.png</file>
     <file>../assets/gui/discord.png</file>
     <file>../assets/gui/raw_meat.png</file>
     <file>../assets/gui/mejoberry.png</file>
-    <file>../assets/gui/dropdown.png</file>
-    <file>../assets/gui/dropup.png</file>
-    <file>../assets/gui/background1.png</file>
   </qresource>
 </RCC>

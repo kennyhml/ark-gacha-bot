@@ -160,7 +160,6 @@ class ARBStation(Station):
             if not time_left:
                 print("Gunpowder has finished crafting.")
                 return True
-
             print(f"{format_seconds(time_left)} left on gunpowder...")
             return False
         except AttributeError:
@@ -176,7 +175,6 @@ class ARBStation(Station):
             if not time_left:
                 print("ARB has finished crafting.")
                 return True
-
             print(f"{format_seconds(time_left)} left on ARB...")
             return False
         except AttributeError:
@@ -189,7 +187,6 @@ class ARBStation(Station):
         if not time_left:
             print("Charcoal has finished burning.")
             return True
-
         print(f"{format_seconds(time_left)} left on charcoal...")
         return False
 
@@ -203,13 +200,12 @@ class ARBStation(Station):
 
     def take_gas_from_forge_dedi(self) -> None:
         """Takes the gas from its dedi at the forge bed"""
-        self._player.turn_y_by(40)
-        self._player.sleep(0.5)
+        self._player.turn_y_by(40, delay=0.5)
 
         self.dedi.open()
         self.dedi.inventory.withdraw_stacks(1)
         self.dedi.close()
-        self._player.sleep(0.5)
+        self._player.sleep(2)
         self._player.turn_y_by(-40)
 
     def take_fungal_wood(self) -> None:
@@ -221,7 +217,7 @@ class ARBStation(Station):
         self.dedi.inventory.transfer_all()
         self.dedi.close()
 
-        self._player.sleep(0.3)
+        self._player.sleep(2)
         self._player.turn_y_by(160, delay=0.5)
         self._player.turn_y_by(20, delay=0.5)
 
@@ -251,18 +247,18 @@ class ARBStation(Station):
         known_empty: set[int] = set()
 
         while right_turns < 4:
-            self._player.sleep(1)
             # turn to the forge
             self._player.turn_90_degrees("right", delay=1)
             right_turns += 1
             if right_turns in known_empty:
                 continue
 
-            self.forge.inventory.open()
+            self.forge.open()
             if not self.forge.inventory.has(items.CHARCOAL):
                 known_empty.add(right_turns)
                 # forge does not have charcoal so go next
-                self.forge.inventory.close()
+                self.forge.close()
+                self._player.sleep(2)
                 continue
 
             # forge has charcoal, take all charcoal and turn back to dedi
@@ -270,7 +266,8 @@ class ARBStation(Station):
                 self.forge.inventory.transfer_all(items.GASOLINE)
 
             self.forge.inventory.transfer_all(items.CHARCOAL)
-            self.forge.inventory.close()
+            self.forge.close()
+            self._player.sleep(2)
 
             for _ in range(right_turns):
                 self._player.turn_90_degrees("left", delay=1)
@@ -306,7 +303,7 @@ class ARBStation(Station):
             self._player.inventory.transfer_all(items.FUNGAL_WOOD)
             self.forge.turn_on()
             self.forge.close()
-            self._player.sleep(1.5)
+            self._player.sleep(2)
 
         self._player.turn_90_degrees("right", delay=0.5)
         self._player.turn_y_by(40, delay=0.5)
@@ -328,8 +325,8 @@ class ARBStation(Station):
         """Turns to the gasoline dedi from the original spawn position,
         can either take gas or deposit it. Finishes in the original spawn
         position."""
-        self._player.turn_x_by(-30, delay=0.3)
-        self._player.turn_y_by(40, delay=0.3)
+        self._player.turn_x_by(-30, delay=0.5)
+        self._player.turn_y_by(40, delay=0.5)
         self._player.sleep(1)
 
         if mode == "take":
@@ -339,7 +336,7 @@ class ARBStation(Station):
         else:
             self.dedi.deposit([items.METAL_INGOT], get_amount=False)
 
-        self._player.sleep(0.5)
+        self._player.sleep(2)
         self._player.turn_y_by(-40, delay=0.3)
         self._player.turn_x_by(30, delay=0.3)
 
@@ -356,8 +353,8 @@ class ARBStation(Station):
         else:
             self.dedi.deposit([items.STONE], get_amount=False)
 
-        self._player.sleep(0.5)
-        self._player.turn_x_by(-30, delay=0.3)
+        self._player.sleep(2)
+        self._player.turn_x_by(-30, delay=0.5)
 
     def access_flint(self, mode: Literal["take", "deposit"]) -> None:
         """Turns to the flint dedi from the original spawn position,
@@ -373,9 +370,9 @@ class ARBStation(Station):
         else:
             self.dedi.deposit([items.FLINT], get_amount=False)
 
-        self._player.sleep(0.5)
-        self._player.turn_y_by(-40, delay=0.3)
-        self._player.turn_x_by(-30, delay=0.3)
+        self._player.sleep(2)
+        self._player.turn_y_by(-40, delay=0.5)
+        self._player.turn_x_by(-30, delay=0.5)
 
     def access_metal(self, mode: Literal["take", "deposit"]) -> None:
         """Turns to the metal dedi from the original spawn position,
@@ -390,7 +387,7 @@ class ARBStation(Station):
         else:
             self.dedi.deposit([items.METAL_INGOT], get_amount=False)
 
-        self._player.sleep(0.5)
+        self._player.sleep(2)
         self._player.turn_x_by(-110, delay=0.3)
 
     def take_metal_queue_arb(self) -> None:
@@ -419,7 +416,7 @@ class ARBStation(Station):
         # close the exo mek
         self.exo_mek.inventory.open_tab("inventory")
         self.exo_mek.inventory.close()
-        self._player.sleep(0.5)
+        self._player.sleep(2)
 
         # turn back to original position, put metal back
         for _ in range(2):
@@ -451,8 +448,7 @@ class ARBStation(Station):
             The item to craft
         """
         for func, arg in self.bottom_bench_turns:
-            func(arg)
-            self._player.sleep(0.3)
+            func(arg, delay=0.5)
 
             # open the chembench, go through the actions
             self.chembench.open()
@@ -477,12 +473,11 @@ class ARBStation(Station):
                 self.chembench.inventory.open_tab("inventory")
 
             self.chembench.inventory.close()
-            self._player.sleep(0.3)
+            self._player.sleep(2)
 
         # reverse the turns to get back to the original position
         for func, arg in reversed(self.bottom_bench_turns):
-            func(arg * -1)
-            self._player.sleep(0.3)
+            func(arg * -1, delay=0.5)
 
     def craft_sparkpowder(self) -> None:
         """Spawns at the station and starts crafting sparkpowder"""
@@ -533,22 +528,22 @@ class ARBStation(Station):
         """Distributes spark evenly over the chembenches, by taking out until 50 slots
         on the bottom chembench and putting the taken spark into the upper chem bench."""
         for func, arg in self.bottom_bench_turns:
-            func(arg, delay=0.3)
+            func(arg, delay=0.5)
 
             # take until 50 slots from the bottom one
             self.chembench.open()
             self.take_spark_out()
             self.chembench.close()
-            self._player.sleep(0.3)
+            self._player.sleep(2)
 
             # turn to top one, put all taken spark into the upper one.
-            self._player.turn_y_by(-70, delay=0.3)
+            self._player.turn_y_by(-70, delay=0.5)
             self.chembench.open()
             self._player.inventory.transfer_all(items.SPARKPOWDER)
             self.chembench.close()
 
-            self._player.sleep(0.3)
-            self._player.turn_y_by(70, delay=0.3)
+            self._player.sleep(2)
+            self._player.turn_y_by(70, delay=0.5)
 
         # reverse the turns to get back to original position
         for func, arg in reversed(self.bottom_bench_turns):
@@ -563,7 +558,7 @@ class ARBStation(Station):
             self.chembench.inventory.transfer_all()
             self._player.inventory.drop_all()
             self.chembench.close()
-            self._player.sleep(1)
+            self._player.sleep(2)
 
         for func, arg in reversed(self.bench_turns):
             func(arg * -1, delay=0.7)
@@ -580,6 +575,7 @@ class ARBStation(Station):
             self.dedi.open()
             self.dedi.inventory.transfer_all()
             self.dedi.close()
+            self._player.sleep(2)
 
         for func, arg in self.bench_turns:
             func(arg, delay=0.5)
@@ -599,7 +595,7 @@ class ARBStation(Station):
             self.chembench.inventory.open_tab("inventory")
             self._player.sleep(0.5)
             self.chembench.close()
-            self._player.sleep(1)
+            self._player.sleep(2)
 
         # reverse turns to get back to original position
         for func, arg in reversed(self.bench_turns):

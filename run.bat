@@ -1,0 +1,3 @@
+py -m main
+
+pause
