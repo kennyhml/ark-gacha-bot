@@ -107,7 +107,7 @@ class FeedStation(Station):
             The amount of pellet rows we want to transfer back into the gacha,
             to avoid capping due to pellet overflow.
         """
-        crop_plot =  self._stacks[0][5]
+        crop_plot = self._stacks[0][5]
         crop_plot.open()
         if crop_plot.inventory.count(items.PELLET) > 10:
             return False
@@ -157,7 +157,7 @@ class FeedStation(Station):
         return self.case_other
 
     def fill_trough(
-        self, item: items.Item, popcorn: Optional[items.Item] = None
+        self, item: items.Item | list[items.Item], popcorn: Optional[items.Item] = None
     ) -> None:
         """Opens the trough the player is looking at and deposits the given
         item. If no items are left after depositing, an Exception is raised.
@@ -182,7 +182,10 @@ class FeedStation(Station):
         self._player.sleep(0.5)
 
         # check for berries left in our inventory
-        if not self._player.inventory.has(item):
+        if isinstance(item, items.Item):
+            item = [item]
+
+        if not any(self._player.inventory.has(i) for i in item):
             self.trough.inventory.close()
             raise LookupError(f"No {item} left to transfer!")
 
@@ -190,7 +193,7 @@ class FeedStation(Station):
         self._player.sleep(0.3)
 
     def fill_troughs(
-        self, item: items.Item, popcorn: Optional[items.Item] = None
+        self, item: items.Item | list[items.Item], popcorn: Optional[items.Item] = None
     ) -> None:
         """Fills all the troughs with the passed item. Stops when
         a `NoItemsLeftError` is raised.

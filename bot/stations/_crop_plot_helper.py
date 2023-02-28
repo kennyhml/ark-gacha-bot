@@ -1,5 +1,6 @@
 from typing import Optional
 from ark import Player, TekCropPlot, exceptions, items
+from torch import inverse
 
 from ..tools import threaded
 
@@ -7,7 +8,7 @@ from ..tools import threaded
 def do_crop_plot_stack(
     player: Player,
     stack: list[TekCropPlot],
-    item: Optional[items.Item],
+    item: Optional[items.Item | list[items.Item]],
     turns: list[int],
     dead: list[TekCropPlot],
     *,
@@ -19,6 +20,9 @@ def do_crop_plot_stack(
     @threaded("Standing up")
     def stand_up() -> None:
         player.stand_up()
+
+    if isinstance(item, items.Item):
+        item = [item]
 
     player.look_down_hard()
     fails = 0
@@ -37,7 +41,7 @@ def do_crop_plot_stack(
 def take_and_refill(
     player: Player,
     crop_plot: TekCropPlot,
-    item: Optional[items.Item],
+    items_to_take: Optional[list[items.Item]],
     dead: list[TekCropPlot],
     *,
     refill: bool,
@@ -59,9 +63,11 @@ def take_and_refill(
     if not crop_plot.inventory.has(items.YTRAP_SEED):
         dead.append(crop_plot)
 
-    if item and crop_plot.inventory.has(item):
-        crop_plot.inventory.search(item, delete_prior=False)
-        crop_plot.inventory.transfer_all()
+    if items_to_take:
+        for item in items_to_take:
+            if not crop_plot.inventory.has(item):
+                continue
+            crop_plot.inventory.transfer_all(item)
 
     if refill:
         player.inventory.transfer_all()

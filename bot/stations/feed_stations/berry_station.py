@@ -21,6 +21,14 @@ class BerryFeedStation(FeedStation):
     """
 
     MEJOBERRY_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/0/00/Mejoberry.png/revision/latest/scale-to-width-down/228?cb=20160219215159"
+    _BERRIES = [
+        items.MEJOBERRY,
+        items.NARCOBERRY,
+        items.TINTOBERRY,
+        items.AZULBERRY,
+        items.AZULBERRY,
+        items.STIMBERRY,
+    ]
 
     def __init__(
         self,
@@ -63,7 +71,7 @@ class BerryFeedStation(FeedStation):
             do_crop_plot_stack(
                 self._player,
                 self._stacks[turn],
-                items.MEJOBERRY,
+                self._BERRIES,
                 [-130, *[-17] * 5, 50, -17],
                 [],
                 precise=True,
@@ -106,7 +114,7 @@ class BerryFeedStation(FeedStation):
             self._player.crouch()
             took_pellets = self.check_get_pellets()
             self.do_crop_plots(took_pellets)
-            self.fill_troughs(items.MEJOBERRY)
+            self.fill_troughs(self._BERRIES)
 
             self._webhook.send_embed(self.create_embed(round(time.time() - start)))
 
