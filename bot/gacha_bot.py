@@ -108,16 +108,15 @@ class GachaBot:
             task = self._find_next_task()
             print(f"Found next task: '{task.name}'")
             task.complete()
-
-        except exceptions.BedNotFoundError as e:
-            self.info_webhook.send_error(
-                f"Failed to travel to '{task}'", e, mention=True
-            )
-
+            
         except exceptions.TerminatedError:
             pass
 
+        except ConnectionError as e:
+            print(f"Ran into a connection error!\n{e}")
+
         except Exception as e:
+            self.info_webhook.send_error(f"Station '{task}'", e)
             print(traceback.format_exc())
             self._unstuck()
 
@@ -139,7 +138,7 @@ class GachaBot:
         unstucking.unstuck()
         if not unstucking.reconnected:
             return
-        
+
     @staticmethod
     def validate_game_settings(settings: UserSettings) -> None:
         s = settings
