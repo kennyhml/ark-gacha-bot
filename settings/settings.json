@@ -1,25 +1,25 @@
 {
     "main": {
-        "account_name": "Kenny",
+        "account_name": "Deadman",
         "game_launcher": "Epic",
-        "ark_path": "F:/ARKSurvivalEvolved",
+        "ark_path": "D:/SteamLibrary/steamapps/common/ARK/ShooterGame",
         "tesseract_path": "C:/Program Files/Tesseract-OCR/tesseract.exe",
         "map": "Other",
         "ytrap_beds": 40,
         "ytrap_prefix": "seed",
         "crystal_beds": 1,
         "crystal_prefix": "crystal",
-        "ytrap_station": true,
-        "grinding_station": true,
-        "arb_station": true,
-        "berry_station": false,
-        "meat_station": true
+        "ytrap_station": false,
+        "grinding_station": false,
+        "arb_station": false,
+        "berry_station": true,
+        "meat_station": false
     },
     "player": {
-        "health": 300,
+        "health": 500,
         "food": 100,
         "water": 100,
-        "weight": 1000
+        "weight": 1100
     },
     "discord": {
         "user_id": "",
@@ -42,16 +42,15 @@
         "crystal_interval": 5,
         "stryder_depositing": true,
         "drop_items": "['prim']",
-        "keep_items": "['riot', 'fab', 'pump', 'ass', 'mining', 'wood']",
+        "keep_items": "['riot', 'fab', 'pump', 'ass', 'miner']",
         "min_ytraps_collected": 1000,
         "vault_above": false
     },
-    "berry": {
+    "feedstation": {
         "berry_beds": 4,
         "berry_prefix": "autoberry",
-        "berry_interval": 300
-    },
-    "meat": {
+        "berry_interval": 300,
+
         "meat_beds": 4,
         "meat_prefix": "automeat",
         "meat_interval": 120

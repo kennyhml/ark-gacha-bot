@@ -10,7 +10,7 @@ from ark import Player, Server, TribeLog, UserSettings, config, exceptions
 from bot.recovery import Unstucking
 
 from .exceptions import ConfigError
-from .settings import TowerSettings
+from .settings import TowerSettings, FeedStationSettings
 from .stations import (ARBStation, BerryFeedStation, CrystalStation,
                        GrindingStation, HealingStation, MeatFeedStation,
                        Station, YTrapStation)
@@ -35,6 +35,8 @@ class GachaBot:
         self.ark_settings = UserSettings.load()
         self._validate_game_settings()
 
+        self.feed_station_settings = FeedStationSettings.load()
+        
         self.server = Server(self.ark_settings.last_server)
         self.create_webhooks()
 
@@ -59,6 +61,7 @@ class GachaBot:
         grinding = GrindingStation(self.player, self.tribelogs, self.info_webhook)
         arb = ARBStation(self.player, self.tribelogs, self.info_webhook)
 
+        berry = self._create_berry_stations()
         ytraps = self._create_ytrap_stations()
         crystal = self._create_crystal_stations(grinding, arb)
 
@@ -75,7 +78,7 @@ class GachaBot:
             ...
 
         if self.settings.berry_station:
-            ...
+            stations.extend(berry)
 
         if self.settings.ytrap_station:
             stations.append(ytraps)
@@ -107,6 +110,18 @@ class GachaBot:
                 gen2=self.settings.map == "Genesis 2",
             )
             for i in range(self.settings.crystal_beds)
+        ]
+
+    def _create_berry_stations(self) -> list[BerryFeedStation]:
+        return [
+            BerryFeedStation(
+                f"{self.feed_station_settings.berry_prefix}{i:02d}",
+                self.player,
+                self.tribelogs,
+                self.info_webhook,
+                interval = self.feed_station_settings.berry_interval,
+            )
+            for i in range(self.feed_station_settings.berry_beds)
         ]
 
     def create_webhooks(self) -> None:
