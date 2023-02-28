@@ -2,9 +2,10 @@ import json
 import time
 from datetime import datetime
 
-from ark import items
-from discord import Embed  # type:ignore[import]
+from ark import Bed, Dinosaur, Player, TribeLog, exceptions, items
+from discord import Embed  # type: ignore[import]
 
+from ...webhooks import InfoWebhook
 from .._crop_plot_helper import do_crop_plot_stack
 from .feed_station import FeedStation
 
@@ -17,6 +18,17 @@ class BerryFeedStation(FeedStation):
     """
 
     MEJOBERRY_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/0/00/Mejoberry.png/revision/latest/scale-to-width-down/228?cb=20160219215159"
+
+    def __init__(
+        self,
+        name: str,
+        player: Player,
+        tribelog: TribeLog,
+        webhook: InfoWebhook,
+        interval: int,
+    ) -> None:
+        super().__init__(name, player, tribelog, webhook, interval)
+        self._load_last_completion("mejoberry")
 
     def do_crop_plots(self, got_pellets: bool) -> None:
         """Does the crop plot stack, finishes facing the last stack"""
@@ -70,6 +82,7 @@ class BerryFeedStation(FeedStation):
         start = time.time()
 
         try:
+            self._player.crouch()
             took_pellets = self.check_get_pellets()
             self.do_crop_plots(took_pellets)
             self.fill_troughs(items.MEJOBERRY)
