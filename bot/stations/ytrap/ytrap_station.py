@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 import itertools  # type:ignore[import]
 import time
 from typing import final
@@ -58,14 +61,15 @@ class YTrapStation(Station):
         player: Player,
         tribelog: TribeLog,
         info_webhook: InfoWebhook,
+        settings: YTrapStationSettings,
     ) -> None:
         self._name = name
         self._player = player
         self._tribelog = tribelog
         self._webhook = info_webhook
 
-        conf = self.settings = YTrapStationSettings.load()
-        if (l2 := conf.plots_per_stack) != (l1 := len(conf.crop_plot_turns)):
+        self.settings = settings
+        if (l2 := settings.plots_per_stack) != (l1 := len(settings.crop_plot_turns)):
             raise ValueError(
                 f"Turns do not match crop plots, got {l2} crop plots, and {l1} turns."
             )
@@ -102,6 +106,24 @@ class YTrapStation(Station):
             [plot.inventory.contents.get(items.PELLET.name, 0) for plot in plots]
         )
         return min(total_pellets / max_pellets, 1.0)
+
+    @staticmethod
+    def build_stations(
+        player: Player, tribelog: TribeLog, info_webhook: InfoWebhook
+    ) -> list[YTrapStation]:
+        settings = YTrapStationSettings.load()
+        if not settings.enabled:
+            return []
+        return [
+            YTrapStation(
+                f"{settings.ytrap_prefix}{i:02d}",
+                player,
+                tribelog,
+                info_webhook,
+                settings,
+            )
+            for i in range(settings.ytrap_beds)
+        ]
 
     def complete(self) -> None:
         """Completes the Y-Trap station. Travels to the gacha station,

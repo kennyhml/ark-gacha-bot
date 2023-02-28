@@ -1958,7 +1958,7 @@ background-color: rgb(30, 30, 30);</string>
        <number>16</number>
       </property>
      </widget>
-     <widget class="QCheckBox" name="ytrap_station">
+     <widget class="QCheckBox" name="ytrap_enabled">
       <property name="geometry">
        <rect>
         <x>230</x>
@@ -2880,7 +2880,7 @@ border: None
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QCheckBox" name="grinding_station">
+     <widget class="QCheckBox" name="grinding_enabled">
       <property name="geometry">
        <rect>
         <x>300</x>
@@ -2951,7 +2951,7 @@ border: None
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QCheckBox" name="arb_station">
+     <widget class="QCheckBox" name="arb_enabled">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -3342,7 +3342,7 @@ background-color: rgb(30, 30, 30);</string>
        <string>Berry interval:</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="meat_station">
+     <widget class="QCheckBox" name="meat_enabled">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -3360,7 +3360,7 @@ background-color: rgb(30, 30, 30);</string>
        <string>Enabled</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="berry_station">
+     <widget class="QCheckBox" name="berry_enabled">
       <property name="geometry">
        <rect>
         <x>10</x>

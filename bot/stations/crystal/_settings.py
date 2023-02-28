@@ -10,6 +10,8 @@ import dacite
 class CrystalStationSettings:
     """Contains the settings of the crystal station"""
 
+    crystal_beds: int
+    crystal_prefix: str
     drop_items: list[str]
     keep_items: list[str]
     min_ytraps_collected: int 
@@ -19,7 +21,7 @@ class CrystalStationSettings:
     @staticmethod
     def load() -> CrystalStationSettings:
         with open("settings/settings.json") as f:
-            data = json.load(f)["crystal"]
+            data: dict = json.load(f)["crystal"]
 
         for k, v in data.items():
             if "items" in k:

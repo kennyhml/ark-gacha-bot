@@ -1,36 +1,30 @@
 {
     "main": {
-        "account_name": "Deadman",
+        "account_name": "Kenny",
         "game_launcher": "Epic",
-        "ark_path": "D:/SteamLibrary/steamapps/common/ARK/ShooterGame",
+        "ark_path": "F:/ARKSurvivalEvolved",
         "tesseract_path": "C:/Program Files/Tesseract-OCR/tesseract.exe",
-        "map": "Other",
-        "ytrap_beds": 40,
-        "ytrap_prefix": "seed",
-        "crystal_beds": 1,
-        "crystal_prefix": "crystal",
-        "ytrap_station": false,
-        "grinding_station": false,
-        "arb_station": false,
-        "berry_station": true,
-        "meat_station": false
+        "map": "Other"
     },
     "player": {
-        "health": 500,
+        "health": 300,
         "food": 100,
         "water": 100,
-        "weight": 1100
+        "weight": 1000
     },
     "discord": {
         "user_id": "",
-        "webhook_alert": "https://discord.com/api/webhooks/1077483168111800380/0O9TQcyhHq9KFvcszsT2wGZSpoJ_FFjDc8dHHi-Ar9HY-8evGfkphkZJ1P8rJm94XUvz",
-        "webhook_gacha": "https://discord.com/api/webhooks/1077483168111800380/0O9TQcyhHq9KFvcszsT2wGZSpoJ_FFjDc8dHHi-Ar9HY-8evGfkphkZJ1P8rJm94XUvz",
-        "webhook_logs": "https://discord.com/api/webhooks/1060008797508223057/tLB-cG9c2jdTBG4Evdzp6p0bIgeBfI_TrHUBqSIpGIc2wTM1tCOvGCU3vKcUqUMPA2vG",
-        "webhook_state": "https://discord.com/api/webhooks/1077483268598927380/NRqWR9FClwaPSnFSoNeJBBc8gSSXvTm04xJgdxPBWISeA-O877cgZxibLwzNEJz5-KUU",
+        "webhook_alert": "",
+        "webhook_gacha": "",
+        "webhook_logs": "",
+        "webhook_state": "",
         "state_message_id": "1078004041038168104",
         "timer_pop": 30
     },
     "ytrap": {
+        "ytrap_enabled": true,
+        "ytrap_beds": 40,
+        "ytrap_prefix": "seed",
         "mode": "precise refill",
         "turn_direction": "right",
         "plot_stacks": 3,
@@ -39,18 +33,23 @@
         "crop_plot_turns": "[-130, *[-17] * 5, 50, -17]"
     },
     "crystal": {
+        "crystal_beds": 1,
+        "crystal_prefix": "crystal",
         "crystal_interval": 5,
         "stryder_depositing": true,
         "drop_items": "['prim']",
-        "keep_items": "['riot', 'fab', 'pump', 'ass', 'miner']",
+        "keep_items": "['riot', 'fab', 'pump', 'ass', 'mining', 'wood']",
         "min_ytraps_collected": 1000,
         "vault_above": false
     },
-    "feedstation": {
+    "berry": {
+        "berry_enabled": false,
         "berry_beds": 4,
         "berry_prefix": "autoberry",
-        "berry_interval": 300,
-
+        "berry_interval": 300
+    },
+    "meat": {
+        "meat_enabled": false,
         "meat_beds": 4,
         "meat_prefix": "automeat",
         "meat_interval": 120
@@ -59,6 +58,7 @@
         "pod_name": "Gacha Heal"
     },
     "grinding": {
+        "grinding_enabled": true,
         "item_to_craft": "Heavy Auto Turret",
         "text_rgb": " (56, 232, 231)",
         "pearls_region": "(25,350,510,355)",
@@ -67,5 +67,8 @@
         "ingots_region": "(570,730,640,305)",
         "crystal_region": "(1245,365,560,315)",
         "hide_region": "(1240,690,613,355)"
+    },
+    "arb": {
+        "arb_enabled": true
     }
 }

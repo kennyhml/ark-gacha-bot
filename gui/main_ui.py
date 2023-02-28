@@ -55,6 +55,10 @@ class MainUi(QMainWindow, Ui_Form):
         self.grinding_settings = QConfig(
             "grinding", widgets, self.data["grinding"], save_on_change=True
         )
+        self.arb_settings = QConfig(
+            "arb", widgets, self.data["arb"], save_on_change=True
+        )
+
         self.main_settings.set_data()
         self.player_settings.set_data()
         self.disc_settings.set_data()
@@ -64,6 +68,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.meat_settings.set_data()
         self.healing_settings.set_data()
         self.grinding_settings.set_data()
+        self.arb_settings.set_data()
 
         self.main_settings.connect_callback(self.save)
         self.player_settings.connect_callback(self.save)
@@ -74,6 +79,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.meat_settings.connect_callback(self.save)
         self.healing_settings.connect_callback(self.save)
         self.grinding_settings.connect_callback(self.save)
+        self.arb_settings.connect_callback(self.save)
 
     def display(self):
         self.main_win.setWindowTitle(f"Ling-Ling v2.0.1")

@@ -10,10 +10,17 @@ from ark import Player, Server, TribeLog, UserSettings, config, exceptions
 from bot.recovery import Unstucking
 
 from .exceptions import ConfigError
-from .settings import TowerSettings, FeedStationSettings
-from .stations import (ARBStation, BerryFeedStation, CrystalStation,
-                       GrindingStation, HealingStation, MeatFeedStation,
-                       Station, YTrapStation)
+from .settings import TowerSettings
+from .stations import (
+    ARBStation,
+    BerryFeedStation,
+    CrystalStation,
+    GrindingStation,
+    HealingStation,
+    MeatFeedStation,
+    Station,
+    YTrapStation,
+)
 from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook
 
 
@@ -35,8 +42,6 @@ class GachaBot:
         self.ark_settings = UserSettings.load()
         self._validate_game_settings()
 
-        self.feed_station_settings = FeedStationSettings.load()
-        
         self.server = Server(self.ark_settings.last_server)
         self.create_webhooks()
 
@@ -54,75 +59,30 @@ class GachaBot:
         Each of the stations follows the `Station` abstract base class
         and behave similar.
         """
-        stations: list[Station | Iterable[YTrapStation]] = [
-            HealingStation(self.player, self.tribelogs, self.info_webhook)
-        ]
+        base_args = (self.player, self.tribelogs, self.info_webhook)
+        stations: list[Station | Iterable[YTrapStation]] = [HealingStation(*base_args)]
 
-        grinding = GrindingStation(self.player, self.tribelogs, self.info_webhook)
-        arb = ARBStation(self.player, self.tribelogs, self.info_webhook)
+        grinding = GrindingStation(*base_args)
+        arb = ARBStation(*base_args)
+        ytrap = YTrapStation.build_stations(*base_args)
+        crystal = CrystalStation.build_stations(
+            *base_args,
+            self.timer_webhook,
+            grinding,
+            arb,
+            gen2=self.settings.map == "Genesis 2",
+        )
+        meat = MeatFeedStation.build_stations(*base_args)
+        berry = BerryFeedStation.build_stations(*base_args)
 
-        berry = self._create_berry_stations()
-        ytraps = self._create_ytrap_stations()
-        crystal = self._create_crystal_stations(grinding, arb)
+        for station in [crystal, grinding, arb, meat, berry, ytrap]:
+            if isinstance(station, (Station, itertools.cycle)):
+                stations.append(station)
 
-        if self.settings.ytrap_station:
-            stations.extend(crystal)
-
-        if self.settings.grinding_station:
-            stations.append(grinding)
-
-        if self.settings.arb_station:
-            stations.append(arb)
-
-        if self.settings.meat_station:
-            ...
-
-        if self.settings.berry_station:
-            stations.extend(berry)
-
-        if self.settings.ytrap_station:
-            stations.append(ytraps)
+            elif isinstance(station, list):
+                stations.extend(station)
 
         return stations
-
-    def _create_ytrap_stations(self) -> itertools.cycle:
-        stations = [
-            YTrapStation(
-                f"{self.settings.ytrap_prefix}{i:02d}",
-                self.player,
-                self.tribelogs,
-                self.info_webhook,
-            )
-            for i in range(self.settings.ytrap_beds)
-        ]
-        return itertools.cycle(stations)
-
-    def _create_crystal_stations(self, grinding=None, arb=None) -> list[CrystalStation]:
-        return [
-            CrystalStation(
-                f"{self.settings.crystal_prefix}{i:02d}",
-                self.player,
-                self.tribelogs,
-                self.info_webhook,
-                self.timer_webhook,
-                grinding,
-                arb,
-                gen2=self.settings.map == "Genesis 2",
-            )
-            for i in range(self.settings.crystal_beds)
-        ]
-
-    def _create_berry_stations(self) -> list[BerryFeedStation]:
-        return [
-            BerryFeedStation(
-                f"{self.feed_station_settings.berry_prefix}{i:02d}",
-                self.player,
-                self.tribelogs,
-                self.info_webhook,
-                interval = self.feed_station_settings.berry_interval,
-            )
-            for i in range(self.feed_station_settings.berry_beds)
-        ]
 
     def create_webhooks(self) -> None:
         """Creates the webhooks from the discord settings, `None` if no webhook was passed."""
@@ -216,11 +176,11 @@ class GachaBot:
             0x1000,
         )
         raise ConfigError("Invalid ark settings.")
-    
+
     def _set_environment(self) -> None:
         for path in [self.settings.ark_path, self.settings.tesseract_path]:
             if not os.path.exists(path):
                 raise ConfigError(f"CONFIG ERROR! {path} does not exist.")
-            
+
         config.ARK_PATH = self.settings.ark_path
         config.TESSERACT_PATH = self.settings.tesseract_path

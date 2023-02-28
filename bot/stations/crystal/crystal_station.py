@@ -1,16 +1,11 @@
+from __future__ import annotations
+
 import time
 from datetime import datetime
+from typing import Optional
 
-from ark import (
-    Bed,
-    Player,
-    Structure,
-    Stryder,
-    TekDedicatedStorage,
-    TribeLog,
-    _helpers,
-    exceptions,
-)
+from ark import (Bed, Player, Structure, Stryder, TekDedicatedStorage,
+                 TribeLog, _helpers, exceptions)
 from ark.exceptions import DediNotInRangeError
 from ark.items import *
 from discord import Embed  # type: ignore[import]
@@ -81,9 +76,10 @@ class CrystalStation(Station):
         player: Player,
         tribelog: TribeLog,
         info_webhook: InfoWebhook,
+        settings: CrystalStationSettings,
         timer_webhook: TimerWebhook,
-        grinding_station: GrindingStation,
-        arb_station: ARBStation,
+        grinding_station: Optional[GrindingStation],
+        arb_station: Optional[ARBStation],
         *,
         gen2: bool,
     ) -> None:
@@ -93,13 +89,15 @@ class CrystalStation(Station):
         self._tribelog = tribelog
         self._webhook = info_webhook
         self._timer_webhook = timer_webhook
-        self.settings = CrystalStationSettings.load()
+        self.settings = settings
 
         self.bed = Bed(name)
         self.dedi = TekDedicatedStorage()
         self.stryder = Stryder()
         self.vault = Structure(
-            "Vault", "assets/templates/vault.png", capacity="assets/templates/vault_capped.png"
+            "Vault",
+            "assets/templates/vault.png",
+            capacity="assets/templates/vault_capped.png",
         )
         self.gen2 = gen2
 
@@ -112,6 +110,34 @@ class CrystalStation(Station):
         self._resources_made: dict[Item, int] = {}
         self.last_completed = datetime.now()
         self.interval = self.settings.crystal_interval
+
+    @staticmethod
+    def build_stations(
+        player: Player,
+        tribelog: TribeLog,
+        info_webhook: InfoWebhook,
+        timer_webhook: TimerWebhook,
+        grinding_station: GrindingStation,
+        arb_station: ARBStation,
+        *,
+        gen2: bool,
+    ) -> list[CrystalStation]:
+        settings = CrystalStationSettings.load()
+
+        return [
+            CrystalStation(
+                f"{settings.crystal_prefix}{i:02d}",
+                player,
+                tribelog,
+                info_webhook,
+                settings,
+                timer_webhook,
+                None if i else grinding_station,
+                None if i else arb_station,
+                gen2=gen2,
+            )
+            for i in range(settings.crystal_beds)
+        ]
 
     def is_ready(self) -> bool:
         if YTrapStation.total_ytraps_collected < self.settings.min_ytraps_collected:
@@ -144,13 +170,14 @@ class CrystalStation(Station):
 
             if self.settings.stryder_depositing:
                 resources_deposited = self.deposit_into_stryder()
-                self._arb_station.add_wood(resources_deposited[FUNGAL_WOOD])
+                if self._arb_station is not None:
+                    self._arb_station.add_wood(resources_deposited[FUNGAL_WOOD])
             else:
                 resources_deposited = self.deposit_dedis()
 
             # put items into vault
             vault_full = self.deposit_items()
-            if vault_full:
+            if vault_full and self._grinding_station is not None:
                 self._grinding_station.ready = True
 
             # increase the counters

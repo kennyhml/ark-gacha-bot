@@ -11,6 +11,9 @@ import dacite
 class YTrapStationSettings:
     """Contains the settings of the crystal station"""
 
+    enabled: bool
+    ytrap_beds: int
+    ytrap_prefix: str
     mode: Literal["precise", "precise refill", "normal", "set folders"]
     plot_stacks: int
     plots_per_stack: int
@@ -21,7 +24,8 @@ class YTrapStationSettings:
     @staticmethod
     def load() -> YTrapStationSettings:
         with open("settings/settings.json") as f:
-            data = json.load(f)["ytrap"]
-            
+            data: dict = json.load(f)["ytrap"]
+
+        data["enabled"] = data.pop("ytrap_enabled")
         data["crop_plot_turns"] = eval(data["crop_plot_turns"])
         return dacite.from_dict(YTrapStationSettings, data)

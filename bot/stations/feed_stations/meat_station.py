@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import time
 from datetime import datetime
@@ -7,6 +9,7 @@ from discord import Embed  # type: ignore[import]
 
 from ...webhooks import InfoWebhook
 from .._crop_plot_helper import do_crop_plot_stack
+from ._meat_settings import MeatStationSettings
 from .feed_station import FeedStation
 
 
@@ -43,6 +46,24 @@ class MeatFeedStation(FeedStation):
         super().__init__(name, player, tribelog, webhook, interval)
         self.bear = Dinosaur("Dire Bear", "assets/templates/dire_bear.png")
         self._load_last_completion("meat")
+
+    @staticmethod
+    def build_stations(
+        player: Player, tribelog: TribeLog, info_webhook: InfoWebhook
+    ) -> list[MeatFeedStation]:
+        settings = MeatStationSettings.load()
+        if not settings.enabled:
+            return []
+        return [
+            MeatFeedStation(
+                f"{settings.meat_prefix}{i:02d}",
+                player,
+                tribelog,
+                info_webhook,
+                settings.meat_interval,
+            )
+            for i in range(settings.meat_beds)
+        ]
 
     def travel_to_trough_bed(self) -> None:
         """Travels to the stations secondary bed, that has a `b` in front
@@ -94,7 +115,7 @@ class MeatFeedStation(FeedStation):
         """Refills the crop plots with pellets."""
         self._player.turn_90_degrees("left" if self.gacha_is_right() else "right")
         self._player.crouch()
-        
+
         do_crop_plot_stack(
             self._player,
             self._stacks[0],

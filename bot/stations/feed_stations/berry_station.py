@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 import json
 import time
 from datetime import datetime
 
-from ark import Bed, Dinosaur, Player, TribeLog, exceptions, items
+from ark import Player, TribeLog, items
 from discord import Embed  # type: ignore[import]
 
 from ...webhooks import InfoWebhook
 from .._crop_plot_helper import do_crop_plot_stack
+from ._berry_settings import BerryStationSettings
 from .feed_station import FeedStation
 
 
@@ -29,6 +32,24 @@ class BerryFeedStation(FeedStation):
     ) -> None:
         super().__init__(name, player, tribelog, webhook, interval)
         self._load_last_completion("mejoberry")
+
+    @staticmethod
+    def build_stations(
+        player: Player, tribelog: TribeLog, info_webhook: InfoWebhook
+    ) -> list[BerryFeedStation]:
+        settings = BerryStationSettings.load()
+        if not settings.enabled:
+            return []
+        return [
+            BerryFeedStation(
+                f"{settings.berry_prefix}{i:02d}",
+                player,
+                tribelog,
+                info_webhook,
+                settings.berry_interval,
+            )
+            for i in range(settings.berry_beds)
+        ]
 
     def do_crop_plots(self, got_pellets: bool) -> None:
         """Does the crop plot stack, finishes facing the last stack"""
