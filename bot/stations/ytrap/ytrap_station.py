@@ -110,20 +110,23 @@ class YTrapStation(Station):
     @staticmethod
     def build_stations(
         player: Player, tribelog: TribeLog, info_webhook: InfoWebhook
-    ) -> list[YTrapStation]:
+    ) -> itertools.cycle | list:
         settings = YTrapStationSettings.load()
         if not settings.enabled:
             return []
-        return [
-            YTrapStation(
-                f"{settings.ytrap_prefix}{i:02d}",
-                player,
-                tribelog,
-                info_webhook,
-                settings,
-            )
-            for i in range(settings.ytrap_beds)
-        ]
+
+        return itertools.cycle(
+            [
+                YTrapStation(
+                    f"{settings.ytrap_prefix}{i:02d}",
+                    player,
+                    tribelog,
+                    info_webhook,
+                    settings,
+                )
+                for i in range(settings.ytrap_beds)
+            ]
+        )
 
     def complete(self) -> None:
         """Completes the Y-Trap station. Travels to the gacha station,

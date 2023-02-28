@@ -1,11 +1,11 @@
 {
     "arb": {
-        "status": "Waiting for gunpowder",
-        "wood": 130000,
-        "cooking_start": "2023-02-26 11:12:53.755640"
+        "status": "Waiting for wood",
+        "wood": 0,
+        "cooking_start": ""
     },
     "meat": {
-        "last_completed": "2023-02-26 06:12:53.755000"
+        "last_completed": ""
     },
     "mejoberry": {
         "last_completed": ""

@@ -40,7 +40,7 @@ class GachaBot:
         self._set_environment()
 
         self.ark_settings = UserSettings.load()
-        self._validate_game_settings()
+        self.validate_game_settings(self.ark_settings)
 
         self.server = Server(self.ark_settings.last_server)
         self.create_webhooks()
@@ -139,9 +139,10 @@ class GachaBot:
         unstucking.unstuck()
         if not unstucking.reconnected:
             return
-
-    def _validate_game_settings(self) -> None:
-        s = self.ark_settings
+        
+    @staticmethod
+    def validate_game_settings(settings: UserSettings) -> None:
+        s = settings
 
         expected_settings = {
             "Hide item names": (True, s.hide_item_names),
@@ -156,6 +157,7 @@ class GachaBot:
             "Remote sort type": (1, s.remote_sort_type),
             "Remote show engrams": (False, s.remote_show_engrams),
             "Remote hide unlearned engrams": (True, s.remote_hide_unlearned_engrams),
+            "In remote crafting": (False, s.in_remote_inventory),
         }
         incorrect = [
             setting

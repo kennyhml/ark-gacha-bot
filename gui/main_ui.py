@@ -4,11 +4,14 @@ import sys
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtWidgets import QApplication, QMainWindow
 
-from .ui_main_ui import Ui_Form
-
 app = QApplication()
 
+from ark import UserSettings
 from qconfig import QConfig, tools
+
+from bot.gacha_bot import GachaBot
+
+from .ui_main_ui import Ui_Form
 
 
 class MainUi(QMainWindow, Ui_Form):
@@ -22,6 +25,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.setupUi(self.main_win)
         self.tabWidget.setCurrentIndex(0)
         self.connect_tabs()
+        self.connect_buttons()
 
         with open("settings/settings.json") as f:
             self.data = json.load(f)
@@ -97,6 +101,11 @@ class MainUi(QMainWindow, Ui_Form):
         self.feed_station.clicked.connect(lambda: self.open_tab(5))
         self.discord_settings.clicked.connect(lambda: self.open_tab(6))
 
+    def connect_buttons(self) -> None:
+        self.reset_local_data.clicked.connect(lambda: self.reset_data())
+        self.show_ark_settings.clicked.connect(lambda: print(UserSettings.load()))
+        self.verify_ark_settings.clicked.connect(lambda: self.validate_settings())
+
     def open_tab(self, index: int) -> None:
         """Opens ui tab by index."""
         self.tabWidget.setCurrentIndex(index)
@@ -104,3 +113,24 @@ class MainUi(QMainWindow, Ui_Form):
     def save(self) -> None:
         with open("settings/settings.json", "w") as f:
             json.dump(self.data, f, indent=4)
+
+    def reset_data(self) -> None:
+        reset = {
+            "arb": {
+                "status": "Waiting for wood",
+                "wood": 0,
+                "cooking_start": "",
+            },
+            "meat": {"last_completed": ""},
+            "mejoberry": {"last_completed": ""},
+        }
+        with open("bot/_data/station_data.json", "w") as f:
+            json.dump(reset, f, indent=4)
+
+    def validate_settings(self) -> None:
+        try:
+            GachaBot.validate_game_settings(UserSettings.load())
+        except Exception:
+            print("Invalid")
+        else:
+            print("Valid")
