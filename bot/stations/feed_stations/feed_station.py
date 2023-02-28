@@ -124,6 +124,7 @@ class FeedStation(Station):
         self.gacha.inventory.open(default_key=False)
         self.gacha.inventory.transfer_all(items.PELLET)
         self._player.inventory.await_items_added(items.PELLET)
+        self._player.inventory.search(items.PELLET)
 
         for _ in range(6):
             self._player.inventory.transfer_top_row()
@@ -200,7 +201,6 @@ class FeedStation(Station):
             The item to put into the troughs
         """
         # prepare to fill troughs
-        self._player.crouch()
         self._player.look_down_hard()
         self._player.sleep(0.2)
         self._player.turn_y_by(-150)
