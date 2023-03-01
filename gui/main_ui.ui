@@ -659,7 +659,7 @@ Line#line{
 color: rgb(0, 255, 255)</string>
     </property>
     <property name="currentIndex">
-     <number>5</number>
+     <number>1</number>
     </property>
     <property name="tabBarAutoHide">
      <bool>false</bool>
@@ -1838,12 +1838,12 @@ border: None
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox">
+     <widget class="QCheckBox" name="auto_level_gachas">
       <property name="geometry">
        <rect>
         <x>230</x>
         <y>120</y>
-        <width>141</width>
+        <width>151</width>
         <height>17</height>
        </rect>
       </property>
@@ -1853,10 +1853,10 @@ border: None
        </font>
       </property>
       <property name="text">
-       <string>Find dead plots</string>
+       <string>Auto level gachas</string>
       </property>
       <property name="checked">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QLabel" name="label_41">
@@ -3738,6 +3738,7 @@ border: None
  </widget>
  <resources>
   <include location="resources.qrc"/>
+  <include location="../../../.designer/backup/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

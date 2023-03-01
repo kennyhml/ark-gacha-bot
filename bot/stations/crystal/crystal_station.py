@@ -4,8 +4,16 @@ import time
 from datetime import datetime
 from typing import Optional
 
-from ark import (Bed, Player, Structure, Stryder, TekDedicatedStorage,
-                 TribeLog, _helpers, exceptions)
+from ark import (
+    Bed,
+    Player,
+    Structure,
+    Stryder,
+    TekDedicatedStorage,
+    TribeLog,
+    _helpers,
+    exceptions,
+)
 from ark.exceptions import DediNotInRangeError
 from ark.items import *
 from discord import Embed  # type: ignore[import]
@@ -196,7 +204,7 @@ class CrystalStation(Station):
         self._player.turn_y_by(-50, delay=0.5)
         profits: dict[Item, int] = {}
 
-        self.stryder.inventory.open()
+        self.stryder.access()
         self.stryder.inventory.drop_all()
 
         for item in [DUST, FLINT, STONE, FUNGAL_WOOD, BLACK_PEARL]:
@@ -211,7 +219,6 @@ class CrystalStation(Station):
                 self._player.inventory.transfer_all()
 
         self.stryder.inventory.close()
-
         self.stryder.sort_items_to_nearby_dedis()
         self.stryder.sleep(1)
         return profits
@@ -470,10 +477,7 @@ class CrystalStation(Station):
         return average_amount
 
     def create_embed(self, profit: dict[Item, int], time_taken: int) -> Embed:
-        dust = f"{profit[DUST]:_}".replace("_", " ")
-        pearls = f"{profit[BLACK_PEARL]:_}".replace("_", " ")
-        crystals = round(profit[DUST] / 150)
-
+        crystals = round(profit[DUST] / 120)
         embed = Embed(
             type="rich",
             title=f"Collected crystals at '{self._name}'!",
@@ -482,10 +486,12 @@ class CrystalStation(Station):
         embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds")
         embed.add_field(name="Crystals opened:", value=f"~{crystals} crystals")
 
-        embed.add_field(name="\u200b", value="\u200b")
-        embed.add_field(name="Dust made:", value=f"{dust}")
-        embed.add_field(name="Black Pearls made:", value=f"{pearls}")
-        embed.add_field(name="\u200b", value="\u200b")
+        for item, amount in profit.items():
+            formatted_amount = f"{amount:_}".replace("_", " ")
+            embed.add_field(name=item.name, value=formatted_amount)
+
+        for i in range((len(profit) + 2) % 3):
+            embed.add_field(name="\u200b", value="\u200b")
 
         embed.set_thumbnail(url=self.CRYSTAL_AVATAR)
         embed.set_footer(text="Ling Ling on top!")

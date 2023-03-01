@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-
 import itertools  # type:ignore[import]
 import time
 from typing import final
 
-from ark import Bed, Gacha, Player, TekCropPlot, TribeLog, items
-from discord import Embed  # type:ignore[import]
+from ark import Bed, DinoExport, Gacha, Player, TekCropPlot, TribeLog, items
+from discord import Embed # type:ignore[import]
 
 from ...webhooks import InfoWebhook
 from .._crop_plot_helper import do_crop_plot_stack, set_stack_folders
@@ -209,6 +208,8 @@ class YTrapStation(Station):
 
         # take all the pellets (to avoid losing out on traps because of cap)
         self.gacha.access()
+        self._check_level_gacha()
+
         ytraps = self._player.inventory.count(items.Y_TRAP) * 10
 
         if ytraps:
@@ -233,6 +234,28 @@ class YTrapStation(Station):
         if ytraps < 420 or not 0 < ytraps_removed < 800:
             return ytraps
         return ytraps_removed
+
+    def _check_level_gacha(self) -> None:
+        if not self.gacha.inventory.has_level_up():
+            return
+
+        print("Gacha has a level up available! Checking stats...")
+        self.gacha.inventory.close()
+        self._player.sleep(0.5)
+
+        self.gacha.action_wheel.export_data()
+        self.gacha.access()
+
+        data = DinoExport.load_most_recent()
+
+        crafting_to_level = round((0.100000 - data.crafting) / 0.01)
+        if crafting_to_level:
+            print(f"Need to level crafting {crafting_to_level} times.")
+            self.gacha.inventory.level_skill("crafting", crafting_to_level)
+
+        print("Leveling weight...")
+        while self.gacha.inventory.has_level_up():
+            self.gacha.inventory.level_skill("weight", 1)
 
     def _validate_stats(self, time_taken: int, ytraps: int) -> str:
         """Checks on the amount of traps deposited given the current runtime.
@@ -303,6 +326,9 @@ class YTrapStation(Station):
                 ),
             )
 
+        if self.pellet_coverage < self.settings.min_pellet_coverage:
+            embed.set_footer("Station will be refilled text time.")
+        else:
+            embed.set_footer(text="Ling Ling on top!")
         embed.set_thumbnail(url=self.Y_TRAP_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
         return embed

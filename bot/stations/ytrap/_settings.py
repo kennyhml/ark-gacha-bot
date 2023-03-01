@@ -25,7 +25,8 @@ class YTrapStationSettings:
     def load() -> YTrapStationSettings:
         with open("settings/settings.json") as f:
             data: dict = json.load(f)["ytrap"]
-
+            
+        data["min_pellet_coverage"] /= 100
         data["enabled"] = data.pop("ytrap_enabled")
         data["crop_plot_turns"] = eval(data["crop_plot_turns"])
         return dacite.from_dict(YTrapStationSettings, data)

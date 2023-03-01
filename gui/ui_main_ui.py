@@ -654,11 +654,11 @@ class Ui_Form(object):
         self.label_87.setObjectName(u"label_87")
         self.label_87.setGeometry(QRect(10, 320, 361, 151))
         self.label_87.setWordWrap(True)
-        self.checkBox = QCheckBox(self.tab_2)
-        self.checkBox.setObjectName(u"checkBox")
-        self.checkBox.setGeometry(QRect(230, 120, 141, 17))
-        self.checkBox.setFont(font)
-        self.checkBox.setChecked(True)
+        self.auto_level_gachas = QCheckBox(self.tab_2)
+        self.auto_level_gachas.setObjectName(u"auto_level_gachas")
+        self.auto_level_gachas.setGeometry(QRect(230, 120, 151, 17))
+        self.auto_level_gachas.setFont(font)
+        self.auto_level_gachas.setChecked(False)
         self.label_41 = QLabel(self.tab_2)
         self.label_41.setObjectName(u"label_41")
         self.label_41.setGeometry(QRect(10, 50, 91, 31))
@@ -1216,7 +1216,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
 
-        self.tabWidget.setCurrentIndex(5)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(Form)
@@ -1299,7 +1299,7 @@ class Ui_Form(object):
         self.crop_plot_turns.setPlaceholderText(QCoreApplication.translate("Form", u"[-130, *[-17] * 5, 50, -17]", None))
         self.label_87.setText(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-size:10pt; color:#00aaff;\">Turn values are not related to your ingame sensitivity. To customize the turns, please follow pythons </span><a href=\"https/docs.python.org/3/tutorial/datastructures.html#more-on-lists\"><span style=\" text-decoration: underline; color:#0000ff;\">list</span></a><span style=\" font-size:10pt; color:#00aaff;\"> syntax, as the entered values will only be evaluated as such.</span></p><p><span style=\" font-size:10pt; color:#00aaff;\">This simply allows quicker creation, for instance instead of writing out -17 five times, it can be written as </span><span style=\" font-family:'Consolas','Courier New','monospace'; font-size:9pt; color:#00ff00;\">[*[-17] * 5]</span><span style=\" font-family:'Consolas','Courier New','monospace'; font-size:9pt; color:#00aaff;\">. </span></p><p><span style=\" font-family:'Consolas','Courier New','monospace'; font-size:10pt; color:#ff0000;\">The amount of turns must match the amount of crop plots!</span></p></body>"
                         "</html>", None))
-        self.checkBox.setText(QCoreApplication.translate("Form", u"Find dead plots", None))
+        self.auto_level_gachas.setText(QCoreApplication.translate("Form", u"Auto level gachas", None))
         self.label_41.setText(QCoreApplication.translate("Form", u"Bed prefix:", None))
         self.ytrap_prefix.setPlaceholderText(QCoreApplication.translate("Form", u"gachaseed", None))
         self.label_42.setText(QCoreApplication.translate("Form", u"Beds:", None))

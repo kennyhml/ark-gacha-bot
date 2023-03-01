@@ -11,16 +11,9 @@ from bot.recovery import Unstucking
 
 from .exceptions import ConfigError
 from .settings import TowerSettings
-from .stations import (
-    ARBStation,
-    BerryFeedStation,
-    CrystalStation,
-    GrindingStation,
-    HealingStation,
-    MeatFeedStation,
-    Station,
-    YTrapStation,
-)
+from .stations import (ARBStation, BerryFeedStation, CrystalStation,
+                       GrindingStation, HealingStation, MeatFeedStation,
+                       Station, YTrapStation)
 from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook
 
 

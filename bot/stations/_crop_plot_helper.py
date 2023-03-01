@@ -1,6 +1,5 @@
 from typing import Optional
 from ark import Player, TekCropPlot, exceptions, items
-from torch import inverse
 
 from ..tools import threaded
 
@@ -88,7 +87,7 @@ def _adjust_for_crop_plot(
     while crop_plot_idx != expected_idx:
         crop_plot.close()
 
-        player.turn_y_by(7 if crop_plot_idx > expected_idx else -7, delay=0.3)
+        player.turn_y_by(6 if crop_plot_idx > expected_idx else -4, delay=0.3)
 
         crop_plot.open()
         crop_plot_idx = crop_plot.inventory.get_folder_index()

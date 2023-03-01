@@ -23,10 +23,11 @@
     },
     "ytrap": {
         "ytrap_enabled": true,
-        "ytrap_beds": 40,
+        "ytrap_beds": 52,
         "ytrap_prefix": "seed",
         "mode": "precise refill",
         "turn_direction": "right",
+        "auto_level_gachas": true,
         "plot_stacks": 3,
         "plots_per_stack": 8,
         "min_pellet_coverage": 20,
