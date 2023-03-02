@@ -327,7 +327,7 @@ class YTrapStation(Station):
             )
 
         if self.pellet_coverage < self.settings.min_pellet_coverage:
-            embed.set_footer("Station will be refilled text time.")
+            embed.set_footer(text="Station will be refilled text time.")
         else:
             embed.set_footer(text="Ling Ling on top!")
         embed.set_thumbnail(url=self.Y_TRAP_AVATAR)
