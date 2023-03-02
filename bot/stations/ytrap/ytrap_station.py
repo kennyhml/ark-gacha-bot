@@ -208,6 +208,13 @@ class YTrapStation(Station):
 
         # take all the pellets (to avoid losing out on traps because of cap)
         self.gacha.access()
+
+        if self.gacha.inventory.has(items.YTRAP_SEED):
+            self.gacha.close()
+            self._player.sleep(2)
+            self._player.turn_90_degrees(self.settings.turn_direction)
+            return self._load_gacha()
+
         self._check_level_gacha()
 
         ytraps = self._player.inventory.count(items.Y_TRAP) * 10
