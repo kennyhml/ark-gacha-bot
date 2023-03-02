@@ -646,7 +646,7 @@ class ARBStation(Station):
                     self.chembench.inventory.transfer_all()
                     self.chembench.turn_off()
                     self.chembench.close()
-                    self._player.sleep(1)
+                    self._player.sleep(2)
 
             # reverse the turns to return back, once again sliced
             for func, arg in reversed(self.bench_turns[0:i]):
@@ -659,14 +659,13 @@ class ARBStation(Station):
             self.exo_mek.access()
             self._player.inventory.transfer_all(items.GUNPOWDER)
             self.exo_mek.inventory.close()
-            self._player.sleep(1)
+            self._player.sleep(2)
 
-            # return to the start
             for _ in range(2):
                 self._player.turn_90_degrees("left", delay=1)
 
-        # drop all the items aside from charcoal (stone, flint, spark leftovers...)
         self._player.drop_all()
+        self._player.sleep(2)
 
     def craft_arb(self) -> None:
         """Spawns at the crafting bed, empties the chembenches to put the
@@ -745,7 +744,7 @@ class ARBStation(Station):
             color=0xFF5500,
         )
         embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds")
-        embed.add_field(name="ARB crafted:", value=f"{arb_profit}")
+        embed.add_field(name="ARB crafted:", value=f"{max(arb_profit, 10000)}")
 
         embed.set_thumbnail(url=ARB_AVATAR)
         embed.set_footer(text="Ling Ling on top!")

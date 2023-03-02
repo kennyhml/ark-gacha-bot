@@ -208,6 +208,7 @@ class CrystalStation(Station):
         self.stryder.inventory.drop_all()
 
         for item in [DUST, FLINT, STONE, FUNGAL_WOOD, BLACK_PEARL]:
+            self._player.inventory.delete_search()
             self._player.inventory.search(item)
             self._player.sleep(0.3)
 
@@ -487,10 +488,13 @@ class CrystalStation(Station):
         embed.add_field(name="Crystals opened:", value=f"~{crystals} crystals")
 
         for item, amount in profit.items():
+            if not amount:
+                continue
+
             formatted_amount = f"{amount:_}".replace("_", " ")
             embed.add_field(name=item.name, value=formatted_amount)
 
-        for i in range((len(profit) + 2) % 3):
+        for _ in range((len([item for item, amount in profit.items() if amount]) + 2) % 3):
             embed.add_field(name="\u200b", value="\u200b")
 
         embed.set_thumbnail(url=self.CRYSTAL_AVATAR)

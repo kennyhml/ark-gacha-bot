@@ -5,7 +5,7 @@ import time
 from typing import final
 
 from ark import Bed, DinoExport, Gacha, Player, TekCropPlot, TribeLog, items
-from discord import Embed # type:ignore[import]
+from discord import Embed  # type:ignore[import]
 
 from ...webhooks import InfoWebhook
 from .._crop_plot_helper import do_crop_plot_stack, set_stack_folders
@@ -247,7 +247,6 @@ class YTrapStation(Station):
         self.gacha.access()
 
         data = DinoExport.load_most_recent()
-
         crafting_to_level = round((0.100000 - data.crafting) / 0.01)
         if crafting_to_level:
             print(f"Need to level crafting {crafting_to_level} times.")
@@ -255,7 +254,8 @@ class YTrapStation(Station):
 
         print("Leveling weight...")
         while self.gacha.inventory.has_level_up():
-            self.gacha.inventory.level_skill("weight", 1)
+            self.gacha.inventory.level_skill("weight", 5)
+        self._player.sleep(3)
 
     def _validate_stats(self, time_taken: int, ytraps: int) -> str:
         """Checks on the amount of traps deposited given the current runtime.
