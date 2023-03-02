@@ -4,8 +4,16 @@ from datetime import datetime
 from typing import Any, Literal, Optional
 
 import pyautogui  # type: ignore[import]
-from ark import (Bed, ChemistryBench, Dinosaur, IndustrialForge, Player,
-                 TekDedicatedStorage, TribeLog, items)
+from ark import (
+    Bed,
+    ChemistryBench,
+    Dinosaur,
+    IndustrialForge,
+    Player,
+    TekDedicatedStorage,
+    TribeLog,
+    items,
+)
 from discord import Embed  # type: ignore[import]
 
 from bot.stations._station import Station
@@ -49,6 +57,7 @@ class ARBStation(Station):
         self._player = player
         self._tribelog = tribelog
         self._webhook = info_webhook
+        self.forges_emptied = False
 
         with open("bot/_data/station_data.json") as f:
             data: dict = json.load(f)["arb"]
@@ -254,7 +263,10 @@ class ARBStation(Station):
                 continue
 
             self.forge.open()
-            if not self.forge.inventory.has(items.CHARCOAL):
+            if (
+                not self.forge.inventory.has(items.CHARCOAL)
+                or self.forge.inventory.count(items.FUNGAL_WOOD) > 20
+            ):
                 known_empty.add(right_turns)
                 # forge does not have charcoal so go next
                 self.forge.close()
@@ -288,8 +300,10 @@ class ARBStation(Station):
         dedis. Sets the most recent wood cooking timestamp upon finishing.
         """
         start = time.time()
+        if not self.forges_emptied:
+            self.empty_forges()
+            self.forges_emptied = True
 
-        self.empty_forges()
         self.spawn_at_forges()
 
         self.take_gas_from_forge_dedi()
@@ -309,7 +323,6 @@ class ARBStation(Station):
         self._player.turn_y_by(40, delay=0.5)
         self.forges_put_gas_back()
 
-        # queue sparkpowder
         self.craft_sparkpowder()
         embed = self.create_forges_refilled_embed(round(time.time() - start))
         self._webhook.send_embed(embed)
@@ -495,9 +508,11 @@ class ARBStation(Station):
         self.fill_bottom_chembenches(
             gas=False, material=items.FLINT, amount=7700, craft=items.SPARKPOWDER
         )
-        self.access_flint("deposit")
-        self.status = Status.COOKING_WOOD
-        self._set_data("status", "Cooking wood")
+        try:
+            self.access_flint("deposit")
+        finally:
+            self.status = Status.COOKING_WOOD
+            self._set_data("status", "Cooking wood")
 
     def take_spark_out(self) -> None:
         """Scrolls down far enough to have a view on slot 51, so that we can determine
@@ -562,7 +577,6 @@ class ARBStation(Station):
 
         for func, arg in reversed(self.bench_turns):
             func(arg * -1, delay=0.7)
-
 
     def queue_gunpowder(self, transfer_mats: bool) -> None:
         """Queues gunpowder in every chembench, if transfer_mats is toggled

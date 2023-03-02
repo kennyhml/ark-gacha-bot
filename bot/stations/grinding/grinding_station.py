@@ -937,10 +937,12 @@ class GrindingStation(Station):
         self._webhook.send_embed(embed)
 
         self.clear_up_exo_mek()
-
-        self._transfer_vault()
-        self._transfer_dedi_wall()
-
+        try:
+            self._transfer_vault()
+            self._transfer_dedi_wall()
+        except Exception as e:
+            self._webhook.send_error("Transferring items", e)
+            
         self.status = Status.WAITING_FOR_ITEMS
         self.ready = False
 

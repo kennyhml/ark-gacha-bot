@@ -3,9 +3,12 @@ import itertools
 import json
 import os
 import traceback
+from datetime import datetime
 from typing import Iterable
 
-from ark import Player, Server, TribeLog, UserSettings, config, exceptions
+from ark import (Console, Player, Server, TribeLog, UserSettings, config,
+                 exceptions)
+from discord import Embed  # type:ignore[import]
 
 from bot.recovery import Unstucking
 
@@ -101,7 +104,7 @@ class GachaBot:
             task = self._find_next_task()
             print(f"Found next task: '{task.name}'")
             task.complete()
-            
+
         except exceptions.TerminatedError:
             pass
 
@@ -124,6 +127,17 @@ class GachaBot:
 
         raise LookupError("Could not find a ready station!")
 
+    def start(self) -> None:
+        try:
+            console = Console()
+            console.set_gamma(5)
+
+            self.player.set_first_person()
+            self._inform_started()
+        except exceptions.TerminatedError:
+            print("Bot terminated!")
+            pass
+
     def _unstuck(self) -> None:
         unstucking = Unstucking(
             self.server, self.player, self.settings.game_launcher, self.info_webhook
@@ -131,6 +145,26 @@ class GachaBot:
         unstucking.unstuck()
         if not unstucking.reconnected:
             return
+
+    def _inform_started(self) -> None:
+        """Sends a message to discord that the bot has been started"""
+        now = datetime.now()
+        now_time = now.strftime("%H:%M")
+
+        embed = Embed(
+            type="rich",
+            title="Ling Ling has been started!",
+            description=f"Ling Ling has been started at {now_time}!",
+            color=0xF20A0A,
+        )
+        embed.add_field(name=f"Account:", value=self.settings.account_name)
+        embed.add_field(name=f"Server:", value=self.server.name)
+        embed.set_thumbnail(
+            url="https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b9/Whip_%28Scorched_Earth%29.png/revision/latest/scale-to-width-down/228?cb=20160901213011"
+        )
+        embed.set_footer(text="Ling Ling on top!")
+
+        self.info_webhook.send_embed(embed)
 
     @staticmethod
     def validate_game_settings(settings: UserSettings) -> None:

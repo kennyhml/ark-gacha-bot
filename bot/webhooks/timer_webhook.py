@@ -102,6 +102,10 @@ class TimerWebhook:
                 )
             except ConnectionError:
                 pass
+
+            except Exception as e:
+                print(f"Unhandled error in timer thread!\n{e}")
+
             time_taken = (time.perf_counter() - start)
             if self._timer is None:
                 continue

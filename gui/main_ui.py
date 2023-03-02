@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 
 app = QApplication()
 
-from ark import UserSettings
+from ark import UserSettings, config
 from qconfig import QConfig, tools
 
 from bot.gacha_bot import GachaBot
@@ -103,7 +103,7 @@ class MainUi(QMainWindow, Ui_Form):
 
     def connect_buttons(self) -> None:
         self.reset_local_data.clicked.connect(lambda: self.reset_data())
-        self.show_ark_settings.clicked.connect(lambda: print(UserSettings.load()))
+        self.show_ark_settings.clicked.connect(lambda: self.show_settings())
         self.verify_ark_settings.clicked.connect(lambda: self.validate_settings())
 
     def open_tab(self, index: int) -> None:
@@ -127,7 +127,12 @@ class MainUi(QMainWindow, Ui_Form):
         with open("bot/_data/station_data.json", "w") as f:
             json.dump(reset, f, indent=4)
 
+    def show_settings(self) -> None:
+        config.ARK_PATH = self.ark_path.text()
+        print(UserSettings.load())
+
     def validate_settings(self) -> None:
+        config.ARK_PATH = self.ark_path.text()
         try:
             GachaBot.validate_game_settings(UserSettings.load())
         except Exception:

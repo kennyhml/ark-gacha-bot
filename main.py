@@ -16,7 +16,8 @@ def main():
         print(f"Terminating due to config mismatch.\n{e}")
         pg.press("F3")
         return
-
+    
+    bot.start()
     while State.running:
         bot.do_next_task()
 
@@ -25,7 +26,6 @@ def on_key_press(key):
     """Connets inputs from listener thread to their corresponding function"""
     if key == keyboard.Key.f1:
         if not (State.paused or State.running):
-            print("Started!")
             State.running = True
 
             bot = Thread(target=main, daemon=True, name="Main bot Thread")
@@ -33,17 +33,14 @@ def on_key_press(key):
 
     elif key == keyboard.Key.f3:
         if State.running:
-            print("Terminated!")
             State.paused = False
             State.running = False
 
     elif key == keyboard.Key.f5:
         if State.running and not State.paused:
-            print("Paused!")
             State.paused = True
 
         elif State.running and State.paused:
-            print("Resumed!")
             State.paused = False
 
 
