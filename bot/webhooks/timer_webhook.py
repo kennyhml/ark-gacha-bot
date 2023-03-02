@@ -101,10 +101,12 @@ class TimerWebhook:
                     self.ORIGINAL_MESSAGE, content=self._build_message()
                 )
             except ConnectionError:
+                time.sleep(20)
                 pass
 
             except Exception as e:
                 print(f"Unhandled error in timer thread!\n{e}")
+                time.sleep(20)
 
             time_taken = (time.perf_counter() - start)
             if self._timer is None:
