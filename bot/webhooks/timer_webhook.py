@@ -110,6 +110,7 @@ class TimerWebhook:
 
             time_taken = (time.perf_counter() - start)
             if self._timer is None:
+                time.sleep(5)
                 continue
 
             # check how long sending the message took so we can adjust
