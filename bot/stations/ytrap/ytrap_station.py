@@ -165,7 +165,7 @@ class YTrapStation(Station):
             self._player.turn_90_degrees(delay=1)
 
         self._player.look_down_hard()
-        self._player.turn_x_by(-160, delay=0.5)
+        self._player.turn_y_by(-160, delay=0.5)
 
         added_traps = self._load_gacha()
         YTrapStation.total_ytraps_collected += added_traps
