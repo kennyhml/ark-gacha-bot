@@ -2,7 +2,7 @@
     "main": {
         "account_name": "Kenny",
         "game_launcher": "Epic",
-        "ark_path": "F:/ARKSurvivalEvolved",
+        "ark_path": "",
         "tesseract_path": "C:/Program Files/Tesseract-OCR/tesseract.exe",
         "map": "Other"
     },
@@ -18,14 +18,14 @@
         "webhook_gacha": "",
         "webhook_logs": "",
         "webhook_state": "",
-        "state_message_id": "1078004041038168104",
+        "state_message_id": "",
         "timer_pop": 30
     },
     "ytrap": {
         "ytrap_enabled": true,
         "ytrap_beds": 52,
         "ytrap_prefix": "seed",
-        "mode": "precise refill",
+        "mode": "normal",
         "turn_direction": "right",
         "auto_level_gachas": true,
         "plot_stacks": 3,
@@ -39,7 +39,7 @@
         "crystal_interval": 5,
         "stryder_depositing": true,
         "drop_items": "['prim']",
-        "keep_items": "['riot', 'fab', 'pump', 'ass', 'mining', 'wood']",
+        "keep_items": "['riot', 'rifle', 'pistol', 'miner']",
         "min_ytraps_collected": 1000,
         "vault_above": false
     },

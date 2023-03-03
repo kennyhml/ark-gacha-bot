@@ -4,16 +4,8 @@ from datetime import datetime
 from typing import Any, Literal, Optional
 
 import pyautogui  # type: ignore[import]
-from ark import (
-    Bed,
-    ChemistryBench,
-    Dinosaur,
-    IndustrialForge,
-    Player,
-    TekDedicatedStorage,
-    TribeLog,
-    items,
-)
+from ark import (Bed, ChemistryBench, Dinosaur, IndustrialForge, Player,
+                 TekDedicatedStorage, TribeLog, items)
 from discord import Embed  # type: ignore[import]
 
 from bot.stations._station import Station
@@ -21,6 +13,7 @@ from bot.stations._station import Station
 from ...tools import format_seconds
 from ...webhooks import InfoWebhook
 from .._station import Station
+from ._settings import ArbStationSettings
 from ._status import Status
 
 FORGE_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/c5/Industrial_Forge.png/revision/latest/scale-to-width-down/228?cb=20151126023709"
@@ -76,6 +69,7 @@ class ARBStation(Station):
 
         self.ready = self._wood_in_dedi > 29900
         print(f"Station is ready: {self.ready}")
+        self.settings = ArbStationSettings.load()
 
         self.dedi = TekDedicatedStorage()
         self.chembench = ChemistryBench()
@@ -102,6 +96,10 @@ class ARBStation(Station):
 
     def is_ready(self) -> bool:
         """Checks if the station is ready for the next step."""
+        if not self.settings.enabled:
+            return False
+        
+        print(f"Checking whether arb station is ready, status: '{self.status}'")
         if self.status == Status.WAITING_FOR_WOOD:
             # set ready by 'add_wood' method, called from crystal station
             # when wood gets teleported

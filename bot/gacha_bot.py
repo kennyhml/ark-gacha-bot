@@ -72,12 +72,15 @@ class GachaBot:
         berry = BerryFeedStation.build_stations(*base_args)
 
         for station in [crystal, grinding, arb, meat, berry, ytrap]:
+            if not station:
+                continue
+
             if isinstance(station, (Station, itertools.cycle)):
                 stations.append(station)
 
             elif isinstance(station, list):
                 stations.extend(station)
-
+                
         return stations
 
     def create_webhooks(self) -> None:

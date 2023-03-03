@@ -10,6 +10,7 @@ import dacite
 class GrindingStationSettings:
     """Contains the settings of the crystal station"""
 
+    enabled: bool
     item_to_craft: str
     text_rgb: tuple[int, int, int]
     pearls_region: tuple[int, int, int, int]
@@ -25,6 +26,7 @@ class GrindingStationSettings:
         with open("settings/settings.json") as f:
             data: dict = json.load(f)["grinding"]
 
+        data["enabled"] = data.pop("grinding_enabled")
         for k, v in data.items():
             if k == "text_rgb" or "region" in k:
                 data[k] = eval(v)

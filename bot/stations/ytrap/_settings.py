@@ -14,6 +14,7 @@ class YTrapStationSettings:
     enabled: bool
     ytrap_beds: int
     ytrap_prefix: str
+    auto_level_gachas: bool
     mode: Literal["precise", "precise refill", "normal", "set folders"]
     plot_stacks: int
     plots_per_stack: int

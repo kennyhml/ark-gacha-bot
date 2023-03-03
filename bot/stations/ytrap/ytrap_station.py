@@ -164,6 +164,9 @@ class YTrapStation(Station):
         for _ in range(4 - len(self._stacks)):
             self._player.turn_90_degrees(delay=1)
 
+        self._player.look_down_hard()
+        self._player.turn_x_by(-160, delay=0.5)
+
         added_traps = self._load_gacha()
         YTrapStation.total_ytraps_collected += added_traps
         self.total_completions += 1
@@ -214,11 +217,11 @@ class YTrapStation(Station):
             self._player.sleep(2)
             self._player.turn_90_degrees(self.settings.turn_direction)
             return self._load_gacha()
-
-        self._check_level_gacha()
+        
+        if self.settings.auto_level_gachas:
+            self._check_level_gacha()
 
         ytraps = self._player.inventory.count(items.Y_TRAP) * 10
-
         if ytraps:
             self.gacha.inventory.transfer_all(items.PELLET)
             self._player.inventory.transfer_all(items.Y_TRAP)

@@ -124,8 +124,11 @@ class GrindingStation(Station):
         base `is_ready` method because the grinding station is responsible
         for multiple steps within the same instance.
         """
+        if not self.settings.enabled:
+            return False
+
+        print(f"Checking whether grinding station is ready, status: '{self.status}'")
         if self.status == Status.WAITING_FOR_ITEMS:
-            # ready property set by the crystal station if the vault is full
             return self.ready
 
         if self.status == Status.AWAITING_EVALUTION:
@@ -942,7 +945,7 @@ class GrindingStation(Station):
             self._transfer_dedi_wall()
         except Exception as e:
             self._webhook.send_error("Transferring items", e)
-            
+
         self.status = Status.WAITING_FOR_ITEMS
         self.ready = False
 
@@ -1065,6 +1068,7 @@ class GrindingStation(Station):
             self.dedi.inventory.open()
             self.dedi.inventory.transfer_all()
             self.dedi.inventory.close()
+            self._player.sleep(2)
 
             for _ in range(2):
                 self._player.turn_x_by(90, delay=0.5)
@@ -1084,12 +1088,14 @@ class GrindingStation(Station):
         self.dedi.inventory.open()
         self.dedi.inventory.transfer_all()
         self.dedi.inventory.close()
+        self._player.sleep(2)
 
         # take metal
         self._player.turn_y_by(50)
         self.dedi.inventory.open()
         self.dedi.inventory.transfer_all()
         self.dedi.inventory.close()
+        self._player.sleep(2)
 
         for _ in range(2):
             self._player.turn_x_by(160, delay=0.5)
