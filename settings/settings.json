@@ -30,7 +30,7 @@
         "auto_level_gachas": true,
         "plot_stacks": 3,
         "plots_per_stack": 8,
-        "min_pellet_coverage": 20,
+        "min_pellet_coverage": 50,
         "crop_plot_turns": "[-130, *[-17] * 5, 50, -17]"
     },
     "crystal": {
