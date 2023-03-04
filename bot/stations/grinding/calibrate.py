@@ -1,9 +1,14 @@
 import json
 import time
 
-from ark import Player, TribeLog
+from ark import Player, TribeLog, config
 
 from .grinding_station import GrindingStation
+
+import json
+
+with open("settings/settings.json") as f:
+    config.ARK_PATH = json.load(f)["main"]["ark_path"]
 
 
 def main():
