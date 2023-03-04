@@ -20,7 +20,7 @@ class YTrapStationSettings:
     plots_per_stack: int
     min_pellet_coverage: float
     gacha_turn: int
-    plot_delay: int
+    plot_delay: float
     turn_direction: Literal["left", "right"]
     crop_plot_turns: list[int]
 
