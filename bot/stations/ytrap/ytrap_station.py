@@ -4,7 +4,7 @@ import itertools  # type:ignore[import]
 import time
 from typing import final
 
-from ark import Bed, DinoExport, Gacha, Player, TekCropPlot, TribeLog, items
+from ark import Bed, DinoExport, Gacha, Player, TekCropPlot, TribeLog, items, exceptions
 from discord import Embed  # type:ignore[import]
 
 from ...webhooks import InfoWebhook
@@ -210,7 +210,12 @@ class YTrapStation(Station):
         """
 
         # take all the pellets (to avoid losing out on traps because of cap)
-        self.gacha.access()
+        try:
+            self.gacha.access()
+        except exceptions.InventoryNotAccessibleError:
+            print("Could not access gacha, trying stood up...")
+            self._player.stand_up()
+            self.gacha.access()
 
         if self.gacha.inventory.has(items.YTRAP_SEED):
             self.gacha.close()

@@ -9,7 +9,7 @@ app = QApplication()
 from ark import UserSettings, config
 from qconfig import QConfig, tools
 
-from bot.gacha_bot import GachaBot
+from bot import GachaBot, __version__
 
 from .ui_main_ui import Ui_Form
 
@@ -86,7 +86,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.arb_settings.connect_callback(self.save)
 
     def display(self):
-        self.main_win.setWindowTitle(f"Ling-Ling v2.0.1")
+        self.main_win.setWindowTitle(f"Ling-Ling v{__version__}")
         self.main_win.setWindowIcon(QtGui.QIcon(("assets/gui/dust.png")))
         self.main_win.show()
         sys.exit(app.exec())

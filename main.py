@@ -1,23 +1,21 @@
 from gui.main_ui import MainUi
+
 from threading import Thread
 
 import pyautogui as pg  # type: ignore[import]
 from ark import State
 from pynput import keyboard  # type: ignore[import]
-
-from bot.config_validator import ConfigValidator
-from bot.exceptions import ConfigError
-from bot.gacha_bot import GachaBot
+from bot import ConfigValidator, GachaBot, exceptions
 
 
 def main():
     try:
         bot = GachaBot()
-    except ConfigError as e:
+    except exceptions.ConfigError as e:
         print(f"Terminating due to config mismatch.\n{e}")
         pg.press("F3")
         return
-    
+
     bot.start()
     while State.running:
         bot.do_next_task()
