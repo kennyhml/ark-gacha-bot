@@ -5,6 +5,7 @@ import pyautogui as pg  # type: ignore[import]
 from ark import State
 from pynput import keyboard  # type: ignore[import]
 
+from bot.config_validator import ConfigValidator
 from bot.exceptions import ConfigError
 from bot.gacha_bot import GachaBot
 
@@ -47,6 +48,9 @@ def on_key_press(key):
 if __name__ == "__main__":
     State.running = False
     State.paused = False
+
+    validator = ConfigValidator()
+    validator()
 
     listener = keyboard.Listener(on_press=on_key_press)
     listener.start()
