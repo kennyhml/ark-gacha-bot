@@ -1606,7 +1606,7 @@ background-color: rgb(30, 30, 30)
        <rect>
         <x>150</x>
         <y>160</y>
-        <width>61</width>
+        <width>51</width>
         <height>22</height>
        </rect>
       </property>
@@ -1684,9 +1684,9 @@ background-color: rgb(30, 30, 30);</string>
      <widget class="QLabel" name="label_18">
       <property name="geometry">
        <rect>
-        <x>220</x>
+        <x>210</x>
         <y>155</y>
-        <width>81</width>
+        <width>91</width>
         <height>31</height>
        </rect>
       </property>
@@ -1699,14 +1699,14 @@ background-color: rgb(30, 30, 30);</string>
        <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
-       <string>Per Stack:</string>
+       <string>Per stack:</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_19">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>200</y>
+        <y>220</y>
         <width>201</width>
         <height>31</height>
        </rect>
@@ -1727,7 +1727,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>220</x>
-        <y>205</y>
+        <y>225</y>
         <width>51</width>
         <height>22</height>
        </rect>
@@ -1758,7 +1758,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>280</x>
-        <y>200</y>
+        <y>220</y>
         <width>91</width>
         <height>31</height>
        </rect>
@@ -1779,7 +1779,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>240</y>
+        <y>250</y>
         <width>331</width>
         <height>31</height>
        </rect>
@@ -1800,7 +1800,7 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>280</y>
+        <y>290</y>
         <width>361</width>
         <height>20</height>
        </rect>
@@ -1930,7 +1930,7 @@ border: None
      <widget class="QSpinBox" name="ytrap_beds">
       <property name="geometry">
        <rect>
-        <x>290</x>
+        <x>300</x>
         <y>54</y>
         <width>61</width>
         <height>22</height>
@@ -1979,6 +1979,132 @@ background-color: rgb(30, 30, 30);</string>
        <bool>false</bool>
       </property>
      </widget>
+     <widget class="QLabel" name="label_39">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>151</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Open/close delay:</string>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="ytrap_plot_delay">
+      <property name="geometry">
+       <rect>
+        <x>151</x>
+        <y>194</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <double>0.200000000000000</double>
+      </property>
+      <property name="maximum">
+       <double>2.000000000000000</double>
+      </property>
+      <property name="singleStep">
+       <double>0.100000000000000</double>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_62">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>190</y>
+        <width>101</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Gacha turn:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="ytrap_gacha_turn">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>195</y>
+        <width>61</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>-300</number>
+      </property>
+      <property name="maximum">
+       <number>-140</number>
+      </property>
+      <property name="singleStep">
+       <number>5</number>
+      </property>
+      <property name="value">
+       <number>-140</number>
+      </property>
+     </widget>
+     <zorder>label_14</zorder>
+     <zorder>label_15</zorder>
+     <zorder>mode</zorder>
+     <zorder>turn_direction</zorder>
+     <zorder>label_16</zorder>
+     <zorder>plot_stacks</zorder>
+     <zorder>label_17</zorder>
+     <zorder>plots_per_stack</zorder>
+     <zorder>label_18</zorder>
+     <zorder>label_19</zorder>
+     <zorder>min_pellet_coverage</zorder>
+     <zorder>label_20</zorder>
+     <zorder>label_22</zorder>
+     <zorder>label_87</zorder>
+     <zorder>auto_level_gachas</zorder>
+     <zorder>label_41</zorder>
+     <zorder>ytrap_prefix</zorder>
+     <zorder>label_42</zorder>
+     <zorder>ytrap_beds</zorder>
+     <zorder>ytrap_enabled</zorder>
+     <zorder>crop_plot_turns</zorder>
+     <zorder>label_39</zorder>
+     <zorder>ytrap_plot_delay</zorder>
+     <zorder>label_62</zorder>
+     <zorder>ytrap_gacha_turn</zorder>
     </widget>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">
@@ -3738,7 +3864,7 @@ border: None
  </widget>
  <resources>
   <include location="resources.qrc"/>
-  <include location="../../../.designer/backup/resources.qrc"/>
+  <include location="resources.qrc"/>
  </resources>
  <connections/>
 </ui>

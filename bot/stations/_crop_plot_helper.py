@@ -12,7 +12,8 @@ def do_crop_plot_stack(
     dead: list[TekCropPlot],
     *,
     refill: bool,
-    precise: bool
+    precise: bool,
+    delay: float = 0.3
 ) -> None:
     """Empties a stack of crop plots."""
 
@@ -34,8 +35,8 @@ def do_crop_plot_stack(
             fails += 1
             if fails >= 2:
                 raise exceptions.InventoryNotAccessibleError
+        player.sleep(delay)
     player.crouch()
-
 
 def take_and_refill(
     player: Player,

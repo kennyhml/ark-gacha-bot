@@ -4,7 +4,7 @@ import itertools  # type:ignore[import]
 import time
 from typing import final
 
-from ark import Bed, DinoExport, Gacha, Player, TekCropPlot, TribeLog, items, exceptions
+from ark import Bed, DinoExport, Gacha, Player, TekCropPlot, TribeLog, exceptions, items
 from discord import Embed  # type:ignore[import]
 
 from ...webhooks import InfoWebhook
@@ -159,13 +159,14 @@ class YTrapStation(Station):
                     refill=self.refill,
                     precise=self.settings.mode == "precise"
                     or (self.settings.mode == "precise refill" and self.refill),
+                    delay=self.settings.plot_delay,
                 )
 
         for _ in range(4 - len(self._stacks)):
             self._player.turn_90_degrees(delay=1)
 
         self._player.look_down_hard()
-        self._player.turn_y_by(-160, delay=0.5)
+        self._player.turn_y_by(self.settings.gacha_turn, delay=0.5)
 
         added_traps = self._load_gacha()
         YTrapStation.total_ytraps_collected += added_traps
@@ -222,7 +223,7 @@ class YTrapStation(Station):
             self._player.sleep(2)
             self._player.turn_90_degrees(self.settings.turn_direction)
             return self._load_gacha()
-        
+
         if self.settings.auto_level_gachas:
             self._check_level_gacha()
 

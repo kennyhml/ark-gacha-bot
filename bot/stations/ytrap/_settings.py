@@ -19,6 +19,8 @@ class YTrapStationSettings:
     plot_stacks: int
     plots_per_stack: int
     min_pellet_coverage: float
+    gacha_turn: int
+    plot_delay: int
     turn_direction: Literal["left", "right"]
     crop_plot_turns: list[int]
 
@@ -29,5 +31,7 @@ class YTrapStationSettings:
             
         data["min_pellet_coverage"] /= 100
         data["enabled"] = data.pop("ytrap_enabled")
+        data["plot_delay"] = data.pop("ytrap_plot_delay")
+        data["gacha_turn"] = data.pop("ytrap_gacha_turn")
         data["crop_plot_turns"] = eval(data["crop_plot_turns"])
         return dacite.from_dict(YTrapStationSettings, data)

@@ -26,13 +26,15 @@ class ConfigValidator:
             "ytrap_enabled": True,
             "ytrap_beds": 52,
             "ytrap_prefix": "seed",
-            "mode": "precise refill",
+            "mode": "normal",
             "turn_direction": "right",
             "auto_level_gachas": True,
             "plot_stacks": 3,
             "plots_per_stack": 8,
             "min_pellet_coverage": 50,
-            "crop_plot_turns": "[-130, *[-17] * 5, 50, -17]",
+            "crop_plot_turns": "[-130, -17, -17, -17, -17, -17, 50, -17]",
+            "ytrap_plot_delay": 0.3,
+            "ytrap_gacha_turn": -160
         },
         "crystal": {
             "crystal_beds": 1,
