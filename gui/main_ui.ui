@@ -659,7 +659,7 @@ Line#line{
 color: rgb(0, 255, 255)</string>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>3</number>
     </property>
     <property name="tabBarAutoHide">
      <bool>false</bool>
@@ -2531,8 +2531,8 @@ border: None
       <property name="geometry">
        <rect>
         <x>120</x>
-        <y>66</y>
-        <width>171</width>
+        <y>80</y>
+        <width>231</width>
         <height>21</height>
        </rect>
       </property>
@@ -2629,7 +2629,7 @@ background-color: rgb(30, 30, 30)
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>60</y>
+        <y>74</y>
         <width>101</width>
         <height>31</height>
        </rect>
@@ -2649,9 +2649,9 @@ background-color: rgb(30, 30, 30)
      <widget class="QLineEdit" name="text_rgb">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>130</x>
         <y>116</y>
-        <width>161</width>
+        <width>211</width>
         <height>21</height>
        </rect>
       </property>
@@ -2717,9 +2717,9 @@ border: None
      <widget class="QLineEdit" name="pearls_region">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>130</x>
         <y>150</y>
-        <width>171</width>
+        <width>211</width>
         <height>21</height>
        </rect>
       </property>
@@ -2764,9 +2764,9 @@ border: None
      <widget class="QLineEdit" name="paste_region">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>130</x>
         <y>180</y>
-        <width>171</width>
+        <width>211</width>
         <height>21</height>
        </rect>
       </property>
@@ -2793,9 +2793,9 @@ border: None
      <widget class="QLineEdit" name="electronics_region">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>130</x>
         <y>210</y>
-        <width>171</width>
+        <width>210</width>
         <height>21</height>
        </rect>
       </property>
@@ -2843,9 +2843,9 @@ border: None
      <widget class="QLineEdit" name="ingots_region">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>130</x>
         <y>240</y>
-        <width>171</width>
+        <width>210</width>
         <height>21</height>
        </rect>
       </property>
@@ -2893,9 +2893,9 @@ border: None
      <widget class="QLineEdit" name="crystal_region">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>130</x>
         <y>270</y>
-        <width>171</width>
+        <width>210</width>
         <height>21</height>
        </rect>
       </property>
@@ -2943,9 +2943,9 @@ border: None
      <widget class="QLineEdit" name="hide_region">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>130</x>
         <y>300</y>
-        <width>171</width>
+        <width>210</width>
         <height>21</height>
        </rect>
       </property>
@@ -3009,8 +3009,8 @@ border: None
      <widget class="QCheckBox" name="grinding_enabled">
       <property name="geometry">
        <rect>
-        <x>300</x>
-        <y>68</y>
+        <x>10</x>
+        <y>50</y>
         <width>141</width>
         <height>17</height>
        </rect>

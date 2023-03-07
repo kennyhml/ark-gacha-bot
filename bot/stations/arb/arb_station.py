@@ -759,7 +759,7 @@ class ARBStation(Station):
         embed.add_field(name="ARB crafted:", value=f"{max(arb_profit, 10000)}")
 
         embed.set_thumbnail(url=ARB_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
         return embed
 
     def create_arb_queued_embed(self, time_taken: int) -> Embed:
@@ -772,7 +772,7 @@ class ARBStation(Station):
         )
         embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds")
         embed.set_thumbnail(url=EXOMEK_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
         return embed
 
     def create_gunpowder_crafted_embed(self, time_taken: int, crafted: int) -> Embed:
@@ -787,7 +787,7 @@ class ARBStation(Station):
         embed.add_field(name="Gunpowder queued:", value=crafted)
 
         embed.set_thumbnail(url=CHEMBENCH_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
         return embed
 
     def create_forges_refilled_embed(self, time_taken: int) -> Embed:
@@ -803,5 +803,5 @@ class ARBStation(Station):
         embed.add_field(name="Forges emptied:", value=True)
 
         embed.set_thumbnail(url=FORGE_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
         return embed

@@ -3,19 +3,9 @@ from itertools import cycle
 from typing import Iterable
 
 import cv2  # type: ignore[import]
-from ark import (
-    ArkWindow,
-    Bed,
-    Dinosaur,
-    IndustrialGrinder,
-    Player,
-    Structure,
-    TekDedicatedStorage,
-    TribeLog,
-    exceptions,
-    items,
-    tools,
-)
+from ark import (ArkWindow, Bed, Dinosaur, IndustrialGrinder, Player,
+                 Structure, TekDedicatedStorage, TribeLog, exceptions, items,
+                 tools)
 from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
@@ -231,7 +221,8 @@ class GrindingStation(Station):
 
         embed = self.create_available_materials_embed(available_mats)
         self._webhook.send_embed(embed, img=img)
-
+        self._player.sleep(1)
+        
         self.compute_crafting_plan(available_mats)
         self.status = Status.CRAFTING_SUBCOMPONENTS
 
@@ -798,7 +789,7 @@ class GrindingStation(Station):
         # add each resource to the embed, heavies and electronics on the
         # righthand side
         for resource, quantity in formatted.items():
-            embed.add_field(name=f"{resource.name}:ㅤ", value=quantity)
+            embed.add_field(name=f"{resource.name}:ㅤ", value=quantity.strip())
 
         embed.add_field(
             name="Expected Result:",
@@ -811,7 +802,7 @@ class GrindingStation(Station):
 
         # set exo mek image
         embed.set_thumbnail(url=self.EXOMEK_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
 
         # send the embed
         return embed
@@ -847,7 +838,7 @@ class GrindingStation(Station):
         )
 
         for resource, quantity in formatted.items():
-            embed.add_field(name=f"{resource.name}:ㅤ", value=quantity)
+            embed.add_field(name=f"{resource.name}:ㅤ", value=quantity.strip())
 
         embed.set_thumbnail(url=self.EXOMEK_AVATAR)
 
@@ -865,7 +856,7 @@ class GrindingStation(Station):
         embed.add_field(name=f"Time taken:ㅤ", value=f"{time_taken} seconds")
         embed.add_field(name="Heavies crafted:", value=profit)
         embed.set_thumbnail(url=self.EXOMEK_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
         return embed
 
     def crafting_finished(self) -> bool:
@@ -1049,7 +1040,7 @@ class GrindingStation(Station):
         embed.add_field(name="Item to craft:", value=self.item_to_craft)
 
         embed.set_thumbnail(url=self.GRINDER_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
 
         return embed
 
@@ -1091,7 +1082,7 @@ class GrindingStation(Station):
         else:
             embed.set_thumbnail(url=self.EXOMEK_AVATAR)
 
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
         return embed
 
     def _transfer_dedi_wall(self) -> None:

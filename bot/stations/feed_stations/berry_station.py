@@ -102,7 +102,7 @@ class BerryFeedStation(FeedStation):
         embed.add_field(name="Time taken:ㅤ", value=f"{time_taken} seconds")
 
         embed.set_thumbnail(url=self.MEJOBERRY_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
         return embed
 
     def complete(self) -> None:

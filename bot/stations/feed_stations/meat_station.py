@@ -195,7 +195,7 @@ class MeatFeedStation(FeedStation):
         embed.add_field(name="Pellets refilled", value=refilled)
 
         embed.set_thumbnail(url=self.RAW_MEAT_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
         return embed
 
     def complete(self) -> None:

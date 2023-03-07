@@ -100,6 +100,6 @@ class HealingStation(Station):
         embed.add_field(name="Last healed:", value=interval)
 
         embed.set_thumbnail(url=self.POD_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
 
         return embed

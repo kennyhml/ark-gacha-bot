@@ -882,7 +882,7 @@ class Ui_Form(object):
         self.item_to_craft.addItem("")
         self.item_to_craft.addItem("")
         self.item_to_craft.setObjectName(u"item_to_craft")
-        self.item_to_craft.setGeometry(QRect(120, 66, 171, 21))
+        self.item_to_craft.setGeometry(QRect(120, 80, 231, 21))
         self.item_to_craft.setFont(font4)
         self.item_to_craft.setFocusPolicy(Qt.NoFocus)
         self.item_to_craft.setContextMenuPolicy(Qt.DefaultContextMenu)
@@ -900,12 +900,12 @@ class Ui_Form(object):
         self.item_to_craft.setFrame(False)
         self.label_30 = QLabel(self.tab_4)
         self.label_30.setObjectName(u"label_30")
-        self.label_30.setGeometry(QRect(10, 60, 101, 31))
+        self.label_30.setGeometry(QRect(10, 74, 101, 31))
         self.label_30.setFont(font)
         self.label_30.setStyleSheet(u"color: white")
         self.text_rgb = QLineEdit(self.tab_4)
         self.text_rgb.setObjectName(u"text_rgb")
-        self.text_rgb.setGeometry(QRect(120, 116, 161, 21))
+        self.text_rgb.setGeometry(QRect(130, 116, 211, 21))
         self.text_rgb.setFont(font)
         self.text_rgb.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -925,7 +925,7 @@ class Ui_Form(object):
         self.label_32.setStyleSheet(u"color: rgb(255, 255, 255)")
         self.pearls_region = QLineEdit(self.tab_4)
         self.pearls_region.setObjectName(u"pearls_region")
-        self.pearls_region.setGeometry(QRect(120, 150, 171, 21))
+        self.pearls_region.setGeometry(QRect(130, 150, 211, 21))
         self.pearls_region.setFont(font)
         self.pearls_region.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -940,7 +940,7 @@ class Ui_Form(object):
         self.label_33.setStyleSheet(u"color: rgb(255, 255, 255)")
         self.paste_region = QLineEdit(self.tab_4)
         self.paste_region.setObjectName(u"paste_region")
-        self.paste_region.setGeometry(QRect(120, 180, 171, 21))
+        self.paste_region.setGeometry(QRect(130, 180, 211, 21))
         self.paste_region.setFont(font)
         self.paste_region.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -950,7 +950,7 @@ class Ui_Form(object):
 "")
         self.electronics_region = QLineEdit(self.tab_4)
         self.electronics_region.setObjectName(u"electronics_region")
-        self.electronics_region.setGeometry(QRect(120, 210, 171, 21))
+        self.electronics_region.setGeometry(QRect(130, 210, 210, 21))
         self.electronics_region.setFont(font)
         self.electronics_region.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -965,7 +965,7 @@ class Ui_Form(object):
         self.label_34.setStyleSheet(u"color: rgb(255, 255, 255)")
         self.ingots_region = QLineEdit(self.tab_4)
         self.ingots_region.setObjectName(u"ingots_region")
-        self.ingots_region.setGeometry(QRect(120, 240, 171, 21))
+        self.ingots_region.setGeometry(QRect(130, 240, 210, 21))
         self.ingots_region.setFont(font)
         self.ingots_region.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -980,7 +980,7 @@ class Ui_Form(object):
         self.label_35.setStyleSheet(u"color: rgb(255, 255, 255)")
         self.crystal_region = QLineEdit(self.tab_4)
         self.crystal_region.setObjectName(u"crystal_region")
-        self.crystal_region.setGeometry(QRect(120, 270, 171, 21))
+        self.crystal_region.setGeometry(QRect(130, 270, 210, 21))
         self.crystal_region.setFont(font)
         self.crystal_region.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -995,7 +995,7 @@ class Ui_Form(object):
         self.label_36.setStyleSheet(u"color: rgb(255, 255, 255)")
         self.hide_region = QLineEdit(self.tab_4)
         self.hide_region.setObjectName(u"hide_region")
-        self.hide_region.setGeometry(QRect(120, 300, 171, 21))
+        self.hide_region.setGeometry(QRect(130, 300, 210, 21))
         self.hide_region.setFont(font)
         self.hide_region.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -1014,7 +1014,7 @@ class Ui_Form(object):
         self.label_89.setWordWrap(True)
         self.grinding_enabled = QCheckBox(self.tab_4)
         self.grinding_enabled.setObjectName(u"grinding_enabled")
-        self.grinding_enabled.setGeometry(QRect(300, 68, 141, 17))
+        self.grinding_enabled.setGeometry(QRect(10, 50, 141, 17))
         self.grinding_enabled.setFont(font)
         self.grinding_enabled.setChecked(False)
         self.tabWidget.addTab(self.tab_4, "")
@@ -1271,7 +1271,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
 
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(3)
 
 
         QMetaObject.connectSlotsByName(Form)

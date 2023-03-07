@@ -492,6 +492,6 @@ class CrystalStation(Station):
             embed.add_field(name="\u200b", value="\u200b")
             
         embed.set_thumbnail(url=self.CRYSTAL_AVATAR)
-        embed.set_footer(text="Ling Ling on top!")
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
 
         return embed
