@@ -124,3 +124,4 @@ class TimerWebhook:
             if self._timer <= self._timer_pop:
                 self._timer = (15 * 60) + 10
                 self.timer_popped = True
+                server_query.query(self._server)

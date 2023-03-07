@@ -295,11 +295,11 @@ class YTrapStation(Station):
             return f"Station works as expected for the first lap!"
 
         # check trap amount, below 400 is not normal
-        if ytraps < 400:
+        if ytraps < 360:
             result += f"The amount of Y-Traps deposited is too low.\n"
 
         # check time taken for station
-        if time_taken > 100:
+        if time_taken > 120:
             result += f"The time taken was unsually long!"
 
         return result if result else "Station works as expected."
@@ -343,8 +343,5 @@ class YTrapStation(Station):
             )
 
         if self.pellet_coverage < self.settings.min_pellet_coverage:
-            embed.set_footer(text="Station will be refilled text time.")
-        else:
-            embed.set_footer(text="Ling Ling on top!")
-        embed.set_thumbnail(url=self.Y_TRAP_AVATAR)
+            embed.description = "Station will be refilled next lap."
         return embed

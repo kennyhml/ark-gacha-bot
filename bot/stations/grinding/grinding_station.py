@@ -3,9 +3,19 @@ from itertools import cycle
 from typing import Iterable
 
 import cv2  # type: ignore[import]
-from ark import (ArkWindow, Bed, Dinosaur, IndustrialGrinder, Player,
-                 Structure, TekDedicatedStorage, TribeLog, exceptions, items,
-                 tools)
+from ark import (
+    ArkWindow,
+    Bed,
+    Dinosaur,
+    IndustrialGrinder,
+    Player,
+    Structure,
+    TekDedicatedStorage,
+    TribeLog,
+    exceptions,
+    items,
+    tools,
+)
 from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
@@ -201,6 +211,7 @@ class GrindingStation(Station):
             available_mats = DEFAULT_MATS
         available_mats[items.ORGANIC_POLYMER] = 5000
         self.current_station = Stations.ELECTRONICS
+        img = self.screen.grab_screen((0, 0, 1920, 1080))
 
         for item in self.item_to_craft.recipe:
             if item in available_mats:
@@ -216,7 +227,10 @@ class GrindingStation(Station):
                 self.exo_mek.inventory.count(item) * item.stack_size
                 - (0.5 * item.stack_size),
             )
-        self.exo_mek.inventory.close()
+        self.exo_mek.close()
+
+        embed = self.create_available_materials_embed(available_mats)
+        self._webhook.send_embed(embed, img=img)
 
         self.compute_crafting_plan(available_mats)
         self.status = Status.CRAFTING_SUBCOMPONENTS
@@ -249,7 +263,7 @@ class GrindingStation(Station):
             # empty grinder before we grind miner helmets
             # to avoid overcapping and wasting electronics
             if piece is items.MINER_HELMET:
-                self.vault.inventory.close()
+                self.vault.close()
                 self.empty_grinder()
 
             if not self.take_item(piece):
@@ -272,7 +286,7 @@ class GrindingStation(Station):
             )
             self.turn_to(Stations.GEAR_VAULT)
 
-        self.vault.inventory.close()
+        self.vault.close()
         if amount_found:
             self.drop_script_from_grinder(items.CRYSTAL)
 
@@ -292,19 +306,15 @@ class GrindingStation(Station):
             items.LONGNECK,
             items.SIMPLE_PISTOL,
         ]
-
         for weapon in weapons:
-            # continue with next item if no item was found
             if not self.take_item(weapon):
                 continue
 
-            # grind the weapons, take the relevant mats
             self.grind(weapon, [items.ORGANIC_POLYMER, items.PASTE])
             self.deposit(items.PASTE)
             self.turn_to(Stations.GEAR_VAULT)
         self._player.drop_all()
 
-        # get the metal and deposit it into the dedi
         self.drop_script_from_grinder(items.METAL_INGOT)
 
     def get_cycle(self, stations: Iterable[str]) -> cycle:
@@ -320,7 +330,6 @@ class GrindingStation(Station):
         ----------
         A `cycle` object with the iteration pointer on the current station.
         """
-        # convert to cycle
         stations = cycle(stations)
 
         # set the cycle pointer to current station
@@ -429,7 +438,7 @@ class GrindingStation(Station):
         if not self.grinder.inventory.is_open():
             self.turn_to(Stations.GRINDER)
 
-        self.grinder.inventory.open()
+        self.grinder.open()
         self._player.inventory.transfer_all(item)
         self._player.sleep(0.5)
 
@@ -439,7 +448,7 @@ class GrindingStation(Station):
 
         for item in take:
             self.grinder.inventory.transfer_all(item)
-        self.grinder.inventory.close()
+        self.grinder.close()
 
     def deposit(self, items: list[items.Item] | items.Item) -> None:
         """Turns to the dedi for each item given and deposits it.
@@ -476,7 +485,7 @@ class GrindingStation(Station):
         """
         if not self.vault.inventory.is_open():
             self.turn_to(Stations.GEAR_VAULT)
-            self.vault.inventory.open()
+            self.vault.open()
 
         # clear inventory, search for the target item
         self._player.inventory.drop_all()
@@ -489,7 +498,7 @@ class GrindingStation(Station):
 
         # take all (remember search filter is active), close vault
         self.vault.inventory.transfer_all()
-        self.vault.inventory.close()
+        self.vault.close()
         return True
 
     def put_into_exo_mek(self, items: list[items.Item] | items.Item) -> None:
@@ -507,13 +516,13 @@ class GrindingStation(Station):
 
         if not self.exo_mek.inventory.is_open():
             self.turn_to(Stations.EXO_MEK)
-            self.exo_mek.inventory.open()
+            self.exo_mek.access()
 
         # deposit the items
         for item in items:
             self._player.inventory.transfer_all(item)
             self._player.sleep(0.5)
-        self.exo_mek.inventory.close()
+        self.exo_mek.close()
 
     def empty_grinder(self, turn_off: bool = False) -> None:
         """Empties the grinder by taking hide and despawning the rest.
@@ -525,14 +534,14 @@ class GrindingStation(Station):
         """
         # get all the hide and deposit it
         self.turn_to(Stations.GRINDER)
-        self.grinder.inventory.open()
+        self.grinder.open()
         self.grinder.inventory.transfer_all(items.HIDE)
-        self.grinder.inventory.close()
+        self.grinder.close()
         self.deposit(items.HIDE)
 
         # drop all on the remaining items
         self.turn_to(Stations.GRINDER)
-        self.grinder.inventory.open()
+        self.grinder.open()
         for item in [items.FIBER, items.STONE, items.ANGLER_GEL, items.WOOD]:
             self.grinder.inventory.search(item)
             self.grinder.sleep(0.3)
@@ -545,7 +554,7 @@ class GrindingStation(Station):
         # turn off grinder if requestes and close it
         if turn_off:
             self.grinder.turn_off()
-        self.grinder.inventory.close()
+        self.grinder.close()
 
     def drop_script_from_grinder(self, item: items.Item) -> None:
         """Drop scripts the given item from the grinder and puts it
@@ -592,7 +601,7 @@ class GrindingStation(Station):
         self._player.inventory.transfer(
             item, amount + item.stack_size, self.exo_mek.inventory
         )
-        self.exo_mek.inventory.close()
+        self.exo_mek.close()
 
         # put remaining resources back into dedi
         self.turn_to(Stations.from_item(item))
@@ -807,6 +816,44 @@ class GrindingStation(Station):
         # send the embed
         return embed
 
+    def create_available_materials_embed(
+        self, available: dict[items.Item, int]
+    ) -> Embed:
+        """Sends an embed to the info webhook informing about the crafting
+        plan that has been calculated for the ongoing session. Takes its data
+        from the session class attributes."""
+        # reformat the amounts to make it look nicer
+        formatted: dict[items.Item, str] = {}
+        desired_order = [
+            items.METAL_INGOT,
+            items.PASTE,
+            items.ELECTRONICS,
+            items.SILICA_PEARL,
+            items.CRYSTAL,
+            items.HIDE,
+            items.ORGANIC_POLYMER,
+            items.ELEMENT,
+        ]
+        for resource, amount in available.items():
+            formatted[resource] = f"{amount:_}x".replace("_", " ")
+        formatted = {k: formatted[k] for k in desired_order if k in formatted}
+
+        # create embed, black sidebar
+        embed = Embed(
+            type="rich",
+            title="Determined available materials!",
+            description="Available materials:",
+            color=0x000000,
+        )
+
+        for resource, quantity in formatted.items():
+            embed.add_field(name=f"{resource.name}:ㅤ", value=quantity)
+
+        embed.set_thumbnail(url=self.EXOMEK_AVATAR)
+
+        # send the embed
+        return embed
+
     def create_embed(self, profit: int, time_taken: int) -> Embed:
         """Creates the final embed displaying the time taken and the amount
         of heavies that have been crafted."""
@@ -878,7 +925,7 @@ class GrindingStation(Station):
 
         except exceptions.NoItemsAddedError:
             print("Failed to take metal from the exo mek!")
-            self.exo_mek.inventory.close()
+            self.exo_mek.close()
             self._player.crouch()
 
         # get the non heavy mats, drop all on the rest (poly)
@@ -888,7 +935,7 @@ class GrindingStation(Station):
             self.exo_mek.inventory.transfer_all(item)
 
         self.exo_mek.inventory.drop_all([items.ORGANIC_POLYMER])
-        self.exo_mek.inventory.close()
+        self.exo_mek.close()
 
         # deposit the lightweight mats
         for item in [items.SILICA_PEARL, items.PASTE, items.ELECTRONICS]:
@@ -930,14 +977,15 @@ class GrindingStation(Station):
         self.turn_to(Stations.EXO_MEK)
 
         self.exo_mek.access()
+        img = self.screen.grab_screen(self.exo_mek.inventory._ITEM_REGION)
         self.exo_mek.inventory.transfer_all(self.item_to_craft)
         self._player.sleep(1)
 
         stacks_crafted = self._player.inventory.count(self.item_to_craft)
-        self.exo_mek.inventory.close()
+        self.exo_mek.close()
 
         embed = self._create_items_picked_up_embed(stacks_crafted)
-        self._webhook.send_embed(embed)
+        self._webhook.send_embed(embed, img=img)
 
         self.clear_up_exo_mek()
         try:
@@ -971,9 +1019,10 @@ class GrindingStation(Station):
             self.last_crafted = time.time()
             break
 
+        img = self.screen.grab_screen(self.exo_mek.inventory.CRAFTING_QUEUE)
         self._player.drop_all()
         self._webhook.send_embed(
-            self._create_components_queued_embed(item, craft_amount)
+            self._create_components_queued_embed(item, craft_amount), img=img
         )
 
         if not any(amount_left for amount_left in self.subcomponents_to_craft.values()):
@@ -1065,9 +1114,9 @@ class GrindingStation(Station):
             if i != 0:
                 self._player.turn_y_by(50, delay=0.5)
 
-            self.dedi.inventory.open()
+            self.dedi.open()
             self.dedi.inventory.transfer_all()
-            self.dedi.inventory.close()
+            self.dedi.close()
             self._player.sleep(2)
 
             for _ in range(2):
@@ -1085,16 +1134,16 @@ class GrindingStation(Station):
         self._player.turn_x_by(-160, delay=0.5)
 
         # take electronics
-        self.dedi.inventory.open()
+        self.dedi.open()
         self.dedi.inventory.transfer_all()
-        self.dedi.inventory.close()
+        self.dedi.close()
         self._player.sleep(2)
 
         # take metal
         self._player.turn_y_by(50)
-        self.dedi.inventory.open()
+        self.dedi.open()
         self.dedi.inventory.transfer_all()
-        self.dedi.inventory.close()
+        self.dedi.close()
         self._player.sleep(2)
 
         for _ in range(2):

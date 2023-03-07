@@ -71,6 +71,8 @@ class InfoWebhook:
                 file = File(fp=image_binary, filename="image.png")
             embed.set_image(url="attachment://image.png")
 
+        embed.set_footer(text="Ling Ling - Kenny#0947 - https://discord.gg/2mPhj8xhS5")
+
         if mention and self._user_id is not None:
             message = f"<{self._user_id}>"
         else:

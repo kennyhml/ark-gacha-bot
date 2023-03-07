@@ -4,16 +4,8 @@ import time
 from datetime import datetime
 from typing import Optional
 
-from ark import (
-    Bed,
-    Player,
-    Structure,
-    Stryder,
-    TekDedicatedStorage,
-    TribeLog,
-    _helpers,
-    exceptions,
-)
+from ark import (Bed, Player, Structure, Stryder, TekDedicatedStorage,
+                 TribeLog, _helpers, exceptions)
 from ark.exceptions import DediNotInRangeError
 from ark.items import *
 from discord import Embed  # type: ignore[import]
@@ -208,7 +200,6 @@ class CrystalStation(Station):
         self.stryder.inventory.drop_all()
 
         for item in [DUST, FLINT, STONE, FUNGAL_WOOD, BLACK_PEARL]:
-            self._player.inventory.delete_search()
             self._player.inventory.search(item)
             self._player.sleep(0.3)
 
@@ -218,6 +209,8 @@ class CrystalStation(Station):
             )
             if stacks:
                 self._player.inventory.transfer_all()
+            else:
+                self._player.inventory.delete_search()
 
         self.stryder.inventory.close()
         self.stryder.sort_items_to_nearby_dedis()
@@ -456,13 +449,13 @@ class CrystalStation(Station):
     def validate_dust_amount(self, amount: int) -> int:
         """Checks if the given amount of dust is valid compared to the usual average.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         amount :class:`int`:
             The amount of dust we think we got
 
-        Returns:
-        ----------
+        Returns
+        --------
         The given amount if its within a valid range, else the average amount
         """
         try:
@@ -494,9 +487,10 @@ class CrystalStation(Station):
             formatted_amount = f"{amount:_}".replace("_", " ")
             embed.add_field(name=item.name, value=formatted_amount)
 
-        for _ in range((len([item for item, amount in profit.items() if amount]) + 2) % 3):
+        missing = 3 - len(embed.fields) % 3
+        for _ in range(missing if missing != 3 else 0):
             embed.add_field(name="\u200b", value="\u200b")
-
+            
         embed.set_thumbnail(url=self.CRYSTAL_AVATAR)
         embed.set_footer(text="Ling Ling on top!")
 

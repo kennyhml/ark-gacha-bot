@@ -42,7 +42,7 @@ class ConfigValidator:
             "crystal_interval": 5,
             "stryder_depositing": True,
             "drop_items": "['prim']",
-            "keep_items": "['riot', 'rifle', 'pistol', 'miner']",
+            "keep_items": "['riot', 'rifle', 'pistol', 'miner', 'pump']",
             "min_ytraps_collected": 1000,
             "vault_above": False,
         },

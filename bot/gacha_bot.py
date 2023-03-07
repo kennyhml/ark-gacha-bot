@@ -2,17 +2,16 @@ import ctypes
 import itertools
 import json
 import os
+import time
 import traceback
-from datetime import datetime
 from typing import Iterable
 
 from ark import (Console, Player, Server, TribeLog, UserSettings, config,
                  exceptions)
 from discord import Embed  # type:ignore[import]
 
-from bot.recovery import Unstucking
-
 from .exceptions import ConfigError
+from .recovery import Unstucking
 from .settings import TowerSettings
 from .stations import (ARBStation, BerryFeedStation, CrystalStation,
                        GrindingStation, HealingStation, MeatFeedStation,
@@ -80,7 +79,7 @@ class GachaBot:
 
             elif isinstance(station, list):
                 stations.extend(station)
-                
+
         return stations
 
     def create_webhooks(self) -> None:
@@ -151,13 +150,10 @@ class GachaBot:
 
     def _inform_started(self) -> None:
         """Sends a message to discord that the bot has been started"""
-        now = datetime.now()
-        now_time = now.strftime("%H:%M")
-
         embed = Embed(
             type="rich",
             title="Ling Ling has been started!",
-            description=f"Ling Ling has been started at {now_time}!",
+            description=f"Ling Ling has been started at <t:{round(time.time())}:t>!",
             color=0xF20A0A,
         )
         embed.add_field(name=f"Account:", value=self.settings.account_name)
@@ -203,7 +199,7 @@ class GachaBot:
         ctypes.windll.user32.MessageBoxW(
             None,
             f"Incorrect configurations:\n\n{errors}\n\nPlease fix these mismatches and try again.",
-            f"ARK Setting assertion found non matching values!",
+            f"ARK config mismatches!",
             0x1000,
         )
         raise ConfigError("Invalid ark settings.")
@@ -211,7 +207,7 @@ class GachaBot:
     def _set_environment(self) -> None:
         for path in [self.settings.ark_path, self.settings.tesseract_path]:
             if not os.path.exists(path):
-                raise ConfigError(f"CONFIG ERROR! {path} does not exist.")
+                raise ConfigError(f"CONFIG ERROR! Path '{path}' does not exist.")
 
         config.ARK_PATH = self.settings.ark_path
         config.TESSERACT_PATH = self.settings.tesseract_path
