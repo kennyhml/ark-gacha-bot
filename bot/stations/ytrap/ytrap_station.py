@@ -4,7 +4,8 @@ import itertools  # type:ignore[import]
 import time
 from typing import final
 
-from ark import Bed, DinoExport, Gacha, Player, TekCropPlot, TribeLog, exceptions, items
+from ark import (Bed, DinoExport, Gacha, Player, TekCropPlot, TribeLog,
+                 exceptions, items)
 from discord import Embed  # type:ignore[import]
 
 from ...webhooks import InfoWebhook
@@ -344,4 +345,6 @@ class YTrapStation(Station):
 
         if self.pellet_coverage < self.settings.min_pellet_coverage:
             embed.description = "Station will be refilled next lap."
+        embed.set_thumbnail(url=self.Y_TRAP_AVATAR)
+        
         return embed
