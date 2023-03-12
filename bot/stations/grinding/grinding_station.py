@@ -3,18 +3,8 @@ from itertools import cycle
 from typing import Iterable
 
 import cv2  # type: ignore[import]
-from ark import (
-    ArkWindow,
-    Bed,
-    Dinosaur,
-    IndustrialGrinder,
-    Player,
-    Structure,
-    TekDedicatedStorage,
-    exceptions,
-    items,
-    tools,
-)
+from ark import (ArkWindow, Bed, Dinosaur, IndustrialGrinder, Player,
+                 Structure, TekDedicatedStorage, exceptions, items, tools)
 from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
@@ -22,7 +12,6 @@ from pytesseract import pytesseract as tes  # type: ignore[import]
 from ...tools import format_seconds, mss_to_pil
 from ...webhooks import InfoWebhook, TribeLogWebhook
 from .._station import Station
-from ._exceptions import DedisNotDetermined
 from ._settings import GrindingStationSettings
 from ._stations import Stations
 from ._status import Status
@@ -32,10 +21,10 @@ DEDI_NUMBER_MAPPING = {"l": "1", "i": "1", "I": "1", "|": "1", "O": "0"}
 
 # the default mats we assume when the dedis could not be determined
 DEFAULT_MATS: dict[items.Item, int] = {
-    items.SILICA_PEARL: 5211,
-    items.PASTE: 2600,
+    items.SILICA_PEARL: 7000,
+    items.PASTE: 5000,
     items.METAL_INGOT: 8757,
-    items.ELECTRONICS: 1100,
+    items.ELECTRONICS: 900,
     items.CRYSTAL: 10000,
     items.HIDE: 20000,
 }
@@ -726,7 +715,8 @@ class GrindingStation(Station):
 
             try:
                 final_result = int(amount)
-            except ValueError:
+            except ValueError as e:
+                print(e)
                 final_result = 0
 
             # validate that the result is within a logical range

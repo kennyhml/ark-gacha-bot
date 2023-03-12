@@ -67,7 +67,7 @@ class TribeLogWebhook:
         )
 
     def get_mention_id(self, alerts: list[Embed]) -> str:
-        if (time.time() - self._LAST_MENTION) > self.settings.mention_cooldown:
+        if (time.time() - self._LAST_MENTION) < self.settings.mention_cooldown:
             return ""
 
         if len(alerts) > 10 and self.settings.mass_event_mention:
