@@ -1,11 +1,10 @@
 import json
 import time
 
-from ark import Player, TribeLog, config
+from ark import Player, config, TribeLog
 
+from ...webhooks import TribeLogWebhook, InfoWebhook
 from .grinding_station import GrindingStation
-
-import json
 
 with open("settings/settings.json") as f:
     config.ARK_PATH = json.load(f)["main"]["ark_path"]
@@ -32,8 +31,8 @@ def main():
     player = Player(100, 100, 100, 100)
     grinding = GrindingStation(
         player,
-        TribeLog(data["discord"]["webhook_alert"], data["discord"]["webhook_logs"], ""),
-        "",
+        TribeLogWebhook(TribeLog(), data["discord"]["webhook_alert"], data["discord"]["webhook_logs"]),
+        InfoWebhook(data["discord"]["webhook_gacha"], ""),
     )
 
     if do_turns:
@@ -62,11 +61,8 @@ def main():
             "NOTE! During this calibration, an open-cv window will pop up showing the result.\n"
             "It will NOT proceed until you close the window for each dedi!"
         )
-        try:
-            grinding.determine_materials(debug=True)
-        except AttributeError:
-            # the error from passing webhook as a string, silence
-            pass
+        grinding.determine_materials(debug=True)
+
 
     if do_dedi_transfer:
         grinding._transfer_dedi_wall()
