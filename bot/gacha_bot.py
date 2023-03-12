@@ -6,17 +6,23 @@ import time
 import traceback
 from typing import Iterable
 
-from ark import (Console, Player, Server, TribeLog, UserSettings, config,
-                 exceptions)
+from ark import Console, Player, Server, TribeLog, UserSettings, config, exceptions
 from discord import Embed  # type:ignore[import]
 
 from .exceptions import ConfigError
 from .recovery import Unstucking
 from .settings import TowerSettings
-from .stations import (ARBStation, BerryFeedStation, CrystalStation,
-                       GrindingStation, HealingStation, MeatFeedStation,
-                       Station, YTrapStation)
-from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook
+from .stations import (
+    ARBStation,
+    BerryFeedStation,
+    CrystalStation,
+    GrindingStation,
+    HealingStation,
+    MeatFeedStation,
+    Station,
+    YTrapStation,
+)
+from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook, TribeLogWebhook
 
 
 class GachaBot:
@@ -87,12 +93,12 @@ class GachaBot:
         try:
             settings = DiscordSettings.load()
             self.info_webhook = InfoWebhook(settings.webhook_gacha, settings.user_id)
-
-            self.tribelogs = TribeLog(
-                settings.webhook_alert, settings.webhook_logs, settings.user_id
+            log = TribeLog()
+            self.tribelogs = TribeLogWebhook(
+                log, settings.webhook_alert, settings.webhook_logs
             )
             self.timer_webhook = TimerWebhook(
-                settings.webhook_state, self.server, self.tribelogs, settings.timer_pop
+                settings.webhook_state, self.server, log, settings.timer_pop
             )
         except Exception as e:
             raise ConfigError(f"Failed to create one or more webhooks!\n{e}")
@@ -211,3 +217,5 @@ class GachaBot:
 
         config.ARK_PATH = self.settings.ark_path
         config.TESSERACT_PATH = self.settings.tesseract_path
+
+

@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Optional
 
-from ark import Bed, Player, TribeLog
+from ark import Bed, Player
 
-from ..webhooks import InfoWebhook
+from ..webhooks import InfoWebhook, TribeLogWebhook
 
 
 class Station(ABC):
@@ -35,7 +35,7 @@ class Station(ABC):
         self,
         name: str,
         player: Player,
-        tribelog: TribeLog,
+        tribelog: TribeLogWebhook,
         webhook: InfoWebhook,
         interval: Optional[int] = None,
         last_completed: Optional[datetime] = None,

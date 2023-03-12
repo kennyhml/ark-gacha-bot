@@ -5,13 +5,13 @@ from typing import Any, Literal, Optional
 
 import pyautogui  # type: ignore[import]
 from ark import (Bed, ChemistryBench, Dinosaur, IndustrialForge, Player,
-                 TekDedicatedStorage, TribeLog, items)
+                 TekDedicatedStorage, items)
 from discord import Embed  # type: ignore[import]
 
 from bot.stations._station import Station
 
 from ...tools import format_seconds
-from ...webhooks import InfoWebhook
+from ...webhooks import InfoWebhook, TribeLogWebhook
 from .._station import Station
 from ._settings import ArbStationSettings
 from ._status import Status
@@ -43,7 +43,7 @@ class ARBStation(Station):
     def __init__(
         self,
         player: Player,
-        tribelog: TribeLog,
+        tribelog: TribeLogWebhook,
         info_webhook: InfoWebhook,
     ) -> None:
         self._name = "ARB Station"
@@ -98,7 +98,7 @@ class ARBStation(Station):
         """Checks if the station is ready for the next step."""
         if not self.settings.enabled:
             return False
-        
+
         print(f"Checking whether arb station is ready, status: '{self.status}'")
         if self.status == Status.WAITING_FOR_WOOD:
             # set ready by 'add_wood' method, called from crystal station

@@ -4,11 +4,10 @@ import itertools  # type:ignore[import]
 import time
 from typing import final
 
-from ark import (Bed, DinoExport, Gacha, Player, TekCropPlot, TribeLog,
-                 exceptions, items)
+from ark import Bed, DinoExport, Gacha, Player, TekCropPlot, exceptions, items
 from discord import Embed  # type:ignore[import]
 
-from ...webhooks import InfoWebhook
+from ...webhooks import InfoWebhook, TribeLogWebhook
 from .._crop_plot_helper import do_crop_plot_stack, set_stack_folders
 from .._station import Station
 from ._settings import YTrapStationSettings
@@ -59,7 +58,7 @@ class YTrapStation(Station):
         self,
         name: str,
         player: Player,
-        tribelog: TribeLog,
+        tribelog: TribeLogWebhook,
         info_webhook: InfoWebhook,
         settings: YTrapStationSettings,
     ) -> None:
@@ -109,7 +108,7 @@ class YTrapStation(Station):
 
     @staticmethod
     def build_stations(
-        player: Player, tribelog: TribeLog, info_webhook: InfoWebhook
+        player: Player, tribelog: TribeLogWebhook, info_webhook: InfoWebhook
     ) -> itertools.cycle | list:
         settings = YTrapStationSettings.load()
         if not settings.enabled:

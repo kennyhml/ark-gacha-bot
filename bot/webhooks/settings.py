@@ -17,7 +17,7 @@ class DiscordSettings:
     webhook_logs: str
     webhook_state: str
     state_message_id: str
-
+    
     @staticmethod
     def load() -> DiscordSettings:
         with open("settings/settings.json") as f:

@@ -1,10 +1,12 @@
 import functools
+from io import BytesIO
 from threading import Thread
 from typing import Callable
 
 import cv2 as cv  # type:ignore[import]
 import numpy as np
-from PIL import Image # type:ignore[import]
+from discord import File  # type:ignore[import]
+from PIL import Image  # type:ignore[import]
 
 
 def threaded(name: str):
@@ -26,7 +28,14 @@ def mss_to_pil(image) -> Image.Image:
     image_rgb = cv.cvtColor(img_array, cv.COLOR_BGR2RGB)
     return Image.fromarray(image_rgb)
 
+def img_to_file(image: Image.Image) -> BytesIO:
 
+    with BytesIO() as image_binary:
+        image.save(image_binary, "PNG")
+        image_binary.seek(0)
+
+        return File(fp=image_binary, filename="image.png")
+    
 def format_seconds(seconds: int) -> str:
     """Formats a number in seconds to a string nicely displaying it in
     different formats."""

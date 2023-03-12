@@ -3,15 +3,24 @@ from itertools import cycle
 from typing import Iterable
 
 import cv2  # type: ignore[import]
-from ark import (ArkWindow, Bed, Dinosaur, IndustrialGrinder, Player,
-                 Structure, TekDedicatedStorage, TribeLog, exceptions, items,
-                 tools)
+from ark import (
+    ArkWindow,
+    Bed,
+    Dinosaur,
+    IndustrialGrinder,
+    Player,
+    Structure,
+    TekDedicatedStorage,
+    exceptions,
+    items,
+    tools,
+)
 from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
 
 from ...tools import format_seconds, mss_to_pil
-from ...webhooks import InfoWebhook
+from ...webhooks import InfoWebhook, TribeLogWebhook
 from .._station import Station
 from ._exceptions import DedisNotDetermined
 from ._settings import GrindingStationSettings
@@ -73,7 +82,7 @@ class GrindingStation(Station):
     def __init__(
         self,
         player: Player,
-        tribelog: TribeLog,
+        tribelog: TribeLogWebhook,
         info_webhook: InfoWebhook,
     ) -> None:
         self._name = "grinding"
@@ -190,16 +199,16 @@ class GrindingStation(Station):
     def determine_materials(self, debug: bool = False) -> None:
         assert self.item_to_craft is not None and self.item_to_craft.recipe is not None
 
-        try:
-            available_mats = self.get_dedi_materials(debug)
-        except (DedisNotDetermined, ValueError) as e:
-            print(
-                f"CRITICAL! Failed to determine valid amounts!\n{e}\n"
-                "This could be caused by faulty item depositing settings, "
-                "please make sure to be within a valid range"
-            )
-            available_mats = DEFAULT_MATS
+        result = self.get_dedi_materials(debug)
+
+        available_mats = result["determined"]
+        undetermined = result["undetermined"]
+
+        for item in undetermined:
+            available_mats[item] = DEFAULT_MATS[item]
+
         available_mats[items.ORGANIC_POLYMER] = 5000
+
         self.current_station = Stations.ELECTRONICS
         img = self.screen.grab_screen((0, 0, 1920, 1080))
 
@@ -219,10 +228,10 @@ class GrindingStation(Station):
             )
         self.exo_mek.close()
 
-        embed = self.create_available_materials_embed(available_mats)
+        embed = self.create_available_materials_embed(available_mats, undetermined)
         self._webhook.send_embed(embed, img=img)
-        self._player.sleep(1)
-        
+        self._player.sleep(3)
+
         self.compute_crafting_plan(available_mats)
         self.status = Status.CRAFTING_SUBCOMPONENTS
 
@@ -653,7 +662,7 @@ class GrindingStation(Station):
         Whether the amount is within a regular range.
         """
         expected = {
-            items.SILICA_PEARL: (3000, 60000),
+            items.SILICA_PEARL: (3000, 130000),
             items.PASTE: (7000, 180000),
             items.ELECTRONICS: (800, 10000),
             items.METAL_INGOT: (5000, 60000),
@@ -693,7 +702,11 @@ class GrindingStation(Station):
         }
 
         img = self.get_dedi_screenshot(True)
-        amounts = {}
+        result: dict[str, dict[items.Item, int]] = {
+            "determined": {},
+            "undetermined": {},
+        }
+
         for item, region in dedi_to_region.items():
             roi = img.crop(
                 (region[0], region[1], region[0] + region[2], region[1] + region[3])
@@ -707,28 +720,22 @@ class GrindingStation(Station):
             # replace common tesseract fuckups
             for char, new_char in DEDI_NUMBER_MAPPING.items():
                 amount = amount.replace(char, new_char)
-
             if debug:
                 cv2.imshow(f"{item.name} - {amount}", denoised_roi)
                 cv2.waitKey(0)
-            final_result = int(amount)
+
+            try:
+                final_result = int(amount)
+            except ValueError:
+                final_result = 0
 
             # validate that the result is within a logical range
             if not self.amount_valid(item, final_result):
-                if item == items.PASTE:
-                    print(
-                        "An error occurred for cementing paste, but will be silenced."
-                    )
-                    final_result = 10000
-                else:
-                    raise ValueError(
-                        f"Invalid amount of resources for {item.name}: {final_result}"
-                    )
-            print(f"Determined {item.name}: {final_result}")
-            amounts[item] = int(final_result)
+                result["undetermined"][item] = final_result
+            else:
+                result["determined"][item] = final_result
 
-        # add material and its amount to our dict
-        return amounts
+        return result
 
     def compute_crafting_plan(self, owned_items: dict[items.Item, int]):
         """Receives the list of materials we own and figures out the most
@@ -808,7 +815,7 @@ class GrindingStation(Station):
         return embed
 
     def create_available_materials_embed(
-        self, available: dict[items.Item, int]
+        self, available: dict[items.Item, int], undetermined: dict[items.Item, int]
     ) -> Embed:
         """Sends an embed to the info webhook informing about the crafting
         plan that has been calculated for the ongoing session. Takes its data
@@ -836,6 +843,9 @@ class GrindingStation(Station):
             description="Available materials:",
             color=0x000000,
         )
+
+        if undetermined:
+            embed.description = f"OCR'd invalid amounts for {undetermined}"
 
         for resource, quantity in formatted.items():
             embed.add_field(name=f"{resource.name}:ㅤ", value=quantity.strip())
