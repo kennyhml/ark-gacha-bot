@@ -659,7 +659,7 @@ Line#line{
 color: rgb(0, 255, 255)</string>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>6</number>
     </property>
     <property name="tabBarAutoHide">
      <bool>false</bool>
@@ -3534,9 +3534,9 @@ background-color: rgb(30, 30, 30);</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>55</y>
-        <width>121</width>
-        <height>31</height>
+        <y>223</y>
+        <width>181</width>
+        <height>21</height>
        </rect>
       </property>
       <property name="font">
@@ -3548,15 +3548,15 @@ background-color: rgb(30, 30, 30);</string>
        <string notr="true">color: white</string>
       </property>
       <property name="text">
-       <string>User ID:</string>
+       <string>Tower maintenance ID:</string>
       </property>
      </widget>
      <widget class="QLineEdit" name="user_id">
       <property name="geometry">
        <rect>
-        <x>140</x>
-        <y>60</y>
-        <width>231</width>
+        <x>200</x>
+        <y>225</y>
+        <width>181</width>
         <height>20</height>
        </rect>
       </property>
@@ -3584,7 +3584,7 @@ border: None
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>95</y>
+        <y>50</y>
         <width>131</width>
         <height>31</height>
        </rect>
@@ -3605,7 +3605,7 @@ border: None
       <property name="geometry">
        <rect>
         <x>140</x>
-        <y>100</y>
+        <y>55</y>
         <width>231</width>
         <height>20</height>
        </rect>
@@ -3634,7 +3634,7 @@ border: None
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>135</y>
+        <y>90</y>
         <width>131</width>
         <height>31</height>
        </rect>
@@ -3655,7 +3655,7 @@ border: None
       <property name="geometry">
        <rect>
         <x>140</x>
-        <y>140</y>
+        <y>95</y>
         <width>231</width>
         <height>20</height>
        </rect>
@@ -3684,7 +3684,7 @@ border: None
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>175</y>
+        <y>130</y>
         <width>131</width>
         <height>31</height>
        </rect>
@@ -3705,7 +3705,7 @@ border: None
       <property name="geometry">
        <rect>
         <x>140</x>
-        <y>180</y>
+        <y>135</y>
         <width>231</width>
         <height>20</height>
        </rect>
@@ -3734,7 +3734,7 @@ border: None
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>220</y>
+        <y>175</y>
         <width>131</width>
         <height>31</height>
        </rect>
@@ -3755,7 +3755,7 @@ border: None
       <property name="geometry">
        <rect>
         <x>140</x>
-        <y>225</y>
+        <y>180</y>
         <width>231</width>
         <height>20</height>
        </rect>
@@ -3783,9 +3783,9 @@ border: None
      <widget class="QLabel" name="label_61">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>285</y>
-        <width>161</width>
+        <x>210</x>
+        <y>385</y>
+        <width>111</width>
         <height>31</height>
        </rect>
       </property>
@@ -3795,17 +3795,100 @@ border: None
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: white</string>
+       <string notr="true">color: rgb(255, 255, 255)</string>
       </property>
       <property name="text">
-       <string>Timer message ID:</string>
+       <string>@ cooldown:</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="state_message_id">
+     <widget class="QSpinBox" name="mention_cooldown">
       <property name="geometry">
        <rect>
-        <x>160</x>
-        <y>290</y>
+        <x>330</x>
+        <y>390</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>600</number>
+      </property>
+      <property name="singleStep">
+       <number>5</number>
+      </property>
+      <property name="value">
+       <number>20</number>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="mention_at_events">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>390</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>15</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>3</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_63">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>385</y>
+        <width>141</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Min. events to @:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="tek_sensor_id">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>262</y>
         <width>181</width>
         <height>20</height>
        </rect>
@@ -3827,23 +3910,178 @@ border: None
        <string/>
       </property>
       <property name="placeholderText">
-       <string>1078004041038168104</string>
+       <string>1084267863960977418</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_90">
+     <widget class="QLabel" name="label_64">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>330</y>
-        <width>361</width>
-        <height>131</height>
+        <y>260</y>
+        <width>181</width>
+        <height>21</height>
        </rect>
       </property>
-      <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;Webhooks are not optional, please make sure you enter them. You can use the same channel for every hook, but I &lt;/span&gt;&lt;span style=&quot; font-size:10pt; font-weight:600; color:#00aaff;&quot;&gt;strongly&lt;/span&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt; recommend against doing so, assign them to designated channels.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#00aaff;&quot;&gt;If a discord user ID is entered, it will be @ed when the bot runs into an error.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
       </property>
-      <property name="wordWrap">
-       <bool>true</bool>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Alert tek sensor role ID:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="destroyed_id">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>302</y>
+        <width>181</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>1084267935054434374</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_65">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>300</y>
+        <width>181</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Alert destroyed role ID:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="killed_id">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>342</y>
+        <width>181</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>1084268012271566868</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_66">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>340</y>
+        <width>181</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Alert dino killed role ID:</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="mass_event_mention">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>430</y>
+        <width>361</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>@everyone on mass events (10+ events)</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="state_message_id">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>490</y>
+        <width>181</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>1084268012271566868</string>
       </property>
      </widget>
     </widget>

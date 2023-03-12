@@ -8,6 +8,7 @@ app = QApplication()
 
 from ark import UserSettings, config
 from qconfig import QConfig, tools
+from qconfig.dynamic_loader import QConfigDynamicLoader
 
 from bot import GachaBot, __version__
 
@@ -28,7 +29,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.connect_buttons()
 
         with open("settings/settings.json") as f:
-            self.data = json.load(f)
+            self.data: dict = json.load(f)
 
         widgets = tools.get_all_widgets(self.main_win)
 
@@ -38,8 +39,12 @@ class MainUi(QMainWindow, Ui_Form):
         self.player_settings = QConfig(
             "player", widgets, self.data["player"], save_on_change=True
         )
+
         self.disc_settings = QConfig(
-            "discord", widgets, self.data["discord"], save_on_change=True
+            "discord",
+            widgets,
+            self.data["discord"],
+            save_on_change=True,
         )
         self.ytrap_settings = QConfig(
             "ytrap", widgets, self.data["ytrap"], save_on_change=True
@@ -63,6 +68,10 @@ class MainUi(QMainWindow, Ui_Form):
             "arb", widgets, self.data["arb"], save_on_change=True
         )
 
+        self.alert_settings = QConfig(
+            "alerts", widgets, self.data["alerts"], save_on_change=True
+        )
+
         self.main_settings.set_data()
         self.player_settings.set_data()
         self.disc_settings.set_data()
@@ -73,6 +82,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.healing_settings.set_data()
         self.grinding_settings.set_data()
         self.arb_settings.set_data()
+        self.alert_settings.set_data()
 
         self.main_settings.connect_callback(self.save)
         self.player_settings.connect_callback(self.save)
@@ -84,6 +94,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.healing_settings.connect_callback(self.save)
         self.grinding_settings.connect_callback(self.save)
         self.arb_settings.connect_callback(self.save)
+        self.alert_settings.connect_callback(self.save)
 
     def display(self):
         self.main_win.setWindowTitle(f"Ling-Ling v{__version__}")

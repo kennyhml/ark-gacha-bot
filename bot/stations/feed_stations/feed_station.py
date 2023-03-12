@@ -2,11 +2,11 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from ark import Bed, Gacha, Player, Structure, TekCropPlot, TribeLog, items
+from ark import Bed, Gacha, Player, Structure, TekCropPlot, items
 
 from bot.stations._station import Station
 
-from ...webhooks import InfoWebhook
+from ...webhooks import InfoWebhook, TribeLogWebhook
 from .._station import Station
 
 
@@ -29,7 +29,7 @@ class FeedStation(Station):
         self,
         name: str,
         player: Player,
-        tribelog: TribeLog,
+        tribelog: TribeLogWebhook,
         webhook: InfoWebhook,
         interval: int,
     ) -> None:

@@ -1,10 +1,10 @@
 import time
 
-from ark import Player, TekSleepingPod, TribeLog, _helpers, exceptions
+from ark import Player, TekSleepingPod, _helpers, exceptions
 from discord import Embed  # type: ignore[import]
 
 from ...tools import format_seconds
-from ...webhooks import InfoWebhook
+from ...webhooks import InfoWebhook, TribeLogWebhook
 from .._station import Station
 from ._settings import HealingStationSettings
 
@@ -38,7 +38,7 @@ class HealingStation(Station):
     def __init__(
         self,
         player: Player,
-        tribelog: TribeLog,
+        tribelog: TribeLogWebhook,
         info_webhook: InfoWebhook,
     ) -> None:
 

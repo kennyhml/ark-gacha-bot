@@ -5,13 +5,13 @@ from datetime import datetime
 from typing import Optional
 
 from ark import (Bed, Player, Structure, Stryder, TekDedicatedStorage,
-                 TribeLog, _helpers, exceptions)
+                 _helpers, exceptions)
 from ark.exceptions import DediNotInRangeError
 from ark.items import *
 from discord import Embed  # type: ignore[import]
 
 from ...exceptions import NoCrystalAddedError
-from ...webhooks import InfoWebhook, TimerWebhook
+from ...webhooks import InfoWebhook, TimerWebhook, TribeLogWebhook
 from .._station import Station
 from ..arb import ARBStation
 from ..grinding import GrindingStation
@@ -74,7 +74,7 @@ class CrystalStation(Station):
         self,
         name: str,
         player: Player,
-        tribelog: TribeLog,
+        tribelog: TribeLogWebhook,
         info_webhook: InfoWebhook,
         settings: CrystalStationSettings,
         timer_webhook: TimerWebhook,
@@ -114,7 +114,7 @@ class CrystalStation(Station):
     @staticmethod
     def build_stations(
         player: Player,
-        tribelog: TribeLog,
+        tribelog: TribeLogWebhook,
         info_webhook: InfoWebhook,
         timer_webhook: TimerWebhook,
         grinding_station: GrindingStation,
@@ -490,7 +490,7 @@ class CrystalStation(Station):
         missing = 3 - len(embed.fields) % 3
         for _ in range(missing if missing != 3 else 0):
             embed.add_field(name="\u200b", value="\u200b")
-            
+
         embed.set_thumbnail(url=self.CRYSTAL_AVATAR)
         embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
 

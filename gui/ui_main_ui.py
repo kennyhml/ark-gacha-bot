@@ -1162,12 +1162,12 @@ class Ui_Form(object):
         self.label_54.setAlignment(Qt.AlignCenter)
         self.label_55 = QLabel(self.tab)
         self.label_55.setObjectName(u"label_55")
-        self.label_55.setGeometry(QRect(10, 55, 121, 31))
+        self.label_55.setGeometry(QRect(10, 223, 181, 21))
         self.label_55.setFont(font)
         self.label_55.setStyleSheet(u"color: white")
         self.user_id = QLineEdit(self.tab)
         self.user_id.setObjectName(u"user_id")
-        self.user_id.setGeometry(QRect(140, 60, 231, 20))
+        self.user_id.setGeometry(QRect(200, 225, 181, 20))
         self.user_id.setFont(font)
         self.user_id.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -1177,12 +1177,12 @@ class Ui_Form(object):
 "")
         self.label_56 = QLabel(self.tab)
         self.label_56.setObjectName(u"label_56")
-        self.label_56.setGeometry(QRect(10, 95, 131, 31))
+        self.label_56.setGeometry(QRect(10, 50, 131, 31))
         self.label_56.setFont(font)
         self.label_56.setStyleSheet(u"color: white")
         self.webhook_gacha = QLineEdit(self.tab)
         self.webhook_gacha.setObjectName(u"webhook_gacha")
-        self.webhook_gacha.setGeometry(QRect(140, 100, 231, 20))
+        self.webhook_gacha.setGeometry(QRect(140, 55, 231, 20))
         self.webhook_gacha.setFont(font)
         self.webhook_gacha.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -1192,12 +1192,12 @@ class Ui_Form(object):
 "")
         self.label_58 = QLabel(self.tab)
         self.label_58.setObjectName(u"label_58")
-        self.label_58.setGeometry(QRect(10, 135, 131, 31))
+        self.label_58.setGeometry(QRect(10, 90, 131, 31))
         self.label_58.setFont(font)
         self.label_58.setStyleSheet(u"color: white")
         self.webhook_alert = QLineEdit(self.tab)
         self.webhook_alert.setObjectName(u"webhook_alert")
-        self.webhook_alert.setGeometry(QRect(140, 140, 231, 20))
+        self.webhook_alert.setGeometry(QRect(140, 95, 231, 20))
         self.webhook_alert.setFont(font)
         self.webhook_alert.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -1207,12 +1207,12 @@ class Ui_Form(object):
 "")
         self.label_59 = QLabel(self.tab)
         self.label_59.setObjectName(u"label_59")
-        self.label_59.setGeometry(QRect(10, 175, 131, 31))
+        self.label_59.setGeometry(QRect(10, 130, 131, 31))
         self.label_59.setFont(font)
         self.label_59.setStyleSheet(u"color: white")
         self.webhook_logs = QLineEdit(self.tab)
         self.webhook_logs.setObjectName(u"webhook_logs")
-        self.webhook_logs.setGeometry(QRect(140, 180, 231, 20))
+        self.webhook_logs.setGeometry(QRect(140, 135, 231, 20))
         self.webhook_logs.setFont(font)
         self.webhook_logs.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -1222,12 +1222,12 @@ class Ui_Form(object):
 "")
         self.label_60 = QLabel(self.tab)
         self.label_60.setObjectName(u"label_60")
-        self.label_60.setGeometry(QRect(10, 220, 131, 31))
+        self.label_60.setGeometry(QRect(10, 175, 131, 31))
         self.label_60.setFont(font)
         self.label_60.setStyleSheet(u"color: white")
         self.webhook_state = QLineEdit(self.tab)
         self.webhook_state.setObjectName(u"webhook_state")
-        self.webhook_state.setGeometry(QRect(140, 225, 231, 20))
+        self.webhook_state.setGeometry(QRect(140, 180, 231, 20))
         self.webhook_state.setFont(font)
         self.webhook_state.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -1237,12 +1237,87 @@ class Ui_Form(object):
 "")
         self.label_61 = QLabel(self.tab)
         self.label_61.setObjectName(u"label_61")
-        self.label_61.setGeometry(QRect(10, 285, 161, 31))
+        self.label_61.setGeometry(QRect(210, 385, 111, 31))
         self.label_61.setFont(font)
-        self.label_61.setStyleSheet(u"color: white")
+        self.label_61.setStyleSheet(u"color: rgb(255, 255, 255)")
+        self.mention_cooldown = QSpinBox(self.tab)
+        self.mention_cooldown.setObjectName(u"mention_cooldown")
+        self.mention_cooldown.setGeometry(QRect(330, 390, 51, 22))
+        self.mention_cooldown.setFont(font)
+        self.mention_cooldown.setStyleSheet(u"border: None;\n"
+"background-color: rgb(30, 30, 30);")
+        self.mention_cooldown.setMinimum(0)
+        self.mention_cooldown.setMaximum(600)
+        self.mention_cooldown.setSingleStep(5)
+        self.mention_cooldown.setValue(20)
+        self.mention_at_events = QSpinBox(self.tab)
+        self.mention_at_events.setObjectName(u"mention_at_events")
+        self.mention_at_events.setGeometry(QRect(150, 390, 51, 22))
+        self.mention_at_events.setFont(font)
+        self.mention_at_events.setStyleSheet(u"border: None;\n"
+"background-color: rgb(30, 30, 30);")
+        self.mention_at_events.setMinimum(1)
+        self.mention_at_events.setMaximum(15)
+        self.mention_at_events.setSingleStep(1)
+        self.mention_at_events.setValue(3)
+        self.label_63 = QLabel(self.tab)
+        self.label_63.setObjectName(u"label_63")
+        self.label_63.setGeometry(QRect(10, 385, 141, 31))
+        self.label_63.setFont(font)
+        self.label_63.setStyleSheet(u"color: rgb(255, 255, 255)")
+        self.tek_sensor_id = QLineEdit(self.tab)
+        self.tek_sensor_id.setObjectName(u"tek_sensor_id")
+        self.tek_sensor_id.setGeometry(QRect(200, 262, 181, 20))
+        self.tek_sensor_id.setFont(font)
+        self.tek_sensor_id.setStyleSheet(u"\n"
+"color: rgb(0, 255, 255);\n"
+"background-color: rgb(30, 30, 30);\n"
+"border: None\n"
+"\n"
+"")
+        self.label_64 = QLabel(self.tab)
+        self.label_64.setObjectName(u"label_64")
+        self.label_64.setGeometry(QRect(10, 260, 181, 21))
+        self.label_64.setFont(font)
+        self.label_64.setStyleSheet(u"color: white")
+        self.destroyed_id = QLineEdit(self.tab)
+        self.destroyed_id.setObjectName(u"destroyed_id")
+        self.destroyed_id.setGeometry(QRect(200, 302, 181, 20))
+        self.destroyed_id.setFont(font)
+        self.destroyed_id.setStyleSheet(u"\n"
+"color: rgb(0, 255, 255);\n"
+"background-color: rgb(30, 30, 30);\n"
+"border: None\n"
+"\n"
+"")
+        self.label_65 = QLabel(self.tab)
+        self.label_65.setObjectName(u"label_65")
+        self.label_65.setGeometry(QRect(10, 300, 181, 21))
+        self.label_65.setFont(font)
+        self.label_65.setStyleSheet(u"color: white")
+        self.killed_id = QLineEdit(self.tab)
+        self.killed_id.setObjectName(u"killed_id")
+        self.killed_id.setGeometry(QRect(200, 342, 181, 20))
+        self.killed_id.setFont(font)
+        self.killed_id.setStyleSheet(u"\n"
+"color: rgb(0, 255, 255);\n"
+"background-color: rgb(30, 30, 30);\n"
+"border: None\n"
+"\n"
+"")
+        self.label_66 = QLabel(self.tab)
+        self.label_66.setObjectName(u"label_66")
+        self.label_66.setGeometry(QRect(10, 340, 181, 21))
+        self.label_66.setFont(font)
+        self.label_66.setStyleSheet(u"color: white")
+        self.mass_event_mention = QCheckBox(self.tab)
+        self.mass_event_mention.setObjectName(u"mass_event_mention")
+        self.mass_event_mention.setGeometry(QRect(10, 430, 361, 17))
+        self.mass_event_mention.setFont(font)
+        self.mass_event_mention.setChecked(False)
         self.state_message_id = QLineEdit(self.tab)
         self.state_message_id.setObjectName(u"state_message_id")
-        self.state_message_id.setGeometry(QRect(160, 290, 181, 20))
+        self.state_message_id.setGeometry(QRect(160, 490, 181, 20))
         self.state_message_id.setFont(font)
         self.state_message_id.setStyleSheet(u"\n"
 "color: rgb(0, 255, 255);\n"
@@ -1250,10 +1325,6 @@ class Ui_Form(object):
 "border: None\n"
 "\n"
 "")
-        self.label_90 = QLabel(self.tab)
-        self.label_90.setObjectName(u"label_90")
-        self.label_90.setGeometry(QRect(10, 330, 361, 131))
-        self.label_90.setWordWrap(True)
         self.tabWidget.addTab(self.tab, "")
         Form.setCentralWidget(self.MainUi)
         self.LeftBackground.raise_()
@@ -1271,7 +1342,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
 
-        self.tabWidget.setCurrentIndex(3)
+        self.tabWidget.setCurrentIndex(6)
 
 
         QMetaObject.connectSlotsByName(Form)
@@ -1436,7 +1507,7 @@ class Ui_Form(object):
         self.berry_enabled.setText(QCoreApplication.translate("Form", u"Enabled", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_6), QCoreApplication.translate("Form", u"FEED", None))
         self.label_54.setText(QCoreApplication.translate("Form", u"Discord Configuration", None))
-        self.label_55.setText(QCoreApplication.translate("Form", u"User ID:", None))
+        self.label_55.setText(QCoreApplication.translate("Form", u"Tower maintenance ID:", None))
         self.user_id.setText("")
         self.user_id.setPlaceholderText(QCoreApplication.translate("Form", u"529805265252646914", None))
         self.label_56.setText(QCoreApplication.translate("Form", u"Info webhook:", None))
@@ -1451,10 +1522,20 @@ class Ui_Form(object):
         self.label_60.setText(QCoreApplication.translate("Form", u"Timer webhook:", None))
         self.webhook_state.setText("")
         self.webhook_state.setPlaceholderText(QCoreApplication.translate("Form", u"https/discord.com/api/webhooks", None))
-        self.label_61.setText(QCoreApplication.translate("Form", u"Timer message ID:", None))
+        self.label_61.setText(QCoreApplication.translate("Form", u"@ cooldown:", None))
+        self.label_63.setText(QCoreApplication.translate("Form", u"Min. events to @:", None))
+        self.tek_sensor_id.setText("")
+        self.tek_sensor_id.setPlaceholderText(QCoreApplication.translate("Form", u"1084267863960977418", None))
+        self.label_64.setText(QCoreApplication.translate("Form", u"Alert tek sensor role ID:", None))
+        self.destroyed_id.setText("")
+        self.destroyed_id.setPlaceholderText(QCoreApplication.translate("Form", u"1084267935054434374", None))
+        self.label_65.setText(QCoreApplication.translate("Form", u"Alert destroyed role ID:", None))
+        self.killed_id.setText("")
+        self.killed_id.setPlaceholderText(QCoreApplication.translate("Form", u"1084268012271566868", None))
+        self.label_66.setText(QCoreApplication.translate("Form", u"Alert dino killed role ID:", None))
+        self.mass_event_mention.setText(QCoreApplication.translate("Form", u"@everyone on mass events (10+ events)", None))
         self.state_message_id.setText("")
-        self.state_message_id.setPlaceholderText(QCoreApplication.translate("Form", u"1078004041038168104", None))
-        self.label_90.setText(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-size:10pt; color:#00aaff;\">Webhooks are not optional, please make sure you enter them. You can use the same channel for every hook, but I </span><span style=\" font-size:10pt; font-weight:600; color:#00aaff;\">strongly</span><span style=\" font-size:10pt; color:#00aaff;\"> recommend against doing so, assign them to designated channels.</span></p><p><span style=\" font-size:10pt; color:#00aaff;\">If a discord user ID is entered, it will be @ed when the bot runs into an error.</span></p></body></html>", None))
+        self.state_message_id.setPlaceholderText(QCoreApplication.translate("Form", u"1084268012271566868", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("Form", u"DISCORD", None))
     # retranslateUi
 

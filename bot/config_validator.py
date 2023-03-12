@@ -22,6 +22,14 @@ class ConfigValidator:
             "state_message_id": "",
             "timer_pop": 30,
         },
+        "alerts": {
+            "mention_cooldown": 60,
+            "destroyed_id": "",
+            "killed_id": "",
+            "tek_sensor_id": "",
+            "mass_event_mention": True,
+            "mention_at_events": 3
+        },
         "ytrap": {
             "ytrap_enabled": True,
             "ytrap_beds": 52,
@@ -34,7 +42,7 @@ class ConfigValidator:
             "min_pellet_coverage": 50,
             "crop_plot_turns": "[-130, -17, -17, -17, -17, -17, 50, -17]",
             "ytrap_plot_delay": 0.3,
-            "ytrap_gacha_turn": -160
+            "ytrap_gacha_turn": -160,
         },
         "crystal": {
             "crystal_beds": 1,
@@ -81,7 +89,7 @@ class ConfigValidator:
             print("Settings do not exist. Adding defaults...")
             self._create_settings()
             return
-        
+
         print("Validating settings...")
         self._load()
         self._validate_data_presence()
@@ -92,7 +100,7 @@ class ConfigValidator:
     def _validate_data_presence(self, expected=None, data=None) -> None:
         data = data or self.data
         expected = expected or self.EXPECTED_CONFIG
-        
+
         for k, v in expected.items():
             if k not in data:
                 print(f"Adding '{k}', default value {v}...")
@@ -129,7 +137,3 @@ class ConfigValidator:
     def _dump(self) -> None:
         with open(self.settings_dir, "w") as f:
             json.dump(self.data, f, indent=4)
-
-
-
-

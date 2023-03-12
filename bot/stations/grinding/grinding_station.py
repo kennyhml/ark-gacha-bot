@@ -4,14 +4,14 @@ from typing import Iterable
 
 import cv2  # type: ignore[import]
 from ark import (ArkWindow, Bed, Dinosaur, IndustrialGrinder, Player,
-                 Structure, TekDedicatedStorage, TribeLog, exceptions, items,
+                 Structure, TekDedicatedStorage, exceptions, items,
                  tools)
 from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
 
 from ...tools import format_seconds, mss_to_pil
-from ...webhooks import InfoWebhook
+from ...webhooks import InfoWebhook, TribeLogWebhook
 from .._station import Station
 from ._exceptions import DedisNotDetermined
 from ._settings import GrindingStationSettings
@@ -73,7 +73,7 @@ class GrindingStation(Station):
     def __init__(
         self,
         player: Player,
-        tribelog: TribeLog,
+        tribelog: TribeLogWebhook,
         info_webhook: InfoWebhook,
     ) -> None:
         self._name = "grinding"

@@ -4,10 +4,10 @@ import json
 import time
 from datetime import datetime
 
-from ark import Bed, Dinosaur, Player, TribeLog, exceptions, items
+from ark import Bed, Dinosaur, Player, exceptions, items
 from discord import Embed  # type: ignore[import]
 
-from ...webhooks import InfoWebhook
+from ...webhooks import InfoWebhook, TribeLogWebhook
 from .._crop_plot_helper import do_crop_plot_stack
 from ._meat_settings import MeatStationSettings
 from .feed_station import FeedStation
@@ -39,7 +39,7 @@ class MeatFeedStation(FeedStation):
         self,
         name: str,
         player: Player,
-        tribelog: TribeLog,
+        tribelog: TribeLogWebhook,
         webhook: InfoWebhook,
         interval: int,
     ) -> None:
@@ -49,7 +49,7 @@ class MeatFeedStation(FeedStation):
 
     @staticmethod
     def build_stations(
-        player: Player, tribelog: TribeLog, info_webhook: InfoWebhook
+        player: Player, tribelog: TribeLogWebhook, info_webhook: InfoWebhook
     ) -> list[MeatFeedStation]:
         settings = MeatStationSettings.load()
         if not settings.enabled:
