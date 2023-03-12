@@ -20,8 +20,7 @@ if errorlevel 1 (
 
 :: get depedencies, not worth checking worst case they are already installed.
 echo Installing dependencies...
-py -m pip install ark-api
-py -m pip install qtconfig
+py -m pip install -r requirements.txt
 
 echo Finished installing dependencies.
 echo: 
