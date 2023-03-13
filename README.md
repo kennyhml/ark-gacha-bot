@@ -30,8 +30,8 @@ You might see that this is a self enclosing circle, which allows for a perfect a
 Here is what one station for this automation may look like, and what a whole "tower" of these stations looks like:
 
 <p float="left">
-  <img src="https://user-images.githubusercontent.com/106347478/224790835-17d64719-bec5-4b8b-bae6-743a74698283.png" width="420" height="260" />
-  <img src="https://user-images.githubusercontent.com/106347478/224791277-51998652-5184-4c4d-b917-bcba2f9d11a3.png" width="420" height="260" />
+  <img src="https://user-images.githubusercontent.com/106347478/224790835-17d64719-bec5-4b8b-bae6-743a74698283.png" width="400" height="260" />
+  <img src="https://user-images.githubusercontent.com/106347478/224791277-51998652-5184-4c4d-b917-bcba2f9d11a3.png" width="400" height="260" />
 </p>
 
 The way the tower works is basically just based on the ingame physics, the gacha crystals will roll down stairs / slopes.
