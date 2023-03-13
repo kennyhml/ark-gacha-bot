@@ -31,12 +31,16 @@ def do_crop_plot_stack(
             stand_up()
 
         player.turn_y_by(turn_value, delay=0.3)
-        if not take_and_refill(player, crop_plot, item, dead, refill=refill, precise=precise):
+        if not take_and_refill(
+            player, crop_plot, item, dead, refill=refill, precise=precise
+        ):
             fails += 1
             if fails >= 2:
-                raise exceptions.InventoryNotAccessibleError
+                raise exceptions.InventoryNotAccessibleError(crop_plot)
+
         player.sleep(delay)
     player.crouch()
+
 
 def take_and_refill(
     player: Player,
@@ -76,9 +80,8 @@ def take_and_refill(
     crop_plot.close()
     return True
 
-def _adjust_for_crop_plot(
-    player: Player, crop_plot: TekCropPlot
-) -> None:
+
+def _adjust_for_crop_plot(player: Player, crop_plot: TekCropPlot) -> None:
     try:
         expected_idx = int(crop_plot.name.split(":")[1])
         crop_plot_idx = crop_plot.inventory.get_folder_index()
@@ -96,7 +99,19 @@ def _adjust_for_crop_plot(
 
 def set_stack_folders(player: Player, stack: list[TekCropPlot]) -> None:
     player.turn_y_by(-60)
-    folders = ["AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG", "HHH", "III", "JJJ", "KKK"]
+    folders = [
+        "AAA",
+        "BBB",
+        "CCC",
+        "DDD",
+        "EEE",
+        "FFF",
+        "GGG",
+        "HHH",
+        "III",
+        "JJJ",
+        "KKK",
+    ]
     player.look_down_hard()
     player.turn_y_by(-110)
 
@@ -109,7 +124,7 @@ def set_stack_folders(player: Player, stack: list[TekCropPlot]) -> None:
 
         if idx <= stack_has_up_to:
             continue
-        
+
         while True:
             player.turn_y_by(-5)
             try:
@@ -127,4 +142,3 @@ def set_stack_folders(player: Player, stack: list[TekCropPlot]) -> None:
             stack_has_up_to = curr_idx
             if stack_has_up_to >= idx:
                 break
-

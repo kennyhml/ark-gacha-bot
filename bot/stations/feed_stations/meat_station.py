@@ -144,7 +144,7 @@ class MeatFeedStation(FeedStation):
             self._player.sleep(0.5)
             attempt += 1
             if attempt > 20:
-                raise exceptions.InventoryNotAccessibleError
+                raise exceptions.InventoryNotAccessibleError(self.bear.inventory)
 
         self.bear.access()
         self.bear.inventory.transfer_all(items.RAW_MEAT)

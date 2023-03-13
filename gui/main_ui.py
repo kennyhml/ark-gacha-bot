@@ -8,7 +8,6 @@ app = QApplication()
 
 from ark import UserSettings, config
 from qconfig import QConfig, tools
-from qconfig.dynamic_loader import QConfigDynamicLoader
 
 from bot import GachaBot, __version__
 
