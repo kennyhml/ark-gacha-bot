@@ -30,8 +30,8 @@ You might see that this is a self enclosing circle, which allows for a perfect a
 Here is what one station for this automation may look like, and what a whole "tower" of these stations looks like:
 
 <p float="left">
-  <img src="https://user-images.githubusercontent.com/106347478/224790835-17d64719-bec5-4b8b-bae6-743a74698283.png" width="490" height="280" />
-  <img src="https://user-images.githubusercontent.com/106347478/224791277-51998652-5184-4c4d-b917-bcba2f9d11a3.png" width="490" height="280" />
+  <img src="https://user-images.githubusercontent.com/106347478/224790835-17d64719-bec5-4b8b-bae6-743a74698283.png" width="470" height="260" />
+  <img src="https://user-images.githubusercontent.com/106347478/224791277-51998652-5184-4c4d-b917-bcba2f9d11a3.png" width="470" height="260" />
 </p>
 
 The way the tower works is basically just based on the ingame physics, the gacha crystals will roll down stairs / slopes.
@@ -40,8 +40,8 @@ We make use of this to "funnel" all the produced crystals into a collection poin
 The collection point itself is just a big pit of accumulated crystals, that will be picked up in a set interval. The crystals will then be opened and the materials will be stored. Special items gained from the crystals will be stored and later processed into other things.
 <p float="left">
 
-  <img src="https://user-images.githubusercontent.com/106347478/224799043-454308d0-7ce6-4c0f-9077-b4e1e461ae3f.png" width="490" height="280" />
-  <img src="https://user-images.githubusercontent.com/106347478/224799575-97fc068f-5161-4e95-aac7-3971c5e4e9c4.png" width="490" height="280" />
+  <img src="https://user-images.githubusercontent.com/106347478/224799043-454308d0-7ce6-4c0f-9077-b4e1e461ae3f.png" width="470" height="260" />
+  <img src="https://user-images.githubusercontent.com/106347478/224799575-97fc068f-5161-4e95-aac7-3971c5e4e9c4.png" width="470" height="260" />
 </p>
 
 So, without going into much detail, the only thing left is to fast travel from bed to bed, collect ytraps from the crop plots, refill the fertilizer with the pellets inside the gacha if neccessary, then feed the gacha with the collected ytraps. Every 5-15 minutes we travel to the collection point and pick up / open the crystals.
