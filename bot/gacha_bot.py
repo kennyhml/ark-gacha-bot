@@ -120,7 +120,7 @@ class GachaBot:
             print(f"Found next task: '{task.name}'")
             task.complete()
 
-            if (datetime.now() - self.hour_start) < timedelta(hours=1):
+            if (datetime.now() - self.hour_start) > timedelta(hours=1):
                 self.post_total_statistics()
                 self.hour_start = datetime.now()
 
