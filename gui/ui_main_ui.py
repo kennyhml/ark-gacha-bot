@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_ui.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.1
+## Created by: Qt User Interface Compiler version 6.4.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -1146,12 +1146,66 @@ class Ui_Form(object):
         self.label_53.setStyleSheet(u"color: white")
         self.meat_enabled = QCheckBox(self.tab_6)
         self.meat_enabled.setObjectName(u"meat_enabled")
-        self.meat_enabled.setGeometry(QRect(10, 60, 131, 17))
+        self.meat_enabled.setGeometry(QRect(10, 60, 201, 21))
         self.meat_enabled.setFont(font)
         self.berry_enabled = QCheckBox(self.tab_6)
         self.berry_enabled.setObjectName(u"berry_enabled")
-        self.berry_enabled.setGeometry(QRect(10, 180, 131, 17))
+        self.berry_enabled.setGeometry(QRect(10, 180, 201, 21))
         self.berry_enabled.setFont(font)
+        self.label_67 = QLabel(self.tab_6)
+        self.label_67.setObjectName(u"label_67")
+        self.label_67.setGeometry(QRect(10, 370, 121, 31))
+        self.label_67.setFont(font)
+        self.label_67.setStyleSheet(u"color: white")
+        self.small_meat_enabled = QCheckBox(self.tab_6)
+        self.small_meat_enabled.setObjectName(u"small_meat_enabled")
+        self.small_meat_enabled.setGeometry(QRect(10, 300, 201, 21))
+        self.small_meat_enabled.setFont(font)
+        self.small_meat_interval = QSpinBox(self.tab_6)
+        self.small_meat_interval.setObjectName(u"small_meat_interval")
+        self.small_meat_interval.setGeometry(QRect(140, 376, 71, 22))
+        self.small_meat_interval.setFont(font)
+        self.small_meat_interval.setStyleSheet(u"border: None;\n"
+"background-color: rgb(30, 30, 30);")
+        self.small_meat_interval.setMinimum(1)
+        self.small_meat_interval.setMaximum(300)
+        self.small_meat_interval.setSingleStep(1)
+        self.small_meat_interval.setValue(24)
+        self.label_68 = QLabel(self.tab_6)
+        self.label_68.setObjectName(u"label_68")
+        self.label_68.setGeometry(QRect(260, 326, 51, 31))
+        self.label_68.setFont(font)
+        self.label_68.setStyleSheet(u"color: rgb(255, 255, 255)")
+        self.label_69 = QLabel(self.tab_6)
+        self.label_69.setObjectName(u"label_69")
+        self.label_69.setGeometry(QRect(10, 326, 121, 31))
+        self.label_69.setFont(font)
+        self.label_69.setStyleSheet(u"color: white")
+        self.small_meat_prefix = QLineEdit(self.tab_6)
+        self.small_meat_prefix.setObjectName(u"small_meat_prefix")
+        self.small_meat_prefix.setGeometry(QRect(140, 331, 111, 20))
+        self.small_meat_prefix.setFont(font)
+        self.small_meat_prefix.setStyleSheet(u"\n"
+"color: rgb(0, 255, 255);\n"
+"background-color: rgb(30, 30, 30);\n"
+"border: None\n"
+"\n"
+"")
+        self.small_meat_beds = QSpinBox(self.tab_6)
+        self.small_meat_beds.setObjectName(u"small_meat_beds")
+        self.small_meat_beds.setGeometry(QRect(310, 330, 61, 22))
+        self.small_meat_beds.setFont(font)
+        self.small_meat_beds.setStyleSheet(u"border: None;\n"
+"background-color: rgb(30, 30, 30);")
+        self.small_meat_beds.setMinimum(0)
+        self.small_meat_beds.setMaximum(16)
+        self.small_meat_beds.setSingleStep(1)
+        self.small_meat_beds.setValue(4)
+        self.label_70 = QLabel(self.tab_6)
+        self.label_70.setObjectName(u"label_70")
+        self.label_70.setGeometry(QRect(220, 370, 121, 31))
+        self.label_70.setFont(font)
+        self.label_70.setStyleSheet(u"color: white")
         self.tabWidget.addTab(self.tab_6, "")
         self.tab = QWidget()
         self.tab.setObjectName(u"tab")
@@ -1342,7 +1396,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
 
-        self.tabWidget.setCurrentIndex(6)
+        self.tabWidget.setCurrentIndex(5)
 
 
         QMetaObject.connectSlotsByName(Form)
@@ -1503,8 +1557,15 @@ class Ui_Form(object):
         self.label_51.setText(QCoreApplication.translate("Form", u"minutes.", None))
         self.label_52.setText(QCoreApplication.translate("Form", u"minutes.", None))
         self.label_53.setText(QCoreApplication.translate("Form", u"Berry interval:", None))
-        self.meat_enabled.setText(QCoreApplication.translate("Form", u"Enabled", None))
-        self.berry_enabled.setText(QCoreApplication.translate("Form", u"Enabled", None))
+        self.meat_enabled.setText(QCoreApplication.translate("Form", u"Big meat enabled", None))
+        self.berry_enabled.setText(QCoreApplication.translate("Form", u"Big berries enabled", None))
+        self.label_67.setText(QCoreApplication.translate("Form", u"Meat interval:", None))
+        self.small_meat_enabled.setText(QCoreApplication.translate("Form", u"Small meat enabled", None))
+        self.label_68.setText(QCoreApplication.translate("Form", u"Beds:", None))
+        self.label_69.setText(QCoreApplication.translate("Form", u"Meat bed prefix:", None))
+        self.small_meat_prefix.setText("")
+        self.small_meat_prefix.setPlaceholderText(QCoreApplication.translate("Form", u"owlfeed", None))
+        self.label_70.setText(QCoreApplication.translate("Form", u"hours", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_6), QCoreApplication.translate("Form", u"FEED", None))
         self.label_54.setText(QCoreApplication.translate("Form", u"Discord Configuration", None))
         self.label_55.setText(QCoreApplication.translate("Form", u"Tower maintenance ID:", None))

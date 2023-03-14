@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from ark import Bed, Gacha, Player, Structure, TekCropPlot, items
@@ -89,9 +89,23 @@ class FeedStation(Station):
         with open("bot/_data/station_data.json") as f:
             data: dict = json.load(f)[key]
 
+        if not data["last_completed"]:
+            self.last_completed = (datetime.now() - timedelta(hours=5))
+            self.set_completed_date(key)
+            return
+
         self.last_completed = datetime.strptime(
             data["last_completed"][:-3], "%Y-%m-%d %H:%M:%S.%f"
         )
+
+    def set_completed_date(self, key: str) -> None:
+        with open("bot/_data/station_data.json") as f:
+            data: dict = json.load(f)
+
+        data[key]["last_completed"] = self.last_completed
+
+        with open("bot/_data/station_data.json", "w") as f:
+            json.dump(data, f, indent=4, default=str)
 
     def gacha_is_right(self) -> bool:
         """Checks whether the gacha is on the righthand side when the player

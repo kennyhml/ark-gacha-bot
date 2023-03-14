@@ -57,6 +57,9 @@ class MainUi(QMainWindow, Ui_Form):
         self.meat_settings = QConfig(
             "meat", widgets, self.data["meat"], save_on_change=True
         )
+        self.small_meat_settings = QConfig(
+            "small_meat", widgets, self.data["small_meat"], save_on_change=True
+        )
         self.healing_settings = QConfig(
             "healing", widgets, self.data["healing"], save_on_change=True
         )
@@ -82,6 +85,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.grinding_settings.set_data()
         self.arb_settings.set_data()
         self.alert_settings.set_data()
+        self.small_meat_settings.set_data()
 
         self.main_settings.connect_callback(self.save)
         self.player_settings.connect_callback(self.save)
@@ -94,6 +98,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.grinding_settings.connect_callback(self.save)
         self.arb_settings.connect_callback(self.save)
         self.alert_settings.connect_callback(self.save)
+        self.small_meat_settings.connect_callback(self.save)
 
     def display(self):
         self.main_win.setWindowTitle(f"Ling-Ling v{__version__}")
@@ -132,7 +137,8 @@ class MainUi(QMainWindow, Ui_Form):
                 "cooking_start": "",
             },
             "meat": {"last_completed": ""},
-            "mejoberry": {"last_completed": ""},
+            "berries": {"last_completed": ""},
+            "small_meat": {"last_completed": ""},
         }
         with open("bot/_data/station_data.json", "w") as f:
             json.dump(reset, f, indent=4)

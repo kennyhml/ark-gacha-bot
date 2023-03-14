@@ -220,13 +220,6 @@ class MeatFeedStation(FeedStation):
                     round(time.time() - start), meat_harvested, need_refill
                 )
             )
-            self.last_completed = datetime.now()
-
         finally:
-            with open("bot/_data/station_data.json") as f:
-                data: dict = json.load(f)
-
-            data["meat"]["last_completed"] = self.last_completed
-
-            with open("bot/_data/station_data.json", "w") as f:
-                json.dump(data, f, indent=4, default=str)
+            self.last_completed = datetime.now()
+            self.set_completed_date("meat")

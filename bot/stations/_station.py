@@ -62,7 +62,6 @@ class Station(ABC):
             return True
 
         time_diff = datetime.now() - self.last_completed
-        print(f"Time left for {self._name}: {(self.interval * 60) - time_diff.total_seconds()}")
         return time_diff.total_seconds() > (self.interval * 60)
 
     def spawn(self) -> None:

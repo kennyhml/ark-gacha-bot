@@ -659,7 +659,7 @@ Line#line{
 color: rgb(0, 255, 255)</string>
     </property>
     <property name="currentIndex">
-     <number>6</number>
+     <number>5</number>
     </property>
     <property name="tabBarAutoHide">
      <bool>false</bool>
@@ -3473,8 +3473,8 @@ background-color: rgb(30, 30, 30);</string>
        <rect>
         <x>10</x>
         <y>60</y>
-        <width>131</width>
-        <height>17</height>
+        <width>201</width>
+        <height>21</height>
        </rect>
       </property>
       <property name="font">
@@ -3483,7 +3483,7 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="text">
-       <string>Enabled</string>
+       <string>Big meat enabled</string>
       </property>
      </widget>
      <widget class="QCheckBox" name="berry_enabled">
@@ -3491,8 +3491,8 @@ background-color: rgb(30, 30, 30);</string>
        <rect>
         <x>10</x>
         <y>180</y>
-        <width>131</width>
-        <height>17</height>
+        <width>201</width>
+        <height>21</height>
        </rect>
       </property>
       <property name="font">
@@ -3501,7 +3501,200 @@ background-color: rgb(30, 30, 30);</string>
        </font>
       </property>
       <property name="text">
-       <string>Enabled</string>
+       <string>Big berries enabled</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_67">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>370</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Meat interval:</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="small_meat_enabled">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>300</y>
+        <width>201</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Small meat enabled</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="small_meat_interval">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>376</y>
+        <width>71</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>300</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>24</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_68">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>326</y>
+        <width>51</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255)</string>
+      </property>
+      <property name="text">
+       <string>Beds:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_69">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>326</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>Meat bed prefix:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="small_meat_prefix">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>331</y>
+        <width>111</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+color: rgb(0, 255, 255);
+background-color: rgb(30, 30, 30);
+border: None
+
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>owlfeed</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="small_meat_beds">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>330</y>
+        <width>61</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: None;
+background-color: rgb(30, 30, 30);</string>
+      </property>
+      <property name="minimum">
+       <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>16</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>4</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_70">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>370</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: white</string>
+      </property>
+      <property name="text">
+       <string>hours</string>
       </property>
      </widget>
     </widget>

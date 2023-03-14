@@ -39,7 +39,7 @@ class BerryFeedStation(FeedStation):
         interval: int,
     ) -> None:
         super().__init__(name, player, tribelog, webhook, interval)
-        self._load_last_completion("mejoberry")
+        self._load_last_completion("berries")
 
     @staticmethod
     def build_stations(
@@ -120,11 +120,4 @@ class BerryFeedStation(FeedStation):
 
         finally:
             self.last_completed = datetime.now()
-
-            with open("bot/_data/station_data.json") as f:
-                data: dict = json.load(f)
-
-            data["mejoberry"]["last_completed"] = self.last_completed
-
-            with open("bot/_data/station_data.json", "w") as f:
-                json.dump(data, f, indent=4, default=str)
+            self.set_completed_date("berries")

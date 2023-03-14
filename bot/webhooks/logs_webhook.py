@@ -41,6 +41,7 @@ class TribeLogWebhook:
     def check_tribelogs(self) -> None:
         self.tribelog.open()
         current_logs = self.tribelog.grab_current_events()
+        self.tribelog.get_online_members()
         self.tribelog.close()
 
         self.check_alerts(current_logs)

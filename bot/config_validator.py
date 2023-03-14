@@ -66,6 +66,12 @@ class ConfigValidator:
             "meat_prefix": "automeat",
             "meat_interval": 120,
         },
+        "small_meat": {
+            "small_meat_enabled": False,
+            "small_meat_beds": 4,
+            "small_meat_prefix": "automeat",
+            "small_meat_interval": 120,
+        },
         "healing": {"pod_name": "Gacha Heal"},
         "grinding": {
             "grinding_enabled": True,

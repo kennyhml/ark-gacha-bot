@@ -15,7 +15,7 @@ from .recovery import Unstucking
 from .settings import TowerSettings
 from .stations import (ARBStation, BerryFeedStation, CrystalStation,
                        GrindingStation, HealingStation, MeatFeedStation,
-                       Station, YTrapStation)
+                       Station, YTrapStation, SmallMeatStation)
 from .webhooks import (DiscordSettings, InfoWebhook, TimerWebhook,
                        TribeLogWebhook)
 
@@ -69,9 +69,10 @@ class GachaBot:
             gen2=self.settings.map == "Genesis 2",
         )
         meat = MeatFeedStation.build_stations(*base_args)
+        small_meat = SmallMeatStation.build_stations(*base_args)
         berry = BerryFeedStation.build_stations(*base_args)
 
-        for station in [crystal, grinding, arb, meat, berry, ytrap]:
+        for station in [crystal, grinding, arb, meat, berry, small_meat, ytrap]:
             if not station:
                 continue
 
