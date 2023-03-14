@@ -53,6 +53,8 @@ class YTrapStation(Station):
 
     Y_TRAP_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/c/cb/Plant_Species_Y_Trap_%28Scorched_Earth%29.png/revision/latest?cb=20160901233007"
     total_ytraps_collected = 0
+    lap = 0
+    station_times: list[int] = []
 
     def __init__(
         self,
@@ -66,8 +68,8 @@ class YTrapStation(Station):
         self._player = player
         self._tribelog = tribelog
         self._webhook = info_webhook
-
         self.settings = settings
+
         if (l2 := settings.plots_per_stack) != (l1 := len(settings.crop_plot_turns)):
             raise ValueError(
                 f"Turns do not match crop plots, got {l2} crop plots, and {l1} turns."
@@ -83,9 +85,6 @@ class YTrapStation(Station):
             ]
             for stack in range(self.settings.plot_stacks)
         ]
-
-    def is_ready(self) -> bool:
-        return True
 
     @property
     def stacks(self) -> str:
@@ -126,41 +125,26 @@ class YTrapStation(Station):
                 for i in range(settings.ytrap_beds)
             ]
         )
+    
+    def is_ready(self) -> bool:
+        return True
 
     def complete(self) -> None:
-        """Completes the Y-Trap station. Travels to the gacha station,
-        empties the crop plots and fills the gacha.
+        """Completes the Y-Trap station.
+
+        Spawns at the station, empties the crop plots and loads the gacha.
+        Whether the crop plots need to be refilled with pellets is determined
+        by the pellet coverage of the station, which will only be available
+        once the station has been completed at least once.
         """
         self.spawn()
         start = time.time()
-        dead_crop_plots: list[TekCropPlot] = []
+        refill = self.pellet_coverage < self.settings.min_pellet_coverage
 
-        self.refill = (
-            self.pellet_coverage < self.settings.min_pellet_coverage
-            and self.total_completions > 0
-        )
-
-        if self.refill:
+        if refill and self.total_completions:
             self._take_pellets_from_gacha()
 
-        self._player.crouch()
-
-        for stack in self._stacks:
-            self._player.turn_90_degrees(self.settings.turn_direction, delay=0.5)
-            if self.settings.mode == "set folders":
-                set_stack_folders(self._player, stack)
-            else:
-                do_crop_plot_stack(
-                    self._player,
-                    stack,
-                    items.Y_TRAP,
-                    self.settings.crop_plot_turns,
-                    dead_crop_plots,
-                    refill=self.refill,
-                    precise=self.settings.mode == "precise"
-                    or (self.settings.mode == "precise refill" and self.refill),
-                    delay=self.settings.plot_delay,
-                )
+        dead_crop_plots = self._do_crop_plot_stacks(refill)
 
         for _ in range(4 - len(self._stacks)):
             self._player.turn_90_degrees(delay=1)
@@ -169,13 +153,49 @@ class YTrapStation(Station):
         self._player.turn_y_by(self.settings.gacha_turn, delay=0.5)
 
         added_traps = self._load_gacha()
-        YTrapStation.total_ytraps_collected += added_traps
-        self.total_completions += 1
 
-        embed = self._create_embed(
-            round(time.time() - start), added_traps, dead_crop_plots
-        )
+        time_taken = round(time.time() - start)
+        self._add_statistics(time_taken, added_traps)
+        embed = self._create_embed(time_taken, added_traps, dead_crop_plots, refill)
         self._webhook.send_embed(embed)
+
+    def _add_statistics(self, time_taken: int, traps_collected: int) -> None:
+        """Adds the completion to the statistics to keep track of."""
+        self.station_times.append(time_taken)
+        self.statistics["YTrap Station Time"] = round(
+            sum(self.station_times) / len(self.station_times)
+        )
+        self.total_completions += 1
+        if self.total_completions > self.lap:
+            YTrapStation.lap = self.total_completions
+        YTrapStation.total_ytraps_collected += traps_collected
+
+    def _do_crop_plot_stacks(self, refill: bool) -> list[TekCropPlot]:
+        """Empties the crop plots using the crop plot helpers."""
+        dead_crop_plots: list[TekCropPlot] = []
+        self._player.crouch()
+
+        precise = self.settings.mode == "precise" or (
+            self.settings.mode == "precise refill" and refill
+        )
+
+        for stack in self._stacks:
+            self._player.turn_90_degrees(self.settings.turn_direction, delay=0.5)
+            if self.settings.mode == "set folders":
+                set_stack_folders(self._player, stack)
+                continue
+
+            do_crop_plot_stack(
+                self._player,
+                stack,
+                items.Y_TRAP,
+                self.settings.crop_plot_turns,
+                dead_crop_plots,
+                refill=refill,
+                precise=precise,
+                delay=self.settings.plot_delay,
+            )
+        return dead_crop_plots
 
     def _take_pellets_from_gacha(self) -> None:
         """Takes the pellets from the gacha (on a refill lap only).
@@ -209,21 +229,14 @@ class YTrapStation(Station):
 
         Returns the amount of ytraps that were deposited into the gacha.
         """
-
-        # take all the pellets (to avoid losing out on traps because of cap)
         try:
             self.gacha.access()
         except exceptions.InventoryNotAccessibleError:
-            print("Could not access gacha, trying stood up...")
+            print("Could not access gacha, standing up...")
             self._player.stand_up()
             self.gacha.access()
 
-        if self.gacha.inventory.has(items.YTRAP_SEED):
-            self.gacha.close()
-            self._player.sleep(2)
-            self._player.turn_90_degrees(self.settings.turn_direction)
-            return self._load_gacha()
-
+        self._ensure_looking_at_gacha()
         if self.settings.auto_level_gachas:
             self._check_level_gacha()
 
@@ -232,24 +245,36 @@ class YTrapStation(Station):
             self.gacha.inventory.transfer_all(items.PELLET)
             self._player.inventory.transfer_all(items.Y_TRAP)
 
-        if ytraps >= 400:
-            self._player.sleep(0.3)
-            ytraps_removed = self._player.inventory.get_amount_transferred(items.Y_TRAP)
-
         self._player.inventory.transfer_all()
         self._player.sleep(0.3)
 
-        if self._player.inventory.has(items.Y_TRAP):
-            self._player.inventory.drop_all([items.PELLET])
-            self._player.inventory.drop(items.Y_TRAP)
-            self._player.inventory.close()
-        else:
+        if not self._player.inventory.has(items.Y_TRAP):
             self._player.inventory.drop_all()
             self._player.inventory.close()
-
-        if ytraps < 420 or not 0 < ytraps_removed < 800:
             return ytraps
-        return ytraps_removed
+
+        self._player.inventory.drop_all([items.PELLET])
+        self._player.inventory.drop(items.Y_TRAP)
+        self._player.inventory.close()
+        return ytraps
+
+    def _ensure_looking_at_gacha(self) -> None:
+        """Makes sure we are looking at the gacha. If there is a ytrap seed inside
+        inventory its safe to say we ended up inside a crop plot instead.
+
+        If we turn more than 3 times and are still finding a ytrap seed, a
+        `InventoryNotAccessibleError` is raised.
+        """
+        times_turned = 0
+        while self.gacha.inventory.has(items.YTRAP_SEED):
+            times_turned += 1
+            if times_turned > 3:
+                raise exceptions.InventoryNotAccessibleError(self.gacha.inventory)
+
+            self.gacha.close()
+            self._player.sleep(2)
+            self._player.turn_90_degrees(self.settings.turn_direction)
+            self.gacha.access()
 
     def _check_level_gacha(self) -> None:
         if not self.gacha.inventory.has_level_up():
@@ -273,7 +298,7 @@ class YTrapStation(Station):
             self.gacha.inventory.level_skill("weight", 5)
         self._player.sleep(3)
 
-    def _validate_stats(self, time_taken: int, ytraps: int) -> str:
+    def _validate_stats(self, time_taken: int, ytraps: int, refill: bool) -> str:
         """Checks on the amount of traps deposited given the current runtime.
 
         Parameters:
@@ -289,7 +314,7 @@ class YTrapStation(Station):
         result = ""
 
         # different expectations for first lap (more tasks, dead crop plots)
-        if self.refill:
+        if refill:
             if time_taken > 170:
                 return "Time taken was unusually long, even for the first lap!"
             return f"Station works as expected for the first lap!"
@@ -305,7 +330,7 @@ class YTrapStation(Station):
         return result if result else "Station works as expected."
 
     def _create_embed(
-        self, time_taken: int, ytraps: int, dead: list[TekCropPlot]
+        self, time_taken: int, ytraps: int, dead: list[TekCropPlot], refilled: bool
     ) -> Embed:
         """Creates a `discord.Embed` from the stations statistics.
 
@@ -325,7 +350,7 @@ class YTrapStation(Station):
         embed = Embed(
             type="rich",
             title=f"Finished gacha station '{self._name}'!",
-            description=(self._validate_stats(time_taken, ytraps)),
+            description=(self._validate_stats(time_taken, ytraps, refilled)),
             color=0xFC97E8,
         )
 
@@ -345,5 +370,5 @@ class YTrapStation(Station):
         if self.pellet_coverage < self.settings.min_pellet_coverage:
             embed.description = "Station will be refilled next lap."
         embed.set_thumbnail(url=self.Y_TRAP_AVATAR)
-        
+
         return embed

@@ -4,20 +4,28 @@ import json
 import os
 import time
 import traceback
+from datetime import datetime, timedelta
 from typing import Iterable
 
-from ark import (Console, Player, Server, TribeLog, UserSettings, config,
-                 exceptions)
+from ark import Console, Player, Server, TribeLog, UserSettings, config, exceptions
 from discord import Embed  # type:ignore[import]
 
+from . import tools
 from .exceptions import ConfigError
 from .recovery import Unstucking
 from .settings import TowerSettings
-from .stations import (ARBStation, BerryFeedStation, CrystalStation,
-                       GrindingStation, HealingStation, MeatFeedStation,
-                       Station, YTrapStation, SmallMeatStation)
-from .webhooks import (DiscordSettings, InfoWebhook, TimerWebhook,
-                       TribeLogWebhook)
+from .stations import (
+    ARBStation,
+    BerryFeedStation,
+    CrystalStation,
+    GrindingStation,
+    HealingStation,
+    MeatFeedStation,
+    SmallMeatStation,
+    Station,
+    YTrapStation,
+)
+from .webhooks import DiscordSettings, InfoWebhook, TimerWebhook, TribeLogWebhook
 
 
 class GachaBot:
@@ -29,6 +37,8 @@ class GachaBot:
     This allows to simply iterate over the stations and foreach check if it
     ready. The order they are arranged in can be seen as a priority order.
     """
+
+    SESSION_START = datetime.now()
 
     def __init__(self) -> None:
         print("Bot started, initializing gacha bot...")
@@ -46,6 +56,7 @@ class GachaBot:
 
         self.stations = self.create_stations()
         print("Initialization successful.")
+        self.hour_start = datetime.now()
 
     def create_stations(self) -> list[Station | Iterable[YTrapStation]]:
         """Creates a list of the stations the gacha bot will run, the stations
@@ -109,6 +120,10 @@ class GachaBot:
             print(f"Found next task: '{task.name}'")
             task.complete()
 
+            if (datetime.now() - self.hour_start) < timedelta(hours=1):
+                self.post_total_statistics()
+                self.hour_start = datetime.now()
+
         except exceptions.TerminatedError:
             pass
 
@@ -119,6 +134,39 @@ class GachaBot:
             self.info_webhook.send_error(f"Station '{task}'", e)
             print(traceback.format_exc())
             self._unstuck()
+
+    def post_total_statistics(self) -> None:
+        runtime_diff = (datetime.now() - self.SESSION_START).total_seconds()
+        total_runtime = tools.format_seconds(round(runtime_diff))
+
+        embed = Embed(
+            type="rich",
+            title="Hourly statistics update:",
+            description=f"Here is your hourly statistics update!",
+            color=0x297AD1,
+        )
+
+        embed.add_field(name="Total runtime:", value=total_runtime)
+        embed.add_field(name="Dust per hour:", value=self._compute_dust_per_hour())
+        embed.add_field(name="Laps completed:", value=YTrapStation.lap)
+
+        for statistic, amount in Station.statistics.items():
+            embed.add_field(name=statistic, value=f"{amount:_}".replace("_", " "))
+
+        embed.set_thumbnail(
+            url="https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b1/Element_Dust.png/revision/latest/scale-to-width-down/228?cb=20181107161643"
+        )
+        embed.set_footer(text="Ling Ling Bot - Kenny#0947 - discord.gg/2mPhj8xhS5")
+        self.info_webhook.send_embed(embed)
+
+    def _compute_dust_per_hour(self) -> int:
+        return round(
+            (
+                Station.statistics.get("Element Dust", 0)
+                / (datetime.now() - self.SESSION_START).total_seconds()
+            )
+            * 3600
+        )
 
     def _find_next_task(self) -> Station:
         for station in self.stations:
@@ -213,5 +261,3 @@ class GachaBot:
 
         config.ARK_PATH = self.settings.ark_path
         config.TESSERACT_PATH = self.settings.tesseract_path
-
-

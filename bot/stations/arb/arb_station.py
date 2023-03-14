@@ -742,6 +742,7 @@ class ARBStation(Station):
 
             embed = self.create_embed(round(time.time() - start), amount)
             self._webhook.send_embed(embed)
+            self.statistics["ARB"] = self.statistics.get("ARB", 0) + amount
 
         finally:
             self.status = Status.WAITING_FOR_WOOD

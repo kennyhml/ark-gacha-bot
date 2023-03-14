@@ -3,8 +3,18 @@ from itertools import cycle
 from typing import Iterable
 
 import cv2  # type: ignore[import]
-from ark import (ArkWindow, Bed, Dinosaur, IndustrialGrinder, Player,
-                 Structure, TekDedicatedStorage, exceptions, items, tools)
+from ark import (
+    ArkWindow,
+    Bed,
+    Dinosaur,
+    IndustrialGrinder,
+    Player,
+    Structure,
+    TekDedicatedStorage,
+    exceptions,
+    items,
+    tools,
+)
 from discord import Embed  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from pytesseract import pytesseract as tes  # type: ignore[import]
@@ -939,7 +949,6 @@ class GrindingStation(Station):
         excpected amount).
         """
         assert self.item_to_craft is not None and self.item_to_craft.recipe is not None
-
         if spawn:
             self.spawn()
 
@@ -961,7 +970,6 @@ class GrindingStation(Station):
 
     def pickup_final_craft(self, spawn: bool = True) -> None:
         assert self.item_to_craft is not None
-
         if spawn:
             self.spawn()
 
@@ -973,6 +981,7 @@ class GrindingStation(Station):
         self._player.sleep(1)
 
         stacks_crafted = self._player.inventory.count(self.item_to_craft)
+        self._add_crafts_to_statistics(stacks_crafted)
         self.exo_mek.close()
 
         embed = self._create_items_picked_up_embed(stacks_crafted)
@@ -987,6 +996,14 @@ class GrindingStation(Station):
 
         self.status = Status.WAITING_FOR_ITEMS
         self.ready = False
+
+    def _add_crafts_to_statistics(self, crafts: int) -> None:
+        assert self.item_to_craft is not None
+
+        self.statistics[self.item_to_craft.name] = (
+            self.statistics.get(self.item_to_craft.name, 0)
+            + crafts * self.item_to_craft.stack_size
+        )
 
     def do_next_craft(self, spawn: bool = True) -> None:
         """Checks if we need to queue another 1000 electronics to reach the

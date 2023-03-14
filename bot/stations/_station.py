@@ -30,6 +30,7 @@ class Station(ABC):
     last_completed :class:`Optional[datetime]`:
         The timestamp of the last completion, to check whether its ready
     """
+    statistics: dict[str, int] = {}
 
     def __init__(
         self,

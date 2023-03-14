@@ -15,7 +15,6 @@ from ...webhooks import InfoWebhook, TimerWebhook, TribeLogWebhook
 from .._station import Station
 from ..arb import ARBStation
 from ..grinding import GrindingStation
-from ..ytrap import YTrapStation
 from ._settings import CrystalStationSettings
 
 
@@ -107,7 +106,6 @@ class CrystalStation(Station):
         self._first_pickup = True
 
         self._total_pickups = 0
-        self._resources_made: dict[Item, int] = {}
         self.last_completed = datetime.now()
         self.interval = self.settings.crystal_interval
 
@@ -139,12 +137,6 @@ class CrystalStation(Station):
             for i in range(settings.crystal_beds)
         ]
 
-    def is_ready(self) -> bool:
-        if YTrapStation.total_ytraps_collected < self.settings.min_ytraps_collected:
-            return False
-
-        return super().is_ready()
-
     def complete(self) -> None:
         """Completes the crystal collection station.
 
@@ -156,8 +148,6 @@ class CrystalStation(Station):
         try:
             self.spawn()
             start = time.time()
-
-            # open the crystals and deposit the items into dedis
             try:
                 self._pick_crystals()
             except NoCrystalAddedError:
@@ -183,8 +173,8 @@ class CrystalStation(Station):
             # increase the counters
             self._total_pickups += 1
             for item, amount in resources_deposited.items():
-                got = self._resources_made.get(item, 0)
-                self._resources_made[item] = got + amount
+                got = self.statistics.get(item.name, 0)
+                self.statistics[item.name] = got + amount
 
             embed = self.create_embed(resources_deposited, round(time.time() - start))
             self._webhook.send_embed(embed)
@@ -460,7 +450,7 @@ class CrystalStation(Station):
         """
         try:
             average_amount = round(
-                self._resources_made.get(DUST, 0) / self._total_pickups
+                self.statistics.get(DUST.name, 0) / self._total_pickups
             )
         except ZeroDivisionError:
             # assume 6000 dust / minute, or 100 / second
