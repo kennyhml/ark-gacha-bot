@@ -426,7 +426,7 @@ class ARBStation(Station):
 
         # close the exo mek
         self.exo_mek.inventory.open_tab("inventory")
-        self.exo_mek.inventory.close()
+        self.exo_mek.close()
         self._player.sleep(2)
 
         # turn back to original position, put metal back
@@ -483,7 +483,7 @@ class ARBStation(Station):
                 self.chembench.inventory.craft(craft, 900)
                 self.chembench.inventory.open_tab("inventory")
 
-            self.chembench.inventory.close()
+            self.chembench.close()
             self._player.sleep(2)
 
         # reverse the turns to get back to the original position
