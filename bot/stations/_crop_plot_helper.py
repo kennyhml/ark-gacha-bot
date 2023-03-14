@@ -36,7 +36,7 @@ def do_crop_plot_stack(
         ):
             fails += 1
             if fails >= 2:
-                raise exceptions.InventoryNotAccessibleError(crop_plot)
+                raise exceptions.InventoryNotAccessibleError(crop_plot.inventory)
 
         player.sleep(delay)
     player.crouch()
