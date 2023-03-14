@@ -151,6 +151,9 @@ class GachaBot:
         embed.add_field(name="Laps completed:", value=YTrapStation.lap)
 
         for statistic, amount in Station.statistics.items():
+            if not amount:
+                continue
+            
             embed.add_field(name=statistic, value=f"{amount:_}".replace("_", " "))
 
         embed.set_thumbnail(
