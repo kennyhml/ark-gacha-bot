@@ -996,6 +996,10 @@ class GrindingStation(Station):
         gacha bot function to either spawn and queue new electronics, or
         start crafting the turrets.
         """
+        if not self.subcomponents_to_craft:
+            self.do_final_craft(spawn=True)
+            return
+
         if spawn:
             self.spawn()
 
@@ -1018,10 +1022,7 @@ class GrindingStation(Station):
 
         if not any(amount_left for amount_left in self.subcomponents_to_craft.values()):
             self.status = Status.AWAITING_CRAFT
-            try:
-                if amount < 50:
-                    self.do_final_craft(spawn=False)
-            except NameError:
+            if amount < 50:
                 self.do_final_craft(spawn=False)
         elif amount < 50:
             self._player.sleep(10)
