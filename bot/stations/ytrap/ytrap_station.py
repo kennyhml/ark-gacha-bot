@@ -125,7 +125,7 @@ class YTrapStation(Station):
                 for i in range(settings.ytrap_beds)
             ]
         )
-    
+
     def is_ready(self) -> bool:
         return True
 
@@ -139,9 +139,11 @@ class YTrapStation(Station):
         """
         self.spawn()
         start = time.time()
-        refill = self.pellet_coverage < self.settings.min_pellet_coverage
+        refill = (
+            self.pellet_coverage < self.settings.min_pellet_coverage
+        ) and self.total_completions > 0
 
-        if refill and self.total_completions:
+        if refill:
             self._take_pellets_from_gacha()
 
         dead_crop_plots = self._do_crop_plot_stacks(refill)

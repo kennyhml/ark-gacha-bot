@@ -87,9 +87,12 @@ class Unstucking:
                 mention=True,
             )
 
-        while self._server.status == "Down":
+        while self._server.status == "Down" or not self._server.day:
             server_query.query(self._server)
             time.sleep(15)
+            print(self._server)
+
+        time.sleep(120)
 
         self._session_list.connect(self._server)
         self._player.spawn_in()
