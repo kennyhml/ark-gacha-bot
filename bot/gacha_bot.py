@@ -147,14 +147,25 @@ class GachaBot:
         )
 
         embed.add_field(name="Total runtime:", value=total_runtime)
-        embed.add_field(name="Dust per hour:", value=self._compute_dust_per_hour())
+        embed.add_field(
+            name="Dust per hour:",
+            value=f"{self._compute_dust_per_hour():_}".replace("_", " "),
+        )
         embed.add_field(name="Laps completed:", value=YTrapStation.lap)
 
         for statistic, amount in Station.statistics.items():
             if not amount:
                 continue
+            if "time" in statistic.lower():
+                formatted_amount = tools.format_seconds(amount)
+            else:
+                formatted_amount = f"{amount:_}".replace("_", " ")
+
+            embed.add_field(name=f"{statistic}:", value=formatted_amount)
             
-            embed.add_field(name=statistic, value=f"{amount:_}".replace("_", " "))
+            missing = 3 - len(embed.fields) % 3
+            for _ in range(missing if missing != 3 else 0):
+                embed.add_field(name="\u200b", value="\u200b")
 
         embed.set_thumbnail(
             url="https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b1/Element_Dust.png/revision/latest/scale-to-width-down/228?cb=20181107161643"

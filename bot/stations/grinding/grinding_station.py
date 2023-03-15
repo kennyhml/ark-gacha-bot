@@ -965,6 +965,7 @@ class GrindingStation(Station):
                 self._player.sleep(0.3)
             self.pickup_final_craft(spawn=False)
         else:
+            self.exo_mek.close()
             self.last_crafted = time.time()
             self.status = Status.AWAITING_PICKUP
 
@@ -976,10 +977,10 @@ class GrindingStation(Station):
         self.turn_to(Stations.EXO_MEK)
 
         self.exo_mek.access()
-        img = self.screen.grab_screen(self.exo_mek.inventory._ITEM_REGION)
         self.exo_mek.inventory.transfer_all(self.item_to_craft)
         self._player.sleep(1)
 
+        img = self.screen.grab_screen(self._player.inventory._ITEM_REGION)
         stacks_crafted = self._player.inventory.count(self.item_to_craft)
         self._add_crafts_to_statistics(stacks_crafted)
         self.exo_mek.close()

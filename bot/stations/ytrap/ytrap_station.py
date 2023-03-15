@@ -209,7 +209,7 @@ class YTrapStation(Station):
         self.gacha.inventory.search(items.PELLET)
 
         if not self.gacha.inventory.has(items.PELLET):
-            self.gacha.inventory.close()
+            self.gacha.close()
             return
 
         # take the pellets and transfer some rows back
