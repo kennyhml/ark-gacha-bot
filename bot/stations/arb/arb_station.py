@@ -8,8 +8,6 @@ from ark import (Bed, ChemistryBench, Dinosaur, IndustrialForge, Player,
                  TekDedicatedStorage, items)
 from discord import Embed  # type: ignore[import]
 
-from bot.stations._station import Station
-
 from ...tools import format_seconds
 from ...webhooks import InfoWebhook, TribeLogWebhook
 from .._station import Station
@@ -742,7 +740,7 @@ class ARBStation(Station):
 
             embed = self.create_embed(round(time.time() - start), amount)
             self._webhook.send_embed(embed)
-            self.statistics["ARB"] = self.statistics.get("ARB", 0) + amount
+            self.statistics["ARB"] = self.statistics.get("ARB", 0) + max(amount, 10000)
 
         finally:
             self.status = Status.WAITING_FOR_WOOD

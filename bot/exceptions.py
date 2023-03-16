@@ -7,3 +7,9 @@ class NoCrystalAddedError(StationError):
 
 class ConfigError(Exception):
     """Raised when a setting was incorrect."""
+
+class MissingPelletsError(Exception):
+    """Raised when pellets are missing"""
+
+class StationNotReadyError(Exception):
+    """Raised when a station was not actually ready yet."""

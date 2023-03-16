@@ -41,7 +41,6 @@ def do_crop_plot_stack(
         player.sleep(delay)
     player.crouch()
 
-
 def take_and_refill(
     player: Player,
     crop_plot: TekCropPlot,

@@ -72,6 +72,12 @@ class ConfigValidator:
             "small_meat_prefix": "automeat",
             "small_meat_interval": 120,
         },
+        "medbrew": {
+            "medbrew_enabled": False,
+            "medbrew_beds": 4,
+            "medbrew_prefix": "brew",
+            "medbrew_interval": 120,
+        },
         "healing": {"pod_name": "Gacha Heal"},
         "grinding": {
             "grinding_enabled": True,

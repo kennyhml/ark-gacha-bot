@@ -157,15 +157,15 @@ class GachaBot:
             if not amount:
                 continue
             if "time" in statistic.lower():
-                formatted_amount = tools.format_seconds(amount)
+                formatted_amount = f"{amount} seconds"
             else:
                 formatted_amount = f"{amount:_}".replace("_", " ")
 
             embed.add_field(name=f"{statistic}:", value=formatted_amount)
             
-            missing = 3 - len(embed.fields) % 3
-            for _ in range(missing if missing != 3 else 0):
-                embed.add_field(name="\u200b", value="\u200b")
+        missing = 3 - len(embed.fields) % 3
+        for _ in range(missing if missing != 3 else 0):
+            embed.add_field(name="\u200b", value="\u200b")
 
         embed.set_thumbnail(
             url="https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/b/b1/Element_Dust.png/revision/latest/scale-to-width-down/228?cb=20181107161643"
