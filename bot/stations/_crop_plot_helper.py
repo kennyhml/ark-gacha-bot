@@ -21,10 +21,16 @@ def do_crop_plot_stack(
     def stand_up() -> None:
         player.stand_up()
 
+    @threaded("Crouching")
+    def crouch() -> None:
+        player.crouch()
+
     if isinstance(item, items.Item):
         item = [item]
 
+    crouch()
     player.look_down_hard()
+
     fails = 0
     for idx, (turn_value, crop_plot) in enumerate(zip(turns, stack)):
         if idx == 6:
@@ -39,8 +45,7 @@ def do_crop_plot_stack(
                 raise exceptions.InventoryNotAccessibleError(crop_plot.inventory)
 
         player.sleep(delay)
-    player.crouch()
-
+        
 def take_and_refill(
     player: Player,
     crop_plot: TekCropPlot,
@@ -66,19 +71,21 @@ def take_and_refill(
     if not crop_plot.inventory.has(items.YTRAP_SEED):
         dead.append(crop_plot)
 
+    crop_plot.inventory.set_content(items.PELLET)
+
     if items_to_take:
         for item in items_to_take:
             if not crop_plot.inventory.has(item):
                 continue
-            crop_plot.inventory.transfer_all(item)
+            crop_plot.inventory.transfer_all(item, delete_search=False)
 
     if refill:
         player.inventory.transfer_all()
+        player.click_with_delay(0.2)
+        crop_plot.inventory.set_content(items.PELLET)
 
-    crop_plot.inventory.set_content(items.PELLET)
     crop_plot.close()
     return True
-
 
 def _adjust_for_crop_plot(player: Player, crop_plot: TekCropPlot) -> None:
     try:

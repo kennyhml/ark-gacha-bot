@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools  # type:ignore[import]
+import math
 import time
 from typing import final
 
@@ -122,7 +123,7 @@ class YTrapStation(Station):
                     info_webhook,
                     settings,
                 )
-                for i in range(settings.ytrap_beds)
+                for i in range(41, settings.ytrap_beds)
             ]
         )
 
@@ -151,9 +152,6 @@ class YTrapStation(Station):
         for _ in range(4 - len(self._stacks)):
             self._player.turn_90_degrees(delay=1)
 
-        self._player.look_down_hard()
-        self._player.turn_y_by(self.settings.gacha_turn, delay=0.5)
-
         added_traps = self._load_gacha()
 
         time_taken = round(time.time() - start)
@@ -175,8 +173,6 @@ class YTrapStation(Station):
     def _do_crop_plot_stacks(self, refill: bool) -> list[TekCropPlot]:
         """Empties the crop plots using the crop plot helpers."""
         dead_crop_plots: list[TekCropPlot] = []
-        self._player.crouch()
-
         precise = self.settings.mode == "precise" or (
             self.settings.mode == "precise refill" and refill
         )
@@ -231,11 +227,16 @@ class YTrapStation(Station):
 
         Returns the amount of ytraps that were deposited into the gacha.
         """
+        turns = abs(sum(self.settings.crop_plot_turns))
+        self._player.turn_y_by(abs(turns // 5))
+
         try:
             self.gacha.access()
         except exceptions.InventoryNotAccessibleError:
-            print("Could not access gacha, standing up...")
-            self._player.stand_up()
+            print("Could not access gacha, crouching...")
+            self._player.crouch()
+            self._player.look_down_hard()
+            self._player.turn_y_by(self.settings.gacha_turn, delay=0.5)
             self.gacha.access()
 
         self._ensure_looking_at_gacha()
@@ -268,7 +269,11 @@ class YTrapStation(Station):
         `InventoryNotAccessibleError` is raised.
         """
         times_turned = 0
-        while self.gacha.inventory.has(items.YTRAP_SEED):
+        while (
+            self.gacha.inventory.has(items.YTRAP_SEED)
+            and not self.gacha.inventory.count(items.PELLET) > 20
+            and not self.gacha.inventory.count(items.Y_TRAP) > 3
+        ):
             times_turned += 1
             if times_turned > 3:
                 raise exceptions.InventoryNotAccessibleError(self.gacha.inventory)

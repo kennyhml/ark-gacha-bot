@@ -23,7 +23,7 @@ class MedbrewStation(Station):
     """
 
     MEDBREW_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/5/59/Medical_Brew.png/revision/latest/scale-to-width-down/228?cb=20150615103740"
-    NARCOTIC_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/5/59/Medical_Brew.png/revision/latest/scale-to-width-down/228?cb=20150615103740"
+    NARCOTIC_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/e/e6/Narcotic.png/revision/latest/scale-to-width-down/228?cb=20150615114751"
     COOKER_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/9/91/Industrial_Cooker.png/revision/latest/scale-to-width-down/228?cb=20151202043005"
 
     def __init__(
@@ -163,7 +163,6 @@ class MedbrewStation(Station):
 
         for idx, stack in enumerate(self.tinto_crop_plots):
             self._player.turn_90_degrees("right", delay=1)
-            self._player.crouch()
             do_crop_plot_stack(
                 self._player,
                 stack,
@@ -293,6 +292,7 @@ class MedbrewStation(Station):
         self._player.inventory.transfer_all(items.TINTOBERRY)
 
         self.cooker.inventory.search(items.TINTOBERRY)
+        self._player.sleep(2)
         for _ in range(2):
             self.cooker.inventory.transfer_top_row()
 
@@ -498,9 +498,7 @@ class MedbrewStation(Station):
 
             plot.close()
             self._player.sleep(2)
-
-        self._player.crouch()
-
+            
         do_crop_plot_stack(
             self._player,
             self.narc_crop_plots,
@@ -603,7 +601,7 @@ class MedbrewStation(Station):
         embed = Embed(
             type="rich",
             title=f"Queued narcotics at medbrew station '{self.name}'!",
-            description="The narcotics have been queued and will be ready in 5 minutes!",
+            description="The narcotics have been queued, ready in 5 minutes!",
             color=0x5A2825,
         )
 
