@@ -165,7 +165,7 @@ class GachaBot:
             name="Dust per hour:",
             value=f"{self._compute_dust_per_hour():_}".replace("_", " "),
         )
-        embed.add_field(name="Laps completed:", value=YTrapStation.lap)
+        embed.add_field(name="Laps completed:", value=YTrapStation.lap - 1)
 
         for statistic, amount in Station.statistics.items():
             if not amount:
