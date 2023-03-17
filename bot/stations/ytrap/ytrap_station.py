@@ -193,6 +193,8 @@ class YTrapStation(Station):
                 precise=precise,
                 delay=self.settings.plot_delay,
             )
+            self._player.sleep(0.5)
+            
         return dead_crop_plots
 
     def _take_pellets_from_gacha(self) -> None:

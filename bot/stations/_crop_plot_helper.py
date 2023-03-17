@@ -30,7 +30,8 @@ def do_crop_plot_stack(
 
     crouch()
     player.look_down_hard()
-
+    player.sleep(0.3)
+    
     fails = 0
     for idx, (turn_value, crop_plot) in enumerate(zip(turns, stack)):
         if idx == 6:
