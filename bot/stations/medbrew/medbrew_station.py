@@ -110,6 +110,9 @@ class MedbrewStation(Station):
         info_webhook: InfoWebhook,
     ) -> list[MedbrewStation]:
         settings = MedbrewStationSettings.load()
+        if not settings.enabled:
+            return []
+        
         return [
             MedbrewStation(
                 f"{settings.prefix}{i:02d}",
