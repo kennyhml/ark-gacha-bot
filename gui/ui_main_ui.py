@@ -54,7 +54,7 @@ class Ui_Form(object):
         self.label_4.setStyleSheet(u"background-color: qlineargradient(spread:pad, x1:0, y1:0.505682, x2:1, y2:0.477, stop:0 rgba(150, 123, 111, 219), stop:1 rgba(85, 81, 84, 226));")
         self.ytrap_stations = QPushButton(self.MainUi)
         self.ytrap_stations.setObjectName(u"ytrap_stations")
-        self.ytrap_stations.setGeometry(QRect(-20, 120, 271, 41))
+        self.ytrap_stations.setGeometry(QRect(-20, 110, 271, 41))
         font1 = QFont()
         font1.setFamilies([u"Segoe UI Variable Display"])
         font1.setPointSize(14)
@@ -90,7 +90,7 @@ class Ui_Form(object):
         self.ytrap_stations.setIconSize(QSize(40, 40))
         self.grinding = QPushButton(self.MainUi)
         self.grinding.setObjectName(u"grinding")
-        self.grinding.setGeometry(QRect(-20, 240, 271, 41))
+        self.grinding.setGeometry(QRect(-20, 210, 271, 41))
         self.grinding.setFont(font1)
         self.grinding.setStyleSheet(u"\n"
 "QPushButton{\n"
@@ -118,7 +118,7 @@ class Ui_Form(object):
         self.grinding.setIconSize(QSize(40, 40))
         self.bullets_station = QPushButton(self.MainUi)
         self.bullets_station.setObjectName(u"bullets_station")
-        self.bullets_station.setGeometry(QRect(-20, 300, 271, 41))
+        self.bullets_station.setGeometry(QRect(-20, 260, 271, 41))
         self.bullets_station.setFont(font1)
         self.bullets_station.setStyleSheet(u"\n"
 "QPushButton{\n"
@@ -146,7 +146,7 @@ class Ui_Form(object):
         self.bullets_station.setIconSize(QSize(40, 40))
         self.discord_settings = QPushButton(self.MainUi)
         self.discord_settings.setObjectName(u"discord_settings")
-        self.discord_settings.setGeometry(QRect(-20, 420, 271, 41))
+        self.discord_settings.setGeometry(QRect(-20, 410, 271, 41))
         self.discord_settings.setFont(font1)
         self.discord_settings.setStyleSheet(u"\n"
 "QPushButton{\n"
@@ -174,7 +174,7 @@ class Ui_Form(object):
         self.discord_settings.setIconSize(QSize(40, 40))
         self.feed_station = QPushButton(self.MainUi)
         self.feed_station.setObjectName(u"feed_station")
-        self.feed_station.setGeometry(QRect(-20, 360, 271, 41))
+        self.feed_station.setGeometry(QRect(-20, 310, 271, 41))
         self.feed_station.setFont(font1)
         self.feed_station.setCursor(QCursor(Qt.ArrowCursor))
         self.feed_station.setLayoutDirection(Qt.LeftToRight)
@@ -201,7 +201,7 @@ class Ui_Form(object):
         icon4 = QIcon()
         icon4.addFile(u"assets/gui/raw_meat.png", QSize(), QIcon.Normal, QIcon.Off)
         self.feed_station.setIcon(icon4)
-        self.feed_station.setIconSize(QSize(30, 30))
+        self.feed_station.setIconSize(QSize(40, 40))
         self.label_57 = QLabel(self.MainUi)
         self.label_57.setObjectName(u"label_57")
         self.label_57.setGeometry(QRect(750, 560, 71, 41))
@@ -261,7 +261,7 @@ class Ui_Form(object):
         self.general_config.setIconSize(QSize(40, 40))
         self.crystal_station = QPushButton(self.MainUi)
         self.crystal_station.setObjectName(u"crystal_station")
-        self.crystal_station.setGeometry(QRect(-20, 180, 271, 41))
+        self.crystal_station.setGeometry(QRect(-20, 160, 271, 41))
         self.crystal_station.setFont(font1)
         self.crystal_station.setStyleSheet(u"\n"
 "QPushButton{\n"
@@ -1207,6 +1207,48 @@ class Ui_Form(object):
         self.label_70.setFont(font)
         self.label_70.setStyleSheet(u"color: white")
         self.tabWidget.addTab(self.tab_6, "")
+        self.tab_8 = QWidget()
+        self.tab_8.setObjectName(u"tab_8")
+        self.medbrew_enabled = QCheckBox(self.tab_8)
+        self.medbrew_enabled.setObjectName(u"medbrew_enabled")
+        self.medbrew_enabled.setGeometry(QRect(10, 60, 201, 21))
+        self.medbrew_enabled.setFont(font)
+        self.label_71 = QLabel(self.tab_8)
+        self.label_71.setObjectName(u"label_71")
+        self.label_71.setGeometry(QRect(10, 85, 121, 31))
+        self.label_71.setFont(font)
+        self.label_71.setStyleSheet(u"color: white")
+        self.medbrew_prefix = QLineEdit(self.tab_8)
+        self.medbrew_prefix.setObjectName(u"medbrew_prefix")
+        self.medbrew_prefix.setGeometry(QRect(140, 90, 111, 20))
+        self.medbrew_prefix.setFont(font)
+        self.medbrew_prefix.setStyleSheet(u"\n"
+"color: rgb(0, 255, 255);\n"
+"background-color: rgb(30, 30, 30);\n"
+"border: None\n"
+"\n"
+"")
+        self.medbrew_beds = QSpinBox(self.tab_8)
+        self.medbrew_beds.setObjectName(u"medbrew_beds")
+        self.medbrew_beds.setGeometry(QRect(310, 89, 61, 22))
+        self.medbrew_beds.setFont(font)
+        self.medbrew_beds.setStyleSheet(u"border: None;\n"
+"background-color: rgb(30, 30, 30);")
+        self.medbrew_beds.setMinimum(0)
+        self.medbrew_beds.setMaximum(16)
+        self.medbrew_beds.setSingleStep(1)
+        self.medbrew_beds.setValue(2)
+        self.label_73 = QLabel(self.tab_8)
+        self.label_73.setObjectName(u"label_73")
+        self.label_73.setGeometry(QRect(0, 10, 391, 31))
+        self.label_73.setFont(font3)
+        self.label_73.setAlignment(Qt.AlignCenter)
+        self.label_75 = QLabel(self.tab_8)
+        self.label_75.setObjectName(u"label_75")
+        self.label_75.setGeometry(QRect(260, 85, 51, 31))
+        self.label_75.setFont(font)
+        self.label_75.setStyleSheet(u"color: rgb(255, 255, 255)")
+        self.tabWidget.addTab(self.tab_8, "")
         self.tab = QWidget()
         self.tab.setObjectName(u"tab")
         self.label_54 = QLabel(self.tab)
@@ -1380,6 +1422,34 @@ class Ui_Form(object):
 "\n"
 "")
         self.tabWidget.addTab(self.tab, "")
+        self.medbrew_settings = QPushButton(self.MainUi)
+        self.medbrew_settings.setObjectName(u"medbrew_settings")
+        self.medbrew_settings.setGeometry(QRect(-20, 360, 271, 41))
+        self.medbrew_settings.setFont(font1)
+        self.medbrew_settings.setStyleSheet(u"\n"
+"QPushButton{\n"
+"	background-color: qlineargradient(spread:pad, x1:0, y1:0.505682, x2:1, y2:0.477, stop:0 rgba(11, 131, 120, 219), stop:1 rgba(85, 98, 112, 226));\n"
+"	color:rgba(255, 255, 255, 210);\n"
+"	border-bottom-right-radius: 20px;\n"
+"	border-top-left-radius: 20px;\n"
+"\n"
+"}\n"
+"\n"
+"QPushButton:hover{\n"
+"	background-color: qlineargradient(spread:pad, x1:0, y1:0.505682, x2:1, y2:0.477, stop:0 rgba(150, 123, 111, 219), stop:1 rgba(85, 81, 84, 226));\n"
+"}\n"
+"\n"
+"QPushButton:pressed{\n"
+"	background-color:rgba(150, 123, 111, 255);\n"
+"}\n"
+"\n"
+"Line#line{\n"
+"	color: white;\n"
+"}")
+        icon7 = QIcon()
+        icon7.addFile(u"assets/gui/medbrew.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.medbrew_settings.setIcon(icon7)
+        self.medbrew_settings.setIconSize(QSize(40, 40))
         Form.setCentralWidget(self.MainUi)
         self.LeftBackground.raise_()
         self.label_4.raise_()
@@ -1393,10 +1463,11 @@ class Ui_Form(object):
         self.general_config.raise_()
         self.crystal_station.raise_()
         self.tabWidget.raise_()
+        self.medbrew_settings.raise_()
 
         self.retranslateUi(Form)
 
-        self.tabWidget.setCurrentIndex(5)
+        self.tabWidget.setCurrentIndex(6)
 
 
         QMetaObject.connectSlotsByName(Form)
@@ -1567,6 +1638,13 @@ class Ui_Form(object):
         self.small_meat_prefix.setPlaceholderText(QCoreApplication.translate("Form", u"owlfeed", None))
         self.label_70.setText(QCoreApplication.translate("Form", u"hours", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_6), QCoreApplication.translate("Form", u"FEED", None))
+        self.medbrew_enabled.setText(QCoreApplication.translate("Form", u"Medbrews enabled", None))
+        self.label_71.setText(QCoreApplication.translate("Form", u"Medbrew prefix:", None))
+        self.medbrew_prefix.setText("")
+        self.medbrew_prefix.setPlaceholderText(QCoreApplication.translate("Form", u"brew", None))
+        self.label_73.setText(QCoreApplication.translate("Form", u"Medbrew Configuration", None))
+        self.label_75.setText(QCoreApplication.translate("Form", u"Beds:", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_8), QCoreApplication.translate("Form", u"MEDBREW", None))
         self.label_54.setText(QCoreApplication.translate("Form", u"Discord Configuration", None))
         self.label_55.setText(QCoreApplication.translate("Form", u"Tower maintenance ID:", None))
         self.user_id.setText("")
@@ -1598,5 +1676,6 @@ class Ui_Form(object):
         self.state_message_id.setText("")
         self.state_message_id.setPlaceholderText(QCoreApplication.translate("Form", u"1084268012271566868", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("Form", u"DISCORD", None))
+        self.medbrew_settings.setText(QCoreApplication.translate("Form", u"Brew Stations", None))
     # retranslateUi
 

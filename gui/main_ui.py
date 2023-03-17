@@ -74,6 +74,11 @@ class MainUi(QMainWindow, Ui_Form):
             "alerts", widgets, self.data["alerts"], save_on_change=True
         )
 
+        self.brew_settings = QConfig(
+            "medbrew", widgets, self.data["medbrew"], save_on_change=True
+        )
+
+
         self.main_settings.set_data()
         self.player_settings.set_data()
         self.disc_settings.set_data()
@@ -86,6 +91,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.arb_settings.set_data()
         self.alert_settings.set_data()
         self.small_meat_settings.set_data()
+        self.brew_settings.set_data()
 
         self.main_settings.connect_callback(self.save)
         self.player_settings.connect_callback(self.save)
@@ -99,6 +105,7 @@ class MainUi(QMainWindow, Ui_Form):
         self.arb_settings.connect_callback(self.save)
         self.alert_settings.connect_callback(self.save)
         self.small_meat_settings.connect_callback(self.save)
+        self.brew_settings.connect_callback(self.save)
 
     def display(self):
         self.main_win.setWindowTitle(f"Ling-Ling v{__version__}")
@@ -114,7 +121,8 @@ class MainUi(QMainWindow, Ui_Form):
         self.grinding.clicked.connect(lambda: self.open_tab(3))
         self.bullets_station.clicked.connect(lambda: self.open_tab(4))
         self.feed_station.clicked.connect(lambda: self.open_tab(5))
-        self.discord_settings.clicked.connect(lambda: self.open_tab(6))
+        self.medbrew_settings.clicked.connect(lambda: self.open_tab(6))
+        self.discord_settings.clicked.connect(lambda: self.open_tab(7))
 
     def connect_buttons(self) -> None:
         self.reset_local_data.clicked.connect(lambda: self.reset_data())

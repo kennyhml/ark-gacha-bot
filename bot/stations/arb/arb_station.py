@@ -751,7 +751,7 @@ class ARBStation(Station):
         the ARB made and the time taken."""
         embed = Embed(
             type="rich",
-            title=f"Filled forges and crafted sparkpowder!",
+            title=f"Picked up the ARB!",
             color=0xFF5500,
         )
         embed.add_field(name="Time taken:ㅤㅤㅤ", value=f"{time_taken} seconds")

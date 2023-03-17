@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import time
 from datetime import datetime, timedelta
@@ -16,11 +18,13 @@ from ._status import Status
 
 class MedbrewStation(Station):
     """Ling Lings Medbrew Station component.
-    
+
     Crafts medbrews from berries and spoiled meat plants.
     """
+
     MEDBREW_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/5/59/Medical_Brew.png/revision/latest/scale-to-width-down/228?cb=20150615103740"
     NARCOTIC_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/5/59/Medical_Brew.png/revision/latest/scale-to-width-down/228?cb=20150615103740"
+    COOKER_AVATAR = "https://static.wikia.nocookie.net/arksurvivalevolved_gamepedia/images/9/91/Industrial_Cooker.png/revision/latest/scale-to-width-down/228?cb=20151202043005"
 
     def __init__(
         self,
@@ -99,8 +103,28 @@ class MedbrewStation(Station):
         else:
             raise ValueError(f"'{self.status}' is not a valid status!")
 
+    @staticmethod
+    def build_stations(
+        player: Player,
+        tribelog: TribeLogWebhook,
+        info_webhook: InfoWebhook,
+    ) -> list[MedbrewStation]:
+        settings = MedbrewStationSettings.load()
+        return [
+            MedbrewStation(
+                f"{settings.prefix}{i:02d}",
+                player,
+                tribelog,
+                info_webhook,
+                settings,
+            )
+            for i in range(settings.beds)
+        ]
+
     def craft_narcotics(self) -> None:
         """Gets the narcoberries and spoiled meat, then queues narcotics."""
+        start = time.time()
+
         self._get_narcoberries()
         self._distribute_narcoberries()
 
@@ -114,15 +138,21 @@ class MedbrewStation(Station):
 
         self.status = Status.CRAFTING_NARCOTICS
         self._started_crafting_narcotics = datetime.now()
+        self._webhook.send_embed(
+            self._create_narcotics_queued_embed(round(time.time() - start))
+        )
 
     def cook_brews(self) -> None:
         """Starts cooking the medbrews by putting the crafted narcotics into
         the cookers, then putting the tintoberries in."""
+        start = time.time()
+
         self._put_narcotics_in_cookers()
         self._spawn_at(self.tintoberry_bed)
 
         if self.refill:
             self._player.look_down_hard()
+            self._player.turn_y_by(-40)
             bag = Structure("Item Cache", "assets/wheels/item_cache.png")
             bag.open()
             bag.inventory.transfer_all()
@@ -185,6 +215,9 @@ class MedbrewStation(Station):
 
         self.status = Status.COOKING_MEDBREWS
         self._started_cooking_brews = datetime.now()
+        self._webhook.send_embed(
+            self._create_started_cooking_embed(round(time.time() - start))
+        )
 
     def pickup_brews(self) -> None:
         """Takes the cooked brews out of the cookers and puts them into the
@@ -217,6 +250,9 @@ class MedbrewStation(Station):
         self._webhook.send_embed(
             self._create_final_embed(round(time.time() - start), brews_made), img=img
         )
+        self.statistics["Medical Brews"] = (
+            self.statistics.get("Medical Brews", 0) + brews_made
+        )
 
         self.status = Status.WAITING_FOR_BERRIES
         self.last_completed = datetime.now()
@@ -240,6 +276,7 @@ class MedbrewStation(Station):
             if idx == 3:
                 self._player.inventory.transfer_all()
             else:
+                self.cooker.inventory.transfer_all(items.NARCOTIC)
                 self._player.inventory.transfer(
                     items.NARCOTIC, 600, self.chembench.inventory
                 )
@@ -275,9 +312,7 @@ class MedbrewStation(Station):
         """Returns whether 5 hours passed since the last completion"""
         assert self.last_completed is not None
         try:
-            return (
-                datetime.now() - self.last_completed
-            ).total_seconds() > self.settings.medbrew_interval * 60
+            return (datetime.now() - self.last_completed).total_seconds() > 5 * 3600
         except AttributeError:
             return True
 
@@ -349,9 +384,7 @@ class MedbrewStation(Station):
         try:
             self._take_narcoberries()
         except StationNotReadyError:
-            self.last_completed = datetime.now() - timedelta(
-                minutes=self.settings.medbrew_interval - 30
-            )
+            self.last_completed = datetime.now() - timedelta(minutes=4.5 * 60)
             raise
         except MissingPelletsError:
             self.refill = True
@@ -372,7 +405,7 @@ class MedbrewStation(Station):
                     items.NARCOBERRY, 2700, self.chembench.inventory
                 )
             else:
-                self._player.inventory.transfer_all()
+                self._player.inventory.transfer_all(items.NARCOBERRY)
             self.chembench.close()
             self._player.sleep(2)
 
@@ -449,20 +482,20 @@ class MedbrewStation(Station):
             bag.inventory.transfer_all()
             bag.close()
             for _ in range(2):
-                self._player.turn_90_degrees("left", delay=1) 
+                self._player.turn_90_degrees("left", delay=1)
         else:
             plot = self.narc_crop_plots[6]
             plot.open()
 
-            if plot.inventory.count(items.PELLET) < 10:
+            if plot.inventory.count(items.PELLET) < 13:
                 raise MissingPelletsError
 
             elif plot.inventory.count(items.NARCOBERRY) < 9:
                 raise StationNotReadyError
-            
+
             plot.close()
             self._player.sleep(2)
-        
+
         self._player.crouch()
 
         do_crop_plot_stack(
@@ -521,10 +554,10 @@ class MedbrewStation(Station):
         ]
 
         self.cooker_turns_2 = [
-            (self._player.turn_x_by, -40 * self.turn_factor),
-            (self._player.turn_x_by, 80 * self.turn_factor),
+            (self._player.turn_x_by, 40 * self.turn_factor),
+            (self._player.turn_x_by, -80 * self.turn_factor),
             (self._player.turn_y_by, -100),
-            (self._player.turn_x_by, -60 * self.turn_factor),
+            (self._player.turn_x_by, 60 * self.turn_factor),
         ]
 
     def _load_last_completion(self, key: str) -> None:
@@ -561,4 +594,28 @@ class MedbrewStation(Station):
         embed.add_field(name="Brews crafted:", value=brews_made)
 
         embed.set_thumbnail(url=self.MEDBREW_AVATAR)
+        return embed
+
+    def _create_narcotics_queued_embed(self, time_taken: int) -> Embed:
+        embed = Embed(
+            type="rich",
+            title=f"Queued narcotics at medbrew station '{self.name}'!",
+            description="The narcotics have been queued and will be ready in 5 minutes!",
+            color=0x5A2825,
+        )
+
+        embed.add_field(name="Time taken:", value=f"{time_taken} seconds")
+        embed.set_thumbnail(url=self.NARCOTIC_AVATAR)
+        return embed
+
+    def _create_started_cooking_embed(self, time_taken: int) -> Embed:
+        embed = Embed(
+            type="rich",
+            title=f"Started cooking the medical brews at '{self.name}'!",
+            description="The medical brews will be picked up in 18 minutes!",
+            color=0x5A2825,
+        )
+
+        embed.add_field(name="Time taken:", value=f"{time_taken} seconds")
+        embed.set_thumbnail(url=self.COOKER_AVATAR)
         return embed

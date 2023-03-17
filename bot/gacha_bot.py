@@ -21,6 +21,7 @@ from .stations import (
     GrindingStation,
     HealingStation,
     MeatFeedStation,
+    MedbrewStation,
     SmallMeatStation,
     Station,
     YTrapStation,
@@ -82,8 +83,18 @@ class GachaBot:
         meat = MeatFeedStation.build_stations(*base_args)
         small_meat = SmallMeatStation.build_stations(*base_args)
         berry = BerryFeedStation.build_stations(*base_args)
+        medbrew = MedbrewStation.build_stations(*base_args)
 
-        for station in [crystal, grinding, arb, meat, berry, small_meat, ytrap]:
+        for station in [
+            crystal,
+            grinding,
+            arb,
+            medbrew,
+            meat,
+            berry,
+            small_meat,
+            ytrap,
+        ]:
             if not station:
                 continue
 
@@ -127,6 +138,9 @@ class GachaBot:
         except exceptions.TerminatedError:
             pass
 
+        except LookupError:
+            print("No station is currently ready...")
+
         except ConnectionError as e:
             print(f"Ran into a connection error!\n{e}")
 
@@ -162,7 +176,7 @@ class GachaBot:
                 formatted_amount = f"{amount:_}".replace("_", " ")
 
             embed.add_field(name=f"{statistic}:", value=formatted_amount)
-            
+
         missing = 3 - len(embed.fields) % 3
         for _ in range(missing if missing != 3 else 0):
             embed.add_field(name="\u200b", value="\u200b")

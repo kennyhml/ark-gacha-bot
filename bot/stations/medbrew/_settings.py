@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from typing import Any
 
 import dacite
 
@@ -10,13 +11,14 @@ import dacite
 class MedbrewStationSettings:
     """Contains the settings of the crystal station"""
 
-    medbrew_beds: int
-    medbrew_prefix: str
-    medbrew_interval: int
-
+    enabled: bool
+    beds: int
+    prefix: str
+    
     @staticmethod
     def load() -> MedbrewStationSettings:
         with open("settings/settings.json") as f:
-            data: dict = json.load(f)["medbrew"]
-            
-        return dacite.from_dict(MedbrewStationSettings, data)
+            data: dict[str, Any] = json.load(f)["medbrew"]
+
+        settings = {k.removeprefix("medbrew_"): v for k, v in data.items()}
+        return dacite.from_dict(MedbrewStationSettings, settings)

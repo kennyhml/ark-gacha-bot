@@ -75,8 +75,7 @@ class ConfigValidator:
         "medbrew": {
             "medbrew_enabled": False,
             "medbrew_beds": 4,
-            "medbrew_prefix": "brew",
-            "medbrew_interval": 120,
+            "medbrew_prefix": "brew"
         },
         "healing": {"pod_name": "Gacha Heal"},
         "grinding": {
