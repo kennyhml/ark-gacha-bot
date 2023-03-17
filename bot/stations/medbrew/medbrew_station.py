@@ -310,7 +310,8 @@ class MedbrewStation(Station):
 
         self.cooker.turn_on()
         self.cooker.close()
-
+        self._player.sleep(2)
+        
     def _berries_are_ready(self) -> bool:
         """Returns whether 5 hours passed since the last completion"""
         assert self.last_completed is not None
