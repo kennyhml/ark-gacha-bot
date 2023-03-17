@@ -123,7 +123,7 @@ class YTrapStation(Station):
                     info_webhook,
                     settings,
                 )
-                for i in range(41, settings.ytrap_beds)
+                for i in range(settings.ytrap_beds)
             ]
         )
 
