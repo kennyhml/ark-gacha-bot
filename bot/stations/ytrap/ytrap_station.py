@@ -178,7 +178,7 @@ class YTrapStation(Station):
         )
 
         for stack in self._stacks:
-            self._player.turn_90_degrees(self.settings.turn_direction, delay=0.5)
+            self._player.turn_90_degrees(self.settings.turn_direction, delay=0.3)
             if self.settings.mode == "set folders":
                 set_stack_folders(self._player, stack)
                 continue
@@ -193,7 +193,7 @@ class YTrapStation(Station):
                 precise=precise,
                 delay=self.settings.plot_delay,
             )
-            self._player.sleep(0.5)
+            self._player.sleep(0.2)
             
         return dead_crop_plots
 
