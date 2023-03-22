@@ -178,29 +178,29 @@ class MedbrewStation(Station):
                 continue
 
             self._player.look_down_hard()
-            self._player.turn_y_by(-160)
+            self._player.turn_y_by(-160, delay=1)
 
             for _ in range(3 - idx):
                 self._player.turn_90_degrees("right", delay=1)
 
             if not idx:
-                self._player.turn_x_by(-40 * self.turn_factor)
+                self._player.turn_x_by(-40 * self.turn_factor, delay=0.5)
             else:
-                self._player.turn_x_by(-40 * self.turn_factor)
-                self._player.turn_x_by(80 * self.turn_factor)
+                self._player.turn_x_by(-40 * self.turn_factor, delay=0.5)
+                self._player.turn_x_by(80 * self.turn_factor, delay=0.5)
 
             self._fill_up_cooker()
             if not idx:
-                self._player.turn_x_by(40 * self.turn_factor)
+                self._player.turn_x_by(40 * self.turn_factor, delay=0.5)
             else:
-                self._player.turn_x_by(40 * self.turn_factor)
-                self._player.turn_x_by(-80 * self.turn_factor)
+                self._player.turn_x_by(40 * self.turn_factor, delay=0.5)
+                self._player.turn_x_by(-80 * self.turn_factor, delay=0.5)
 
             for _ in range(3 - idx):
                 self._player.turn_90_degrees("left", delay=1)
 
         self._player.look_down_hard()
-        self._player.turn_y_by(-160, delay=0.5)
+        self._player.turn_y_by(-160, delay=1)
         self._player.turn_90_degrees("right", delay=1)
 
         for idx, (func, arg) in enumerate(self.cooker_turns_2):
